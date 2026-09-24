@@ -66,6 +66,7 @@
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-09-23 | Standalone repo, not inside Orbit | Engine first; later `/stories` host |
+| 2026-09-24 | Portfolio teaser, flagship landing, then the story | First Orbit section after the title is a short teaser with one visual and a button. The button opens `/stories`, where stories accumulate as rows. |
 | 2026-09-23 | sticky + react-scrollama | One layout; drop split-pane |
 | 2026-09-23 | Reference story + ECB evidence + book sim | Decision story, not chart demo |
 | 2026-09-23 | **Interactive Decision Storytelling** as Orbit flagship | Stronger than “scrollytelling side feature” |

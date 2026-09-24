@@ -6,7 +6,7 @@
 
 Two artifacts: (1) the reusable **engine**, (2) the **reference decision story** (`when-rates-rise`). The story is the interface; the product is a reasoning process (Question → Evidence → Model → Mechanism → Uncertainty → Scenarios → Visual narrative → Decision frame).
 
-Future host: Orbit `/stories/[slug]` without overloading Orbit’s prose `/writes` MDX model.
+Future host: Orbit portfolio teaser (first section after the title) → flagship landing at `/stories` → essay at `/stories/[slug]`. New stories are rows on `/stories`. Do not overload Orbit’s prose `/writes` MDX model.
 
 ## Three layers
 
@@ -80,10 +80,12 @@ Mirrored from Orbit (not full Orbit chrome): OKLCH void/neon, Syne / IBM Plex Sa
 ## Future Orbit integration
 
 1. Publish or path-import this engine’s components + schema.
-2. Add Orbit route `/stories/[slug]` that loads manifests.
-3. Keep `/writes` as prose MDX; do not overload `WriteFrontmatter`.
-4. Human approve before production publish.
-5. Treat IDS as Orbit’s flagship system, not a blog garnish.
+2. Add a portfolio teaser as the first section after the Orbit title: short copy, one visual, a button to `/stories`.
+3. Add `/stories` as this flagship landing. New stories are rows on that page.
+4. Add `/stories/[slug]` for the essay manifest. Films keep their own route.
+5. Keep `/writes` as prose MDX; do not overload `WriteFrontmatter`.
+6. Human approve before production publish.
+7. Treat IDS as Orbit’s flagship system, not a blog garnish.
 
 ## Explicitly deferred
 

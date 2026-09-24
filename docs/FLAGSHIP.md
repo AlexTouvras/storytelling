@@ -73,4 +73,9 @@ AI belongs in the pipeline (research → evidence → analysis → decision fram
 
 ## Orbit
 
-Future host: Orbit `/stories/[slug]`. This repo stays the engine + reference story until packaging; do not treat IDS as a minor Orbit chrome add-on.
+Two surfaces, one product.
+
+1. **Portfolio teaser** — the first section after the Orbit title. A short account of the system, one visual, and a button into the flagship.
+2. **Flagship landing** — `/stories`. The page built here: scroll the flight, then open a story. New stories are rows on this page.
+
+From a row: `/stories/[slug]` is the essay, and a film keeps its own route (`/stories/when-rates-rise/film`). `/writes` stays prose. This repo stays the engine and the reference story until packaging. The teaser is an entrance, not a second home for the stories.

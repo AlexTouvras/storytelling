@@ -20,7 +20,7 @@
 
 ## Next (after sign-off)
 
-- [ ] Integrate into Orbit `/stories`
+- [ ] Integrate into Orbit: portfolio teaser after the title, then `/stories` as the flagship landing, then `/stories/[slug]`
 - [ ] Agent pipeline (research → evidence → spec → manifest)
 - [ ] Weekly decision stories
 - [ ] HFCS research microdata (data ladder step 3)
