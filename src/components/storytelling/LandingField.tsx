@@ -3,22 +3,17 @@
 import { memo, useEffect, useRef, type RefObject } from "react";
 
 /**
- * One seeded field, scrubbed by page progress:
- * 0–15% streams, 15–35% the chain, 35–60% bend,
- * 60–82% vortex, 82–100% a calmer field.
+ * One tube of records. Scroll only moves the camera:
+ * front view (streams) → closer on the chain → into the tube (vortex) → a calmer hold.
  */
 
-type Rec = {
-  lane: number;
-  u: number;
-  kind: 0 | 1 | 2;
-  n: number;
-};
+type Rec = { lane: number; u: number; kind: 0 | 1 | 2 };
 
-const CYAN: [number, number, number] = [138, 216, 226];
-const VIOLET: [number, number, number] = [196, 150, 255];
-const LANES = 12;
-const SAMPLES = 76;
+const CYAN: [number, number, number] = [150, 220, 228];
+const VIOLET: [number, number, number] = [206, 160, 255];
+const LANES = 16;
+const SAMPLES = 64;
+const RADIUS = 2.15;
 
 function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -34,10 +29,8 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-/** A diagonal route across the streams. Same points become the vortex spine. */
 function chainU(lane: number) {
-  const t = lane / (LANES - 1);
-  return 0.18 + t * 0.58 + Math.sin(t * Math.PI) * 0.05;
+  return 0.5 + Math.sin((lane / LANES) * Math.PI * 2) * 0.018;
 }
 
 function buildRecords(): Rec[] {
@@ -46,9 +39,9 @@ function buildRecords(): Rec[] {
     for (let i = 0; i < SAMPLES; i++) {
       const n = hash(lane * 97 + i * 13);
       const u = i / (SAMPLES - 1);
-      const onChain = Math.abs(u - chainU(lane)) < 0.016;
-      const kind: 0 | 1 | 2 = onChain ? 2 : n > 0.93 ? 1 : 0;
-      pts.push({ lane, u, kind, n });
+      const onChain = Math.abs(u - chainU(lane)) < 0.012;
+      const kind: 0 | 1 | 2 = onChain ? 2 : n > 0.92 ? 1 : 0;
+      pts.push({ lane, u, kind });
     }
   }
   return pts;
@@ -70,95 +63,84 @@ function fit(canvas: HTMLCanvasElement) {
   return { cssW: rect.width, cssH: rect.height, dpr };
 }
 
-type Scene = {
+type Cam = {
+  x: number;
+  y: number;
+  z: number;
+  fov: number;
+  curl: number;
   focus: number;
-  bend: number;
-  vortex: number;
+  orbit: number;
   arrive: number;
 };
 
-function sceneAt(progress: number): Scene {
+function cameraAt(progress: number): Cam {
+  const focus = smoothstep(0.14, 0.32, progress);
+  const orbit = smoothstep(0.36, 0.78, progress);
+  const arrive = smoothstep(0.82, 1, progress);
+  const yaw = orbit * 1.32 * (1 - arrive * 0.42);
+  const dist = lerp(5.8, 5.2, focus) * lerp(1, 0.62, orbit) + arrive * 1.1;
   return {
-    focus: smoothstep(0.15, 0.32, progress),
-    bend: smoothstep(0.35, 0.58, progress),
-    vortex: smoothstep(0.6, 0.8, progress),
-    arrive: smoothstep(0.82, 0.98, progress),
+    x: Math.sin(yaw) * dist,
+    y: 0,
+    z: Math.cos(yaw) * dist,
+    fov: lerp(1.05, 1.15, orbit),
+    curl: smoothstep(0.42, 0.8, progress) * (1 - arrive * 0.65),
+    focus,
+    orbit,
+    arrive,
   };
 }
 
-function fieldPoint(lane: number, u: number, width: number, height: number) {
-  const laneT = lane / (LANES - 1);
+function world(lane: number, u: number, curl: number) {
+  const angle = (lane / LANES) * Math.PI * 2;
+  const twist = (u - 0.5) * curl * 2.15;
+  const y0 = Math.cos(angle) * RADIUS;
+  const z0 = Math.sin(angle) * RADIUS;
   return {
-    x: width * (0.03 + u * 0.94),
-    y: height * (0.08 + laneT * 0.62) - Math.sin(u * Math.PI) * height * 0.008,
+    x: (u - 0.5) * 6.2,
+    y: y0 * Math.cos(twist) - z0 * Math.sin(twist),
+    z: y0 * Math.sin(twist) + z0 * Math.cos(twist),
   };
-}
-
-function chainCentroid(width: number, height: number) {
-  let x = 0;
-  let y = 0;
-  for (let lane = 0; lane < LANES; lane++) {
-    const p = fieldPoint(lane, chainU(lane), width, height);
-    x += p.x;
-    y += p.y;
-  }
-  return { x: x / LANES, y: y / LANES };
 }
 
 function project(
-  lane: number,
-  u: number,
+  pt: { x: number; y: number; z: number },
+  cam: Cam,
   width: number,
   height: number,
-  scene: Scene,
-  spin: number,
-  followX: number,
-  followY: number,
 ) {
-  const laneT = lane / (LANES - 1);
-  const lateral = u - chainU(lane);
-  const base = fieldPoint(lane, u, width, height);
-  const zoom = 1 + scene.focus * (1 - scene.bend) * 0.16;
-  const cx = width * 0.5;
-  const cy = height * 0.42;
-  const focused = {
-    x: cx + (base.x - cx) * zoom + followX * scene.focus * (1 - scene.bend),
-    y: cy + (base.y - cy) * zoom + followY * scene.focus * (1 - scene.bend),
-  };
-
-  // Ends of each stream sit deeper than the chain, so the line bows into the axis.
-  const cam = scene.bend * 0.62;
-  const z = Math.max(0.3, 0.58 + laneT * 1.25 + lateral * lateral * 3.1 - cam);
-  const persp = 1 / z;
-  const bent = {
-    x: lerp(focused.x, cx + (u - 0.5) * width * 1.15 * persp, scene.bend),
-    y: lerp(focused.y, cy + (laneT - 0.42) * height * 0.92 * persp, scene.bend),
-  };
-
-  const theta = spin + laneT * Math.PI * 2.4 + lateral * Math.PI * 1.15;
-  const worldR = 0.055 + Math.abs(lateral) * 0.95;
-  const depth = 0.42 + laneT * 1.7;
-  const scale = 1.15 / depth;
-  const vortex = {
-    x: cx + Math.cos(theta) * worldR * scale * width * 0.34,
-    y: cy + Math.sin(theta) * worldR * scale * height * 0.42,
-  };
-  const spun = {
-    x: lerp(bent.x, vortex.x, scene.vortex),
-    y: lerp(bent.y, vortex.y, scene.vortex),
-  };
-
-  const calm = {
-    x: width * (0.12 + u * 0.76),
-    y: height * (0.14 + laneT * 0.58) - Math.sin((u + laneT) * Math.PI) * height * 0.04,
-  };
-
+  let fx = -cam.x;
+  let fy = -cam.y;
+  let fz = -cam.z;
+  const fl = Math.hypot(fx, fy, fz) || 1;
+  fx /= fl;
+  fy /= fl;
+  fz /= fl;
+  let rx = -fz;
+  let rz = fx;
+  const rl = Math.hypot(rx, rz) || 1;
+  rx /= rl;
+  rz /= rl;
+  const ux = -rz * fy;
+  const uy = rz * fx - rx * fz;
+  const uz = rx * fy;
+  const dx = pt.x - cam.x;
+  const dy = pt.y - cam.y;
+  const dz = pt.z - cam.z;
+  const zc = dx * fx + dy * fy + dz * fz;
+  if (zc < 0.3) return null;
+  const k = cam.fov / zc;
   return {
-    x: lerp(spun.x, calm.x, scene.arrive),
-    y: lerp(spun.y, calm.y, scene.arrive),
-    near: Math.min(1, scale * 0.55),
-    lateral,
+    x: width * 0.5 + (dx * rx + dz * rz) * k * width,
+    y: height * 0.34 - (dx * ux + dy * uy + dz * uz) * k * height,
+    near: Math.min(1, 3.2 / zc),
   };
+}
+
+function laneReveal(lane: number, orbit: number) {
+  const front = Math.sin((lane / LANES) * Math.PI * 2) > -0.05 ? 1 : 0;
+  return lerp(front, 1, orbit);
 }
 
 function draw(
@@ -169,59 +151,61 @@ function draw(
   time: number,
   reduced: boolean,
 ) {
-  const scene = sceneAt(progress);
-  const travel = reduced ? 0 : time * (1 - scene.bend);
-  const spin = scene.vortex * (1 - scene.arrive * 0.9) * Math.PI * 1.25;
-  const centroid = chainCentroid(width, height);
-  const followX = width * 0.5 - centroid.x;
-  const followY = height * 0.4 - centroid.y;
+  const cam = cameraAt(reduced ? 0 : progress);
+  const drift = reduced ? 0 : time * 0.012 * (1 - cam.orbit);
 
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "oklch(0.08 0.028 264)";
+  ctx.fillStyle = "oklch(0.075 0.028 264)";
   ctx.fillRect(0, 0, width, height);
 
-  const glowA = (0.05 + scene.vortex * 0.2) * (1 - scene.arrive * 0.65);
-  const glow = ctx.createRadialGradient(width * 0.5, height * 0.4, 0, width * 0.5, height * 0.4, width * 0.46);
-  glow.addColorStop(0, `rgba(186,150,255,${glowA})`);
-  glow.addColorStop(0.5, `rgba(120,200,220,${glowA * 0.28})`);
+  const glowA = (0.06 + cam.orbit * 0.16) * (1 - cam.arrive * 0.55);
+  const glow = ctx.createRadialGradient(width * 0.5, height * 0.34, 0, width * 0.5, height * 0.34, width * 0.42);
+  glow.addColorStop(0, `rgba(180,150,255,${glowA})`);
+  glow.addColorStop(0.55, `rgba(120,200,220,${glowA * 0.22})`);
   glow.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, width, height);
 
   ctx.globalCompositeOperation = "lighter";
+  ctx.lineWidth = 1;
 
   for (let lane = 0; lane < LANES; lane++) {
-    const speed = 0.006 + (lane % 4) * 0.0025;
+    const show = laneReveal(lane, cam.orbit);
+    if (show < 0.04) continue;
+    const speed = 0.004 + (lane % 5) * 0.0015;
     const idxs = BY_LANE[lane];
-    const strokeA = (0.42 * (1 - scene.focus * 0.45) * (1 - scene.vortex * 0.75) + scene.vortex * 0.14) * (1 - scene.arrive * 0.35);
-    if (strokeA > 0.03) {
-      ctx.beginPath();
-      idxs.forEach((index, n) => {
-        const rec = RECORDS[index];
-        const u = (rec.u + travel * speed) % 1;
-        const p = project(lane, u, width, height, scene, spin, followX, followY);
-        if (n === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${strokeA})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
+    ctx.beginPath();
+    let started = false;
+    idxs.forEach((index) => {
+      const rec = RECORDS[index];
+      const u = (rec.u + drift * speed) % 1;
+      const p = project(world(lane, u, cam.curl), cam, width, height);
+      if (!p) {
+        started = false;
+        return;
+      }
+      if (!started) {
+        ctx.moveTo(p.x, p.y);
+        started = true;
+      } else ctx.lineTo(p.x, p.y);
+    });
+    const strokeA = lerp(0.72, 0.4, cam.orbit) * show * (1 - cam.focus * 0.15) * (1 - cam.arrive * 0.25);
+    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${strokeA})`;
+    ctx.stroke();
 
     for (const index of idxs) {
       const rec = RECORDS[index];
-      if (rec.kind === 0 && rec.n > 0.72 && scene.arrive > 0.5) continue;
-      const u = (rec.u + travel * speed) % 1;
-      const p = project(lane, u, width, height, scene, spin, followX, followY);
-      if (p.x < -20 || p.y < -20 || p.x > width + 20 || p.y > height + 20) continue;
+      const u = (rec.u + drift * speed) % 1;
+      const p = project(world(lane, u, cam.curl), cam, width, height);
+      if (!p) continue;
       const dist = Math.abs(u - chainU(lane));
-      const emphasis = Math.exp(-dist * dist * (22 + scene.focus * 70));
-      const dim = lerp(1, 0.16 + emphasis, scene.focus * (1 - scene.vortex * 0.92));
-      const signal = rec.kind === 2 || emphasis > 0.8;
+      const emphasis = Math.exp(-dist * dist * (16 + cam.focus * 70));
+      const dim = lerp(1, 0.34 + emphasis * 0.66, cam.focus * (1 - cam.orbit * 0.75));
+      const signal = rec.kind === 2;
       const rgb = signal ? VIOLET : CYAN;
-      const alpha = (signal ? 0.92 : 0.5 + rec.kind * 0.18) * dim * (1 - scene.arrive * 0.28);
-      if (alpha < 0.03) continue;
-      const radius = (signal ? 2.5 : 1.55 + rec.kind * 0.45) * (0.85 + scene.vortex * p.near * 0.35);
+      const alpha = (signal ? 1 : 0.88 + rec.kind * 0.08) * dim * show * (1 - cam.arrive * 0.2);
+      if (alpha < 0.05) continue;
+      const radius = (signal ? 2.6 : 1.7 + rec.kind * 0.4) * (0.9 + p.near * 0.2);
       ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
@@ -231,34 +215,37 @@ function draw(
 
   ctx.beginPath();
   const nodes: { x: number; y: number }[] = [];
+  let pen = false;
   for (let lane = 0; lane < LANES; lane++) {
-    const p = project(lane, chainU(lane), width, height, scene, spin, followX, followY);
+    if (laneReveal(lane, cam.orbit) < 0.2 && cam.orbit < 0.35) {
+      pen = false;
+      continue;
+    }
+    const p = project(world(lane, chainU(lane), cam.curl), cam, width, height);
+    if (!p) {
+      pen = false;
+      continue;
+    }
     nodes.push(p);
-    if (lane === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
+    if (!pen) {
+      ctx.moveTo(p.x, p.y);
+      pen = true;
+    } else ctx.lineTo(p.x, p.y);
   }
-  const chainA = (0.35 + scene.focus * 0.55) * (1 - scene.arrive * 0.45);
-  ctx.strokeStyle = `rgba(220,186,255,${chainA})`;
-  ctx.lineWidth = 1.25 + scene.vortex * 0.7;
+  ctx.strokeStyle = `rgba(214,176,255,${(0.55 + cam.focus * 0.35) * (1 - cam.arrive * 0.4)})`;
+  ctx.lineWidth = 1.2;
   ctx.stroke();
   for (const node of nodes) {
-    ctx.fillStyle = `rgba(238,220,255,${(0.65 + scene.vortex * 0.3) * (1 - scene.arrive * 0.4)})`;
+    ctx.fillStyle = `rgba(236,214,255,${0.9 * (1 - cam.arrive * 0.35)})`;
     ctx.beginPath();
-    ctx.arc(node.x, node.y, 2.2 + scene.vortex * 1.5, 0, Math.PI * 2);
+    ctx.arc(node.x, node.y, 2.3, 0, Math.PI * 2);
     ctx.fill();
   }
 
   ctx.globalCompositeOperation = "source-over";
-  const vignette = ctx.createRadialGradient(
-    width * 0.5,
-    height * 0.42,
-    width * 0.05,
-    width * 0.5,
-    height * 0.48,
-    width * 0.75,
-  );
+  const vignette = ctx.createRadialGradient(width * 0.5, height * 0.36, width * 0.08, width * 0.5, height * 0.42, width * 0.72);
   vignette.addColorStop(0, "rgba(0,0,0,0)");
-  vignette.addColorStop(1, "rgba(6,8,18,0.5)");
+  vignette.addColorStop(1, "rgba(6,8,18,0.38)");
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, width, height);
 }

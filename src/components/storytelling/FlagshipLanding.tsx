@@ -155,7 +155,7 @@ export function FlagshipLanding({ stories }: Props) {
           <section className="relative">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-y-[-8%] left-0 w-full bg-gradient-to-r from-void via-void/75 to-transparent md:w-[62%]"
+              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/92 via-void/50 to-transparent"
             />
             <div className="relative mx-auto max-w-5xl px-5 py-16 md:px-8 md:py-24">
               <h2 className="max-w-[16ch] font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-white">
@@ -180,7 +180,7 @@ export function FlagshipLanding({ stories }: Props) {
           <section id="stories" className="relative scroll-mt-24">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-y-[-6%] left-0 w-full bg-gradient-to-r from-void via-void/80 to-transparent md:w-[68%]"
+              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/94 via-void/55 to-transparent"
             />
             <div className="relative mx-auto max-w-5xl px-5 py-16 md:px-8 md:py-20">
               <h2 className="font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-semibold tracking-[-0.03em] text-white">
