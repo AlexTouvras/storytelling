@@ -3,17 +3,42 @@
 import { memo, useEffect, useRef, type RefObject } from "react";
 
 /**
- * One tube of records. Scroll only moves the camera:
- * front view (streams) → closer on the chain → into the tube (vortex) → a calmer hold.
+ * One field of records, two projections.
+ *
+ * Opening: horizontal streams. Near lanes sit lower and brighter; a violet
+ * path picks one record on each stream.
+ *
+ * Then the same records are flown through with the standard starfield
+ * projection: screen = center + worldXY * focal / z. Far z stays small and
+ * near the center. Near z rushes to the edges. The streak is the line from
+ * the previous (larger) z to the current z, so stars pass from the front of
+ * the view to behind the camera.
  */
 
-type Rec = { lane: number; u: number; kind: 0 | 1 | 2 };
+type Star = {
+  lane: number;
+  u: number;
+  kind: 0 | 1 | 2;
+  onPath: boolean;
+  /** Depth seed along a stream, before the idle dolly. */
+  laneZ: number;
+  /** Angle around the flight axis. */
+  ang: number;
+  /** Radius in units of the short viewport side. */
+  rad: number;
+  /** 0–1 depth seed for the fly-through. */
+  z: number;
+  /** Tunnel fill. Drawn only once the flight has started. */
+  dust: boolean;
+};
 
-const CYAN: [number, number, number] = [150, 220, 228];
-const VIOLET: [number, number, number] = [206, 160, 255];
-const LANES = 16;
-const SAMPLES = 64;
-const RADIUS = 2.15;
+const CYAN: [number, number, number] = [126, 224, 234];
+const VIOLET: [number, number, number] = [214, 160, 255];
+const LANES = 18;
+const SAMPLES = 120;
+const DEPTH = 12;
+const MIN_Z = 6;
+const Z_SPAN = 94;
 
 function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -29,30 +54,72 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-function chainU(lane: number) {
-  return 0.5 + Math.sin((lane / LANES) * Math.PI * 2) * 0.018;
+function pathU(lane: number) {
+  return 0.5 + Math.sin(lane * 0.9) * 0.12;
 }
 
-function buildRecords(): Rec[] {
-  const pts: Rec[] = [];
+function buildStars(): Star[] {
+  const stars: Star[] = [];
   for (let lane = 0; lane < LANES; lane++) {
+    const chosen = pathU(lane);
+    const signalLane = lane % 5 === 2;
     for (let i = 0; i < SAMPLES; i++) {
       const n = hash(lane * 97 + i * 13);
       const u = i / (SAMPLES - 1);
-      const onChain = Math.abs(u - chainU(lane)) < 0.012;
-      const kind: 0 | 1 | 2 = onChain ? 2 : n > 0.92 ? 1 : 0;
-      pts.push({ lane, u, kind });
+      if (Math.abs(u - chosen) < 0.012) continue;
+      const kind: 0 | 1 | 2 = signalLane && n > 0.82 ? 2 : i % 9 === 0 ? 1 : 0;
+      stars.push({
+        lane,
+        u,
+        kind,
+        onPath: false,
+        laneZ: (lane / LANES) * DEPTH + 0.15,
+        ang: (lane / LANES) * Math.PI * 2 + (u - 0.5) * 0.22,
+        rad: 0.05 + Math.abs(u - chosen) * 0.16 + (n - 0.5) * 0.012,
+        z: hash(lane * 17 + i * 31),
+        dust: false,
+      });
     }
+    stars.push({
+      lane,
+      u: chosen,
+      kind: 2,
+      onPath: true,
+      laneZ: (lane / LANES) * DEPTH + 0.15,
+      ang: (lane / LANES) * Math.PI * 2,
+      rad: 0.032,
+      z: 0.35 + hash(lane * 19) * 0.3,
+      dust: false,
+    });
   }
-  return pts;
+  for (let i = 0; i < 520; i++) {
+    const a = hash(i * 3 + 1);
+    const b = hash(i * 3 + 2);
+    const c = hash(i * 3 + 3);
+    stars.push({
+      lane: -1,
+      u: a,
+      kind: 0,
+      onPath: false,
+      laneZ: 0,
+      ang: a * Math.PI * 2,
+      rad: 0.028 + Math.pow(b, 0.55) * 0.2,
+      z: c,
+      dust: true,
+    });
+  }
+  return stars;
 }
 
-const RECORDS = buildRecords();
-const BY_LANE: number[][] = Array.from({ length: LANES }, () => []);
-RECORDS.forEach((rec, i) => BY_LANE[rec.lane].push(i));
+const STARS = buildStars();
+const LANE_INDEX: number[][] = Array.from({ length: LANES }, () => []);
+STARS.forEach((star, i) => {
+  if (star.lane >= 0) LANE_INDEX[star.lane].push(i);
+});
+for (const lane of LANE_INDEX) lane.sort((a, b) => STARS[a].u - STARS[b].u);
 
 function fit(canvas: HTMLCanvasElement) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   const rect = canvas.getBoundingClientRect();
   const w = Math.max(1, Math.round(rect.width * dpr));
   const h = Math.max(1, Math.round(rect.height * dpr));
@@ -63,84 +130,56 @@ function fit(canvas: HTMLCanvasElement) {
   return { cssW: rect.width, cssH: rect.height, dpr };
 }
 
-type Cam = {
-  x: number;
-  y: number;
-  z: number;
-  fov: number;
-  curl: number;
-  focus: number;
-  orbit: number;
-  arrive: number;
-};
-
-function cameraAt(progress: number): Cam {
-  const focus = smoothstep(0.14, 0.32, progress);
-  const orbit = smoothstep(0.36, 0.78, progress);
-  const arrive = smoothstep(0.82, 1, progress);
-  const yaw = orbit * 1.32 * (1 - arrive * 0.42);
-  const dist = lerp(5.8, 5.2, focus) * lerp(1, 0.62, orbit) + arrive * 1.1;
-  return {
-    x: Math.sin(yaw) * dist,
-    y: 0,
-    z: Math.cos(yaw) * dist,
-    fov: lerp(1.05, 1.15, orbit),
-    curl: smoothstep(0.42, 0.8, progress) * (1 - arrive * 0.65),
-    focus,
-    orbit,
-    arrive,
-  };
+function wrapDepth(z: number, dolly: number) {
+  let d = z - dolly;
+  d = ((d % DEPTH) + DEPTH) % DEPTH;
+  return 0.35 + d;
 }
 
-function world(lane: number, u: number, curl: number) {
-  const angle = (lane / LANES) * Math.PI * 2;
-  const twist = (u - 0.5) * curl * 2.15;
-  const y0 = Math.cos(angle) * RADIUS;
-  const z0 = Math.sin(angle) * RADIUS;
-  return {
-    x: (u - 0.5) * 6.2,
-    y: y0 * Math.cos(twist) - z0 * Math.sin(twist),
-    z: y0 * Math.sin(twist) + z0 * Math.cos(twist),
-  };
+function streamPoint(u: number, depth: number, width: number, height: number) {
+  const near = 1 - Math.min(1, (depth - 0.35) / DEPTH);
+  const spread = 0.86 + near * 0.22;
+  const x = width * 0.5 + (u - 0.5) * width * spread;
+  let y = height * (0.05 + near * 0.78);
+  y -= Math.sin(Math.min(1, Math.max(0, u)) * Math.PI) * height * 0.012 * (0.4 + near);
+  return { x, y, near };
 }
 
-function project(
-  pt: { x: number; y: number; z: number },
-  cam: Cam,
+function flightZ(seed: number, travel: number) {
+  const z0 = MIN_Z + seed * Z_SPAN;
+  let z = z0 - travel;
+  z = ((((z - MIN_Z) % Z_SPAN) + Z_SPAN) % Z_SPAN) + MIN_Z;
+  return z;
+}
+
+const WARP = { x: 0, y: 0, px: 0, py: 0 };
+
+/** Classic warp projection. Previous z is farther, so the streak points outward. */
+function warpPoint(
+  star: Star,
+  travel: number,
+  stretch: number,
   width: number,
   height: number,
+  cx: number,
+  cy: number,
 ) {
-  let fx = -cam.x;
-  let fy = -cam.y;
-  let fz = -cam.z;
-  const fl = Math.hypot(fx, fy, fz) || 1;
-  fx /= fl;
-  fy /= fl;
-  fz /= fl;
-  let rx = -fz;
-  let rz = fx;
-  const rl = Math.hypot(rx, rz) || 1;
-  rx /= rl;
-  rz /= rl;
-  const ux = -rz * fy;
-  const uy = rz * fx - rx * fz;
-  const uz = rx * fy;
-  const dx = pt.x - cam.x;
-  const dy = pt.y - cam.y;
-  const dz = pt.z - cam.z;
-  const zc = dx * fx + dy * fy + dz * fz;
-  if (zc < 0.3) return null;
-  const k = cam.fov / zc;
-  return {
-    x: width * 0.5 + (dx * rx + dz * rz) * k * width,
-    y: height * 0.34 - (dx * ux + dy * uy + dz * uz) * k * height,
-    near: Math.min(1, 3.2 / zc),
-  };
-}
-
-function laneReveal(lane: number, orbit: number) {
-  const front = Math.sin((lane / LANES) * Math.PI * 2) > -0.05 ? 1 : 0;
-  return lerp(front, 1, orbit);
+  const z = flightZ(star.z, travel);
+  const prevZ = Math.min(MIN_Z + Z_SPAN, z + stretch);
+  const unit = Math.min(width, height);
+  const focal = unit * 0.2;
+  const dist = star.rad * unit;
+  const twist = (1 - (z - MIN_Z) / Z_SPAN) * 1.6;
+  const prevTwist = (1 - (prevZ - MIN_Z) / Z_SPAN) * 1.6;
+  const k = focal / z;
+  const pk = focal / prevZ;
+  const a = star.ang + twist;
+  const pa = star.ang + prevTwist;
+  WARP.x = cx + Math.cos(a) * dist * k;
+  WARP.y = cy + Math.sin(a) * dist * k;
+  WARP.px = cx + Math.cos(pa) * dist * pk;
+  WARP.py = cy + Math.sin(pa) * dist * pk;
+  return WARP;
 }
 
 function draw(
@@ -151,101 +190,150 @@ function draw(
   time: number,
   reduced: boolean,
 ) {
-  const cam = cameraAt(reduced ? 0 : progress);
-  const drift = reduced ? 0 : time * 0.012 * (1 - cam.orbit);
+  const p = reduced ? 0 : progress;
+  const focus = smoothstep(0.1, 0.28, p);
+  const depart = smoothstep(0.3, 0.48, p);
+  const fly = smoothstep(0.28, 0.46, p);
+  const travel = smoothstep(0.34, 1, p) * 280;
+  const stretch = lerp(6, 22, smoothstep(0.4, 0.82, p));
+  const dolly = reduced ? 0 : time * 0.045 * (1 - fly);
+  const cx = width * lerp(0.5, 0.63, fly);
+  const cy = height * lerp(0.42, 0.48, fly);
 
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "oklch(0.075 0.028 264)";
+  const bg = ctx.createLinearGradient(0, 0, 0, height);
+  bg.addColorStop(0, "oklch(0.07 0.028 264)");
+  bg.addColorStop(0.45, "oklch(0.1 0.032 250)");
+  bg.addColorStop(1, "oklch(0.07 0.03 280)");
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
 
-  const glowA = (0.06 + cam.orbit * 0.16) * (1 - cam.arrive * 0.55);
-  const glow = ctx.createRadialGradient(width * 0.5, height * 0.34, 0, width * 0.5, height * 0.34, width * 0.42);
-  glow.addColorStop(0, `rgba(180,150,255,${glowA})`);
-  glow.addColorStop(0.55, `rgba(120,200,220,${glowA * 0.22})`);
-  glow.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = glow;
+  const glowA = 0.05 + fly * 0.08;
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(width, height) * 0.42);
+  core.addColorStop(0, `rgba(186, 150, 255, ${glowA})`);
+  core.addColorStop(0.35, `rgba(110, 210, 226, ${glowA * 0.28})`);
+  core.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = core;
   ctx.fillRect(0, 0, width, height);
 
-  ctx.globalCompositeOperation = "lighter";
-  ctx.lineWidth = 1;
-
+  const laneDepth = new Float32Array(LANES);
   for (let lane = 0; lane < LANES; lane++) {
-    const show = laneReveal(lane, cam.orbit);
-    if (show < 0.04) continue;
-    const speed = 0.004 + (lane % 5) * 0.0015;
-    const idxs = BY_LANE[lane];
-    ctx.beginPath();
-    let started = false;
-    idxs.forEach((index) => {
-      const rec = RECORDS[index];
-      const u = (rec.u + drift * speed) % 1;
-      const p = project(world(lane, u, cam.curl), cam, width, height);
-      if (!p) {
-        started = false;
-        return;
-      }
-      if (!started) {
-        ctx.moveTo(p.x, p.y);
-        started = true;
-      } else ctx.lineTo(p.x, p.y);
-    });
-    const strokeA = lerp(0.72, 0.4, cam.orbit) * show * (1 - cam.focus * 0.15) * (1 - cam.arrive * 0.25);
-    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${strokeA})`;
-    ctx.stroke();
+    laneDepth[lane] = wrapDepth((lane / LANES) * DEPTH + 0.15, dolly);
+  }
+  const laneOrder = Array.from({ length: LANES }, (_, i) => i).sort(
+    (a, b) => laneDepth[b] - laneDepth[a],
+  );
 
-    for (const index of idxs) {
-      const rec = RECORDS[index];
-      const u = (rec.u + drift * speed) % 1;
-      const p = project(world(lane, u, cam.curl), cam, width, height);
-      if (!p) continue;
-      const dist = Math.abs(u - chainU(lane));
-      const emphasis = Math.exp(-dist * dist * (16 + cam.focus * 70));
-      const dim = lerp(1, 0.34 + emphasis * 0.66, cam.focus * (1 - cam.orbit * 0.75));
-      const signal = rec.kind === 2;
-      const rgb = signal ? VIOLET : CYAN;
-      const alpha = (signal ? 1 : 0.88 + rec.kind * 0.08) * dim * show * (1 - cam.arrive * 0.2);
-      if (alpha < 0.05) continue;
-      const radius = (signal ? 2.6 : 1.7 + rec.kind * 0.4) * (0.9 + p.near * 0.2);
-      ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+  const streamAlpha = 1 - depart;
+  if (streamAlpha > 0.03) {
+    ctx.globalCompositeOperation = "lighter";
+    const spread = 1 + depart * 0.7;
+    const place = (u: number, depth: number) => {
+      const s = streamPoint(u, depth, width, height);
+      return {
+        x: cx + (s.x - cx) * spread,
+        y: cy + (s.y - cy) * spread,
+        near: s.near,
+      };
+    };
+
+    for (const lane of laneOrder) {
+      const depth = laneDepth[lane];
+      const idxs = LANE_INDEX[lane];
+      const first = place(STARS[idxs[0]].u, depth);
+      const alphaBase = (0.22 + first.near * 0.78) * streamAlpha;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      idxs.forEach((index, n) => {
+        const s = place(STARS[index].u, depth);
+        if (n === 0) ctx.moveTo(s.x, s.y);
+        else ctx.lineTo(s.x, s.y);
+      });
+      ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${alphaBase * 0.45})`;
+      ctx.lineWidth = 1 + first.near * 1.5;
+      ctx.stroke();
+
+      for (const index of idxs) {
+        const star = STARS[index];
+        const s = place(star.u, depth);
+        if (s.x < -12 || s.x > width + 12 || s.y < -12 || s.y > height + 12) continue;
+        const dist = Math.abs(star.u - pathU(lane));
+        const emph = Math.exp(-dist * dist * (20 + focus * 80));
+        const dim = lerp(1, 0.3 + emph * 0.7, focus);
+        const signal = star.onPath || star.kind === 2;
+        const rgb = signal ? VIOLET : CYAN;
+        const alpha =
+          (signal ? 0.7 + s.near * 0.3 : 0.4 + s.near * (star.kind === 1 ? 0.55 : 0.4)) *
+          streamAlpha *
+          dim;
+        const radius = Math.max(0.8, (signal ? 2.8 : star.kind === 1 ? 1.9 : 1.35) * (0.55 + s.near));
+        ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.beginPath();
+    const nodes: { x: number; y: number; near: number }[] = [];
+    laneOrder
+      .slice()
+      .sort((a, b) => laneDepth[a] - laneDepth[b])
+      .forEach((lane) => {
+        const node = place(pathU(lane), laneDepth[lane]);
+        nodes.push(node);
+      });
+    nodes.forEach((node, n) => {
+      if (n === 0) ctx.moveTo(node.x, node.y);
+      else ctx.lineTo(node.x, node.y);
+    });
+    ctx.strokeStyle = `rgba(220, 176, 255, ${(0.45 + focus * 0.4) * streamAlpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    for (const node of nodes) {
+      ctx.fillStyle = `rgba(236, 214, 255, ${(0.55 + node.near * 0.45) * streamAlpha})`;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, 1.4 + node.near * 2.6, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  ctx.beginPath();
-  const nodes: { x: number; y: number }[] = [];
-  let pen = false;
-  for (let lane = 0; lane < LANES; lane++) {
-    if (laneReveal(lane, cam.orbit) < 0.2 && cam.orbit < 0.35) {
-      pen = false;
-      continue;
-    }
-    const p = project(world(lane, chainU(lane), cam.curl), cam, width, height);
-    if (!p) {
-      pen = false;
-      continue;
-    }
-    nodes.push(p);
-    if (!pen) {
-      ctx.moveTo(p.x, p.y);
-      pen = true;
-    } else ctx.lineTo(p.x, p.y);
-  }
-  ctx.strokeStyle = `rgba(214,176,255,${(0.55 + cam.focus * 0.35) * (1 - cam.arrive * 0.4)})`;
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
-  for (const node of nodes) {
-    ctx.fillStyle = `rgba(236,214,255,${0.9 * (1 - cam.arrive * 0.35)})`;
+  if (fly > 0.02) {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.lineCap = "butt";
+    const stride = width < 760 ? 4 : 2;
     ctx.beginPath();
-    ctx.arc(node.x, node.y, 2.3, 0, Math.PI * 2);
-    ctx.fill();
+    for (let i = 0; i < STARS.length; i++) {
+      const star = STARS[i];
+      if (star.onPath) continue;
+      if (!star.dust && i % stride !== 0) continue;
+      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
+      if (wpt.x < -60 && wpt.px < -60) continue;
+      if (wpt.y < -60 && wpt.py < -60) continue;
+      if (wpt.x > width + 60 && wpt.px > width + 60) continue;
+      if (wpt.y > height + 60 && wpt.py > height + 60) continue;
+      ctx.moveTo(wpt.px, wpt.py);
+      ctx.lineTo(wpt.x, wpt.y);
+    }
+    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.72 * fly})`;
+    ctx.lineWidth = 1.25;
+    ctx.stroke();
+
+    ctx.beginPath();
+    for (const star of STARS) {
+      if (!star.onPath) continue;
+      const wpt = warpPoint(star, travel, stretch * 0.75, width, height, cx, cy);
+      ctx.moveTo(wpt.px, wpt.py);
+      ctx.lineTo(wpt.x, wpt.y);
+    }
+    ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.9 * fly})`;
+    ctx.lineWidth = 1.7;
+    ctx.stroke();
   }
 
   ctx.globalCompositeOperation = "source-over";
-  const vignette = ctx.createRadialGradient(width * 0.5, height * 0.36, width * 0.08, width * 0.5, height * 0.42, width * 0.72);
+  const vignette = ctx.createRadialGradient(cx, height * 0.48, width * 0.1, cx, height * 0.5, width * 0.72);
   vignette.addColorStop(0, "rgba(0,0,0,0)");
-  vignette.addColorStop(1, "rgba(6,8,18,0.38)");
+  vignette.addColorStop(1, "rgba(6,8,18,0.45)");
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, width, height);
 }
