@@ -54,8 +54,10 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+/** One bow through the stack: a route chosen between the streams, not a slash. */
 function pathU(lane: number) {
-  return 0.5 + Math.sin(lane * 0.9) * 0.12;
+  const t = lane / (LANES - 1);
+  return 0.42 + Math.sin(t * Math.PI) * 0.22;
 }
 
 function buildStars(): Star[] {
@@ -286,13 +288,13 @@ function draw(
       if (n === 0) ctx.moveTo(node.x, node.y);
       else ctx.lineTo(node.x, node.y);
     });
-    ctx.strokeStyle = `rgba(220, 176, 255, ${(0.45 + focus * 0.4) * streamAlpha})`;
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = `rgba(220, 176, 255, ${(0.55 + focus * 0.4) * streamAlpha})`;
+    ctx.lineWidth = 1.6;
     ctx.stroke();
     for (const node of nodes) {
-      ctx.fillStyle = `rgba(236, 214, 255, ${(0.55 + node.near * 0.45) * streamAlpha})`;
+      ctx.fillStyle = `rgba(236, 214, 255, ${(0.7 + node.near * 0.3) * streamAlpha})`;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, 1.4 + node.near * 2.6, 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, 2 + node.near * 2.2, 0, Math.PI * 2);
       ctx.fill();
     }
   }

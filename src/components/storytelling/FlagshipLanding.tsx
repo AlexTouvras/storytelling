@@ -155,9 +155,13 @@ export function FlagshipLanding({ stories }: Props) {
           <section className="relative">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/92 via-void/50 to-transparent"
+              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/75 via-void/35 to-transparent"
             />
             <div className="relative mx-auto max-w-5xl px-5 py-16 md:px-8 md:py-24">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-x-8 -inset-y-10 -z-10 bg-void/80 blur-2xl"
+              />
               <h2 className="max-w-[16ch] font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-white">
                 Every story takes the same path.
               </h2>
@@ -180,9 +184,13 @@ export function FlagshipLanding({ stories }: Props) {
           <section id="stories" className="relative scroll-mt-24">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/94 via-void/55 to-transparent"
+              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/80 via-void/40 to-transparent"
             />
             <div className="relative mx-auto max-w-5xl px-5 py-16 md:px-8 md:py-20">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-x-8 -inset-y-10 -z-10 bg-void/82 blur-2xl"
+              />
               <h2 className="font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-semibold tracking-[-0.03em] text-white">
                 Stories
               </h2>
