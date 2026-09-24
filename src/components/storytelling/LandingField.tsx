@@ -5,8 +5,8 @@ import { memo, useEffect, useRef, type RefObject } from "react";
 /**
  * Three acts of one flight.
  *
- * 1. Top-down. Lanes are vertical. A link steps only to the next lane, and only
- *    a short way along it.
+ * 1. Top-down. The record lanes run horizontal. One vertical thread ties a
+ *    single dot on each lane to the next lane only, a short step at a time.
  * 2. The camera leaves overhead and swings to the side of one dot, the way a
  *    strategy view pitches in, until that dot fills the frame. Then warp:
  *    screen = center + worldXY * focal / z, streak from the previous depth.
@@ -24,7 +24,7 @@ type Star = {
   dust: boolean;
 };
 
-type Link = { lane: number; u0: number; u1: number };
+type Node = { lane: number; u: number };
 type V3 = { x: number; y: number; z: number };
 
 const CYAN: [number, number, number] = [126, 224, 234];
@@ -52,18 +52,37 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+/** One thread: a single dot on each horizontal lane, stepped only to the next lane. */
+function buildPath(): Node[] {
+  const u = new Array<number>(LANES).fill(TARGET_U);
+  for (let lane = CHOSEN - 1; lane >= 0; lane--) {
+    const du = (hash(lane * 19 + 4) - 0.5) * 0.03;
+    u[lane] = Math.min(0.72, Math.max(0.28, u[lane + 1] + du));
+  }
+  for (let lane = CHOSEN + 1; lane < LANES; lane++) {
+    const du = (hash(lane * 23 + 8) - 0.5) * 0.03;
+    u[lane] = Math.min(0.72, Math.max(0.28, u[lane - 1] + du));
+  }
+  u[CHOSEN] = TARGET_U;
+  return u.map((value, lane) => ({ lane, u: value }));
+}
+
+const PATH = buildPath();
+
 function buildStars(): Star[] {
   const stars: Star[] = [];
   for (let lane = 0; lane < LANES; lane++) {
+    const pathIndex = Math.round(PATH[lane].u * (SAMPLES - 1));
     for (let i = 0; i < SAMPLES; i++) {
       const n = hash(lane * 97 + i * 13);
-      const u = lane === CHOSEN && i === Math.round(TARGET_U * (SAMPLES - 1)) ? TARGET_U : i / (SAMPLES - 1);
+      const onPath = i === pathIndex;
+      const u = onPath ? PATH[lane].u : i / (SAMPLES - 1);
       const kind: 0 | 1 | 2 = n > 0.93 ? 2 : i % 11 === 0 ? 1 : 0;
       stars.push({
         lane,
         u,
         kind,
-        onPath: false,
+        onPath,
         ang: (lane / LANES) * Math.PI * 2 + (u - 0.5) * 0.2,
         rad: 0.045 + n * 0.16,
         z: hash(lane * 17 + i * 31),
@@ -89,36 +108,15 @@ function buildStars(): Star[] {
   return stars;
 }
 
-/** Each link touches only the neighboring lane, and only a short step along it. */
-function buildLinks(): Link[] {
-  const links: Link[] = [];
-  for (let lane = 0; lane < LANES - 1; lane++) {
-    const count = hash(lane * 5 + 1) > 0.55 ? 3 : 2;
-    for (let k = 0; k < count; k++) {
-      const u0 = 0.08 + hash(lane * 48 + k * 9) * 0.84;
-      const du = (hash(lane * 19 + k * 13) - 0.5) * 0.045;
-      links.push({
-        lane,
-        u0,
-        u1: Math.min(0.96, Math.max(0.04, u0 + du)),
-      });
-    }
-  }
-  links.push({ lane: CHOSEN - 1, u0: TARGET_U - 0.02, u1: TARGET_U });
-  links.push({ lane: CHOSEN, u0: TARGET_U, u1: TARGET_U + 0.02 });
-  return links;
-}
-
 function worldOf(lane: number, u: number): V3 {
   return {
-    x: (lane - (LANES - 1) / 2) * GAP,
+    x: (u - 0.5) * LEN,
     y: 0,
-    z: (u - 0.5) * LEN,
+    z: (lane - (LANES - 1) / 2) * GAP,
   };
 }
 
 const STARS = buildStars();
-const LINKS = buildLinks();
 const LANE_INDEX: number[][] = Array.from({ length: LANES }, () => []);
 STARS.forEach((star, i) => {
   if (star.lane >= 0) LANE_INDEX[star.lane].push(i);
@@ -205,7 +203,7 @@ type Frame = {
   uz: number;
 };
 
-/** Overhead up is the lane axis, so lanes read vertical. Side-on, up is world up. */
+/** Overhead, screen-up follows the lane stack, so the thread is vertical and the lanes are horizontal. */
 function frameOf(pos: V3, target: V3): Frame {
   let fx = target.x - pos.x;
   let fy = target.y - pos.y;
@@ -344,17 +342,22 @@ function draw(
       ctx.stroke();
     }
 
-    ctx.lineWidth = 1.2;
-    ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.9 * lanesAlpha})`;
-    for (const link of LINKS) {
-      const a = project(worldOf(link.lane, link.u0), cam.pos, cam.frame, focal, width, height);
-      const b = project(worldOf(link.lane + 1, link.u1), cam.pos, cam.frame, focal, width, height);
-      if (!a || !b) continue;
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
+    ctx.beginPath();
+    let pen = false;
+    for (const node of PATH) {
+      const q = project(worldOf(node.lane, node.u), cam.pos, cam.frame, focal, width, height);
+      if (!q) {
+        pen = false;
+        continue;
+      }
+      if (!pen) {
+        ctx.moveTo(q.x, q.y);
+        pen = true;
+      } else ctx.lineTo(q.x, q.y);
     }
+    ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.95 * lanesAlpha})`;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
 
     const cap = Math.min(width, height) * 0.85;
     for (let lane = 0; lane < LANES; lane++) {
@@ -363,9 +366,9 @@ function draw(
         if (star.kind === 0 && index % 2 === 1) continue;
         const q = project(worldOf(lane, star.u), cam.pos, cam.frame, focal, width, height);
         if (!q || q.x < -20 || q.y < -20 || q.x > width + 20 || q.y > height + 20) continue;
-        const target = lane === CHOSEN && Math.abs(star.u - TARGET_U) < 0.008;
-        const radius = Math.min(cap, Math.max(0.7, (target ? 0.055 : 0.03) * q.k));
-        const rgb = target ? [236, 220, 255] : star.kind === 2 ? VIOLET : CYAN;
+        const target = lane === CHOSEN && star.onPath;
+        const radius = Math.min(cap, Math.max(0.7, (target ? 0.055 : star.onPath ? 0.04 : 0.03) * q.k));
+        const rgb = target ? [236, 220, 255] : star.onPath ? VIOLET : CYAN;
         ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(target ? 1 : 0.75) * lanesAlpha})`;
         ctx.beginPath();
         ctx.arc(q.x, q.y, radius, 0, Math.PI * 2);
