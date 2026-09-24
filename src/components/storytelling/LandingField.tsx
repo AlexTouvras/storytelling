@@ -11,7 +11,7 @@ import { memo, useEffect, useRef, type RefObject } from "react";
  * 2. The camera pitches along that thread, the other points fade, and the line
  *    disappears as one dot opens into a soft hole. Warp leaves from that same
  *    center: screen = center + worldXY * focal / z.
- * 3. The streaks ease off into a new horizon of stars and galaxies.
+ * 3. The streaks shorten into the same points, and the brightest open into galaxies.
  */
 
 type Star = {
@@ -141,25 +141,18 @@ STARS.forEach((star, i) => {
   if (star.lane >= 0) LANE_INDEX[star.lane].push(i);
 });
 
-type Body = { x: number; y: number; r: number; warm: number };
-const SLOW_STARS: Body[] = Array.from({ length: 70 }, (_, i) => ({
-  x: hash(i * 9 + 4),
-  y: hash(i * 11 + 6),
-  r: 0.7 + hash(i * 13) * (hash(i * 15) > 0.86 ? 2.4 : 1.3),
-  warm: hash(i * 21),
-}));
-
+/** Shapes only. Positions are the warp heads these bodies grow out of. */
 const GALAXIES = [
-  { x: 0.78, y: 0.34, rx: 150, ry: 52, rot: -0.45 },
-  { x: 0.18, y: 0.58, rx: 120, ry: 40, rot: 0.7 },
-  { x: 0.62, y: 0.18, rx: 86, ry: 28, rot: 0.15 },
-  { x: 0.4, y: 0.78, rx: 100, ry: 34, rot: -1.1 },
+  { rx: 150, ry: 52, rot: -0.45 },
+  { rx: 120, ry: 40, rot: 0.7 },
+  { rx: 86, ry: 28, rot: 0.15 },
+  { rx: 100, ry: 34, rot: -1.1 },
 ];
 
-const ORBS = [
-  { x: 0.84, y: 0.72, r: 28 },
-  { x: 0.27, y: 0.28, r: 18 },
-];
+const ORBS = [{ r: 28 }, { r: 18 }];
+
+const DUST_INDEX: number[] = [];
+for (let i = 0; i < STARS.length; i++) if (STARS[i].dust) DUST_INDEX.push(i);
 
 function fit(canvas: HTMLCanvasElement) {
   const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -179,6 +172,57 @@ function flightZ(seed: number, travel: number) {
   z = ((((z - MIN_Z) % Z_SPAN) + Z_SPAN) % Z_SPAN) + MIN_Z;
   return z;
 }
+
+/** Where a dust star sits once travel has eased to a stop, on a reference frame. */
+const TRAVEL_END = 220;
+function settledReach(star: Star) {
+  const z = flightZ(star.z, TRAVEL_END);
+  const focal = 900 * 0.2;
+  return (star.rad * 900 * focal) / z;
+}
+
+type Ranked = { i: number; reach: number; ang: number };
+
+function pickSpread(pool: Ranked[], count: number, minSep: number) {
+  const picked: Ranked[] = [];
+  const skipped: Ranked[] = [];
+  for (const item of pool) {
+    const clear = picked.every((prev) => {
+      let d = Math.abs(item.ang - prev.ang) % (Math.PI * 2);
+      if (d > Math.PI) d = Math.PI * 2 - d;
+      return d > minSep;
+    });
+    if (clear) picked.push(item);
+    else skipped.push(item);
+    if (picked.length === count) return picked;
+  }
+  for (const item of skipped) {
+    picked.push(item);
+    if (picked.length === count) break;
+  }
+  return picked;
+}
+
+const IN_FRAME: Ranked[] = [];
+for (const i of DUST_INDEX) {
+  const star = STARS[i];
+  const reach = settledReach(star);
+  if (reach < 48 || reach > 460) continue;
+  IN_FRAME.push({ i, reach, ang: star.ang });
+}
+IN_FRAME.sort((a, b) => b.reach - a.reach);
+
+const GALAXY_PICK = pickSpread(IN_FRAME, GALAXIES.length, 0.7);
+const GALAXY_AT = GALAXY_PICK.map((item) => item.i);
+const galaxyUsed = new Set(GALAXY_AT);
+const ORB_PICK = pickSpread(
+  IN_FRAME.filter((item) => !galaxyUsed.has(item.i)),
+  ORBS.length,
+  0.55,
+);
+const ORB_AT = ORB_PICK.map((item) => item.i);
+const GALAXY_SET = new Set(GALAXY_AT);
+const ORB_SET = new Set(ORB_AT);
 
 const WARP = { x: 0, y: 0, px: 0, py: 0 };
 
@@ -326,15 +370,17 @@ function draw(
   const zoom = smoothstep(0.12, 0.52, p);
   const warpIn = smoothstep(0.46, 0.66, p);
   const cruise = smoothstep(0.46, 0.7, p);
-  const brake = smoothstep(0.66, 0.88, p);
-  const horizon = smoothstep(0.72, 0.94, p);
+  const settle = smoothstep(0.64, 0.92, p);
+  const horizon = smoothstep(0.78, 0.97, p);
   const fieldAlpha = (1 - smoothstep(0.18, 0.5, zoom)) * (1 - smoothstep(0.48, 0.6, p));
   const threadAlpha = (1 - smoothstep(0.52, 0.8, zoom)) * (1 - smoothstep(0.46, 0.58, p));
   const holeT = smoothstep(0.34, 1, zoom);
   const holeFade = 1 - smoothstep(0.5, 0.7, p);
-  const travel = smoothstep(0.46, 0.74, p) * 220;
-  const stretch = lerp(3, 26, cruise) * (1 - brake);
-  const warpAlpha = warpIn * (1 - smoothstep(0.74, 0.94, p));
+  const travel = smoothstep(0.46, 0.78, p) * TRAVEL_END;
+  const stretch = lerp(lerp(3, 26, cruise), 0.38, settle);
+  const lineAlpha = warpIn * (1 - smoothstep(0.82, 0.96, p));
+  const laneAlpha = lineAlpha * (1 - smoothstep(0.68, 0.84, p));
+  const dotAlpha = smoothstep(0.72, 0.9, p);
   const cx = width * 0.5;
   const cy = height * 0.46;
 
@@ -504,27 +550,6 @@ function draw(
     }
   }
 
-  if (warpAlpha > 0.03 && stretch > 0.8) {
-    ctx.globalCompositeOperation = "source-over";
-    ctx.lineCap = "butt";
-    const stride = width < 760 ? 4 : 2;
-    ctx.beginPath();
-    for (let i = 0; i < STARS.length; i++) {
-      const star = STARS[i];
-      if (!star.dust && i % stride !== 0) continue;
-      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
-      if (wpt.x < -60 && wpt.px < -60) continue;
-      if (wpt.y < -60 && wpt.py < -60) continue;
-      if (wpt.x > width + 60 && wpt.px > width + 60) continue;
-      if (wpt.y > height + 60 && wpt.py > height + 60) continue;
-      ctx.moveTo(wpt.px, wpt.py);
-      ctx.lineTo(wpt.x, wpt.y);
-    }
-    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.75 * warpAlpha})`;
-    ctx.lineWidth = 1.25;
-    ctx.stroke();
-  }
-
   if (horizon > 0.02) {
     ctx.globalCompositeOperation = "source-over";
     const band = ctx.createLinearGradient(0, height * 0.4, 0, height * 0.62);
@@ -533,58 +558,136 @@ function draw(
     band.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = band;
     ctx.fillRect(0, 0, width, height);
+  }
 
-    const drift = reduced ? 0 : time * 0.012;
-    for (const galaxy of GALAXIES) {
-      const gx = galaxy.x * width + Math.sin(drift + galaxy.rot) * 6;
-      const gy = galaxy.y * height + Math.cos(drift * 0.7 + galaxy.x) * 4;
-      ctx.save();
-      ctx.translate(gx, gy);
-      ctx.rotate(galaxy.rot);
-      ctx.scale(1, galaxy.ry / galaxy.rx);
-      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, galaxy.rx);
-      g.addColorStop(0, `rgba(236, 228, 255, ${0.55 * horizon})`);
-      g.addColorStop(0.22, `rgba(170, 140, 230, ${0.28 * horizon})`);
-      g.addColorStop(0.55, `rgba(90, 140, 170, ${0.1 * horizon})`);
-      g.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = g;
+  const driftAmp = reduced ? 0 : settle * 7;
+  const stride = width < 760 ? 4 : 2;
+
+  if (laneAlpha > 0.03) {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.lineCap = "butt";
+    ctx.beginPath();
+    for (let i = 0; i < STARS.length; i++) {
+      const star = STARS[i];
+      if (star.dust || i % stride !== 0) continue;
+      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
+      if (wpt.x < -80 && wpt.px < -80) continue;
+      if (wpt.y < -80 && wpt.py < -80) continue;
+      if (wpt.x > width + 80 && wpt.px > width + 80) continue;
+      if (wpt.y > height + 80 && wpt.py > height + 80) continue;
+      const dx = wpt.x - wpt.px;
+      const dy = wpt.y - wpt.py;
+      if (dx * dx + dy * dy < 1.4) continue;
+      ctx.moveTo(wpt.px, wpt.py);
+      ctx.lineTo(wpt.x, wpt.y);
+    }
+    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.55 * laneAlpha})`;
+    ctx.lineWidth = 1.25;
+    ctx.stroke();
+  }
+
+  if (lineAlpha > 0.03) {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.lineCap = "butt";
+    ctx.beginPath();
+    for (const i of DUST_INDEX) {
+      const star = STARS[i];
+      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
+      const dx = Math.sin(time * 0.18 + star.ang) * driftAmp;
+      const dy = Math.cos(time * 0.13 + star.ang) * driftAmp;
+      const x = wpt.x + dx;
+      const y = wpt.y + dy;
+      const px = wpt.px + dx;
+      const py = wpt.py + dy;
+      if (x < -80 && px < -80) continue;
+      if (y < -80 && py < -80) continue;
+      if (x > width + 80 && px > width + 80) continue;
+      if (y > height + 80 && py > height + 80) continue;
+      const sx = x - px;
+      const sy = y - py;
+      if (sx * sx + sy * sy < 1.4) continue;
+      ctx.moveTo(px, py);
+      ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.9 * lineAlpha})`;
+    ctx.lineWidth = 1.25;
+    ctx.stroke();
+  }
+
+  if (dotAlpha > 0.02) {
+    ctx.globalCompositeOperation = "source-over";
+    for (const i of DUST_INDEX) {
+      if (GALAXY_SET.has(i) || ORB_SET.has(i)) continue;
+      const star = STARS[i];
+      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
+      const x = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
+      const y = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
+      if (x < -8 || y < -8 || x > width + 8 || y > height + 8) continue;
+      const apparent = star.rad / flightZ(star.z, travel);
+      const dotR = (0.85 + Math.min(1, apparent / 0.0022) * 2.1) * lerp(0.65, 1, dotAlpha);
+      const warm = hash(i * 21) > 0.84;
+      const targetR = warm ? 255 : 236;
+      const targetG = warm ? 214 : 238;
+      const targetB = warm ? 170 : 248;
+      const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * horizon);
+      const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * horizon);
+      const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * horizon);
+      ctx.fillStyle = `rgba(${r},${g},${b},${0.88 * dotAlpha})`;
       ctx.beginPath();
-      ctx.arc(0, 0, galaxy.rx, 0, Math.PI * 2);
+      ctx.arc(x, y, dotR, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
-      ctx.save();
-      ctx.translate(gx, gy);
-      ctx.rotate(galaxy.rot);
-      ctx.strokeStyle = `rgba(210, 190, 255, ${0.22 * horizon})`;
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, galaxy.rx * 0.62, galaxy.ry * 0.7, 0.4, 0.2, 2.4);
-      ctx.stroke();
-      ctx.restore();
     }
 
-    for (const orb of ORBS) {
-      const ox = orb.x * width;
-      const oy = orb.y * height;
-      const body = ctx.createRadialGradient(ox - orb.r * 0.3, oy - orb.r * 0.3, orb.r * 0.1, ox, oy, orb.r);
-      body.addColorStop(0, `rgba(230, 236, 245, ${0.7 * horizon})`);
-      body.addColorStop(0.55, `rgba(140, 160, 190, ${0.35 * horizon})`);
+    for (let n = 0; n < ORB_AT.length; n++) {
+      const star = STARS[ORB_AT[n]];
+      const orb = ORBS[n];
+      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
+      const ox = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
+      const oy = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
+      const radius = lerp(2.4, orb.r, horizon);
+      const body = ctx.createRadialGradient(ox - radius * 0.3, oy - radius * 0.3, radius * 0.1, ox, oy, radius);
+      body.addColorStop(0, `rgba(230, 236, 245, ${0.75 * dotAlpha})`);
+      body.addColorStop(0.55, `rgba(140, 160, 190, ${0.38 * horizon})`);
       body.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = body;
       ctx.beginPath();
-      ctx.arc(ox, oy, orb.r, 0, Math.PI * 2);
+      ctx.arc(ox, oy, radius, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    for (const star of SLOW_STARS) {
-      const x = star.x * width + Math.sin(drift * 0.6 + star.y * 12) * 5;
-      const y = star.y * height + Math.cos(drift * 0.4 + star.x * 9) * 3;
-      const warm = star.warm > 0.72;
-      const rgb = warm ? [255, 214, 170] : star.warm > 0.4 ? CYAN : [230, 230, 245];
-      ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${0.75 * horizon})`;
+    for (let n = 0; n < GALAXY_AT.length; n++) {
+      const star = STARS[GALAXY_AT[n]];
+      const galaxy = GALAXIES[n];
+      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
+      const gx = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
+      const gy = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
+      const rx = lerp(3.2, galaxy.rx, horizon);
+      const ry = lerp(3.2, galaxy.ry, horizon);
+      ctx.save();
+      ctx.translate(gx, gy);
+      ctx.rotate(galaxy.rot);
+      ctx.scale(1, ry / rx);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+      g.addColorStop(0, `rgba(236, 228, 255, ${0.62 * Math.max(dotAlpha, horizon)})`);
+      g.addColorStop(0.22, `rgba(170, 140, 230, ${0.32 * horizon})`);
+      g.addColorStop(0.55, `rgba(90, 140, 170, ${0.12 * horizon})`);
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(x, y, star.r, 0, Math.PI * 2);
+      ctx.arc(0, 0, rx, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+      if (horizon > 0.35) {
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.rotate(galaxy.rot);
+        ctx.strokeStyle = `rgba(210, 190, 255, ${0.22 * horizon})`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rx * 0.62, ry * 0.7, 0.4, 0.2, 2.4);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
   }
 
