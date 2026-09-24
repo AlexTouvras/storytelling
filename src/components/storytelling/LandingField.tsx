@@ -194,7 +194,7 @@ function rawLane(lane: number, u: number, width: number, height: number, zoom: n
 function framePoint(lane: number, u: number, width: number, height: number, zoom: number) {
   const focus = rawLane(CHOSEN, 0.5, width, height, zoom);
   const p = rawLane(lane, u, width, height, zoom);
-  const scale = 1 + zoom * zoom * 9;
+  const scale = 1 + zoom * 5.5;
   return {
     x: focus.x + (p.x - focus.x) * scale,
     y: focus.y + (p.y - focus.y) * scale,
@@ -211,13 +211,13 @@ function draw(
   reduced: boolean,
 ) {
   const p = reduced ? 0 : progress;
-  const zoom = smoothstep(0.12, 0.42, p);
-  const warpIn = smoothstep(0.44, 0.58, p);
+  const zoom = smoothstep(0.16, 0.5, p);
+  const warpIn = smoothstep(0.5, 0.64, p);
   const cruise = smoothstep(0.5, 0.68, p);
   const brake = smoothstep(0.66, 0.86, p);
   const horizon = smoothstep(0.76, 0.94, p);
-  const lanesAlpha = 1 - smoothstep(0.46, 0.6, p);
-  const travel = smoothstep(0.46, 0.72, p) * 220;
+  const lanesAlpha = 1 - smoothstep(0.54, 0.66, p);
+  const travel = smoothstep(0.5, 0.74, p) * 220;
   const stretch = lerp(4, 26, cruise) * (1 - brake);
   const warpAlpha = warpIn * (1 - smoothstep(0.8, 0.96, p));
   const cx = width * lerp(lerp(0.5, 0.58, warpIn), 0.5, horizon);
@@ -251,7 +251,7 @@ function draw(
       if (a.y < -80 && b.y < -80) continue;
       if (a.y > height + 80 && b.y > height + 80) continue;
       const chosen = lane === CHOSEN;
-      const fade = chosen ? 1 : 1 - smoothstep(0.12, 0.42, zoom);
+      const fade = chosen ? 1 : 1 - smoothstep(0.28, 0.72, zoom);
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
@@ -260,7 +260,7 @@ function draw(
       ctx.stroke();
     }
 
-    const linkFade = lanesAlpha * (1 - smoothstep(0.04, 0.28, zoom));
+    const linkFade = lanesAlpha * (1 - smoothstep(0.12, 0.28, p));
     if (linkFade > 0.04) {
       ctx.lineWidth = 1.15;
       ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.85 * linkFade})`;
@@ -285,7 +285,7 @@ function draw(
 
     for (let lane = 0; lane < LANES; lane++) {
       const chosen = lane === CHOSEN;
-      const fade = chosen ? 1 : 1 - smoothstep(0.12, 0.42, zoom);
+      const fade = chosen ? 1 : 1 - smoothstep(0.28, 0.72, zoom);
       if (fade < 0.05) continue;
       for (const index of LANE_INDEX[lane]) {
         const star = STARS[index];
