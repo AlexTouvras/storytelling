@@ -18,7 +18,7 @@
 | Evidence Pack v2 | `data/figures/when-rates-rise.v2.json` | Frozen modeled + observed |
 | Sims | `src/lib/sim/rate-buffer-book.ts` | Calibrated thin cutoff 6% |
 | Directed film | `src/components/film/` · `/stories/when-rates-rise/film` | Scroll-scrubbed canvas of the seeded book. Not a template. |
-| Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Horizontal record streams, then a z-divide starfield (`focal / z`, streak from the previous depth). Not a story template. |
+| Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Irregular lane links, a zoom onto one lane, then a z-divide warp, then a slow horizon. Not a story template. |
 
 ## Design patterns
 
@@ -79,4 +79,4 @@
 | 2026-09-24 | Atmosphere motif registry (5 allow-listed motifs) | Reusable intro/outro/ambient; not five story templates |
 | 2026-09-24 | Directed film route for When Rates Rise | One camera over loan-level sim output; sliders recompute payments. Essay route unchanged. |
 | 2026-09-24 | Landing is a product index with a data-field hero | Gradient wordmark, then the shared path cuts through the field. No per-story poster. |
-| 2026-09-24 | Landing flight is a warp starfield | Opening is horizontal streams with one path between them. Scroll then flies through the same records: screen = center + worldXY × focal / z, streak from the previous (farther) z. No orbit camera, no layout blend. |
+| 2026-09-24 | Landing flight is approach, warp, arrival | Lanes join by irregular jumps. Scroll zooms onto one lane until it is horizontal, then the z-divide warp starts. Acceleration stops into a slow field of stars, galaxies, and larger bodies. |

@@ -52,16 +52,16 @@ function fadeFor(progress: number) {
 }
 
 function stageFor(progress: number) {
-  if (progress < 0.15) return "field";
-  if (progress < 0.35) return "chain";
-  if (progress < 0.6) return "bend";
-  if (progress < 0.82) return "vortex";
-  return "arrival";
+  if (progress < 0.16) return "field";
+  if (progress < 0.42) return "zoom";
+  if (progress < 0.74) return "vortex";
+  return "horizon";
 }
 
 /**
  * The field stays up for the whole page. Copy arrives on the stage it belongs to:
- * the path while the streams bend, the stories while the vortex settles.
+ * the path while the camera commits to one lane, the stories as warp falls off
+ * into the new horizon.
  */
 export function FlagshipLanding({ stories }: Props) {
   const reduced = usePrefersReducedMotion();
