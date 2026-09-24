@@ -5,9 +5,12 @@ test.describe("when rates rise film", () => {
     page,
   }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      /Interactive Decision Storytelling/i,
-    );
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: /Interactive Decision Storytelling/i,
+      }),
+    ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Stories" })).toBeVisible();
     await expect(
       page.getByRole("link", { name: /watch the film/i }),
