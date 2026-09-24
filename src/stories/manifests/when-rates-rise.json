@@ -1,0 +1,189 @@
+{
+  "meta": {
+    "slug": "when-rates-rise",
+    "title": "When Rates Rise: Where Should a Portfolio Manager Cut?",
+    "summary": "Follow a credit-risk mechanism from the policy dial through unequal borrowers and a seeded mortgage book — until a decision-relevant sleeve becomes visible. Euro-area evidence is the reality check; methodology and limitations close the piece.",
+    "date": "2026-09-23",
+    "templateId": "scrolling-narrative",
+    "role": "reference",
+    "atmosphere": {
+      "motifId": "pressure-field",
+      "roles": ["intro", "outro", "ambient"]
+    },
+    "hero": {
+      "kicker": "Decision story",
+      "title": "When Rates Rise",
+      "question": "When the policy rate moves, where should a portfolio manager actually cut — on the print, or somewhere inside the book?"
+    }
+  },
+  "sections": [
+    {
+      "id": "dial",
+      "headline": "Act 1 — The Dial",
+      "body": "Portfolio commentary loves the overnight rate. It is measurable and shared by every desk.\n\nCredit risk does not live in that print. When rates rise, payments rise and the **buffer** compresses. The decision is not whether rates matter — it is **where pressure concentrates** inside unequal borrowers.\n\nTeaching household first, then a seeded book, then euro-area figures as a check. Not a default forecast — a cut you can defend.",
+      "scenes": [
+        {
+          "id": "dial-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "dial",
+          "transition": "reveal"
+        }
+      ]
+    },
+    {
+      "id": "transmission",
+      "headline": "Act 2 — The Transmission",
+      "body": "Policy does not hit households in one step. Central bank decisions reprice markets; banks reprice loans; the **monthly payment** moves; what remains after essentials and debt service is the **buffer**.\n\nHold a hypothetical household at €4,000 monthly income and €2,000 essentials. Before a rate step-up: €1,000 debt service and €1,000 buffer (25% of income). Nothing here is a survey respondent — the point is the accounting identity.\n\nIf your monitoring stack stops at the policy rate, you are watching the first node and pricing risk as if the last two did not exist. The rate only becomes risk when it reprices the payment.",
+      "scenes": [
+        {
+          "id": "transmission-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "transmission",
+          "transition": "trace"
+        }
+      ]
+    },
+    {
+      "id": "heterogeneity",
+      "headline": "Act 3 — The Heterogeneity",
+      "body": "Lift debt service on that household to €1,600 and the buffer falls to €400. The payment ate the residual.\n\nNow give three hypothetical households the **same** coupon shock. The high-buffer name still has capacity. The low-buffer name is already against the wall. A parallel rate move is not a parallel risk move.\n\nRemember that picture. When we zoom to a whole book, the question becomes: which starting rooms turn the same shock into a problem account?",
+      "scenes": [
+        {
+          "id": "heterogeneity-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "heterogeneity",
+          "transition": "split"
+        }
+      ]
+    },
+    {
+      "id": "book",
+      "headline": "Act 4 — The Book",
+      "body": "Zoom from three names to a population. A **seeded** illustrative book of **2,000** amortising mortgages (seed 42): about **35%** floating by unpaid balance, the rest fixed. Thin buffer means residual cash-flow under **6%** of income — a teaching cut calibrated to rhyme with published DSTI-stress intensification, not a regulatory definition. Fixed coupons hold; floaters reprice by **+300bp** and payments are recomputed.\n\nWatch what happens to the thin-buffer share of unpaid balance. It rises from **27.8% → 33.3%**. Newly thin accounts appear. Most of the field is still fine — that is the point. The story is not “the whole book broke.” The story is **who crossed**, and whether that crossing is random.\n\nDo not cut on the thin share alone yet. Thin can include fixed-rate names that were already stressed. The next act asks a stricter question.",
+      "scenes": [
+        {
+          "id": "book-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "book",
+          "transition": "accumulate"
+        }
+      ]
+    },
+    {
+      "id": "intersection",
+      "headline": "Act 5 — The Intersection",
+      "body": "Keep only the balances that can still reprice **and** sit under the thin-buffer line: floating ∩ thin.\n\nWatch the panel filter the field. What remains is not “everyone who felt the shock.” It is the sleeve where mechanism and exposure meet. In this calibrated book that sleeve is **21.0%** of unpaid principal.\n\nOf the accounts that newly crossed into thin, **90.4%** were already in the weakest pre-shock buffer tercile. Stress landed on names that were short of room before the move.\n\nOne more check: hold the generator fixed and vary only floating mix. At +300bp, new thin balance runs **3.4% / 5.5% / 7.9%** as floating share rises from 20% to 50%. Mix rivals the shock. The dial you argued about in Act 1 is upstream. The cut lives in the sleeve.",
+      "scenes": [
+        {
+          "id": "intersection-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "intersection",
+          "transition": "highlight"
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "headline": "Act 6 — Reality Check",
+      "body": "Pause the model. Does Europe after 2022 rhyme with payment-up / buffer-down / stress-up?\n\nPublished readings: CES housing costs about **+10.2%** (Jul 2022–Jan 2024) vs HICP **+5.5%**; mortgagors about **+12%**. WP 3053 simulations: median DSTI **+6 pp**; share above 40% DSTI **26% → 33%**. Lower-income **expected** late mortgage payments ~**30%** in early 2024 — an early signal, not defaults.\n\n**Counterpoint you need:** household debt-to-income still fell **92.8% → 87.0%**. Aggregate leverage eased while pockets tightened.\n\nSo the mechanism is not “Europe blew up.” It is the same lesson as the book: **averages can improve while a sleeve deteriorates.** That is why the cut is a filter, not a headline rate.",
+      "scenes": [
+        {
+          "id": "evidence-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "evidence",
+          "transition": "annotate"
+        }
+      ]
+    },
+    {
+      "id": "cut",
+      "headline": "Act 7 — The Cut",
+      "body": "You have already seen the sleeve. The panel restates the book as two parts: the majority that is not the first-loss corridor for a floater shock, and the floating × thin slice you filtered to.\n\n**That is where the watchlist starts** — not on a parallel shift across every balance, and not on the overnight print alone.\n\nTag reset dates. Refresh buffer or DSTI at account level. Treat floating × thin as the first-loss corridor for rate scenarios. Prefer names that were already weak before the move. Use euro-area aggregates as context.\n\nIllustrative model plus published evidence — not live-portfolio advice, not a default forecast. Methodology and sources follow.",
+      "scenes": [
+        {
+          "id": "cut-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "cut",
+          "transition": "highlight"
+        }
+      ]
+    }
+  ],
+  "dataRefs": [
+    {
+      "id": "sim-base",
+      "label": "Calibrated illustrative book v2: n=2000, seed 42, 35% floating, +300bp floaters, thin <6% income → thin balance 27.8%→33.3%, new thin 5.5%, 90.4% from bottom tercile, floating∩thin 21.0% (rhyme-check vs WP 3053 DSTI>40% 26→33%)",
+      "kind": "calculated",
+      "note": "src/lib/sim/rate-buffer-book.ts + calibration.ts"
+    },
+    {
+      "id": "sim-sensitivity",
+      "label": "At +300bp, new thin balance 3.4% / 5.5% / 7.9% for floating 20% / 35% / 50%",
+      "kind": "calculated"
+    },
+    {
+      "id": "ces-housing-10-2",
+      "label": "CES housing costs +10.2% (Jul 2022–Jan 2024); HICP +5.5%",
+      "kind": "observed"
+    },
+    {
+      "id": "ces-mortgagor-12",
+      "label": "Mortgagor housing costs ~+12% (same CES window)",
+      "kind": "observed"
+    },
+    {
+      "id": "wp3053-dsti",
+      "label": "WP 3053: median DSTI +6 pp; share DSTI>40% 26%→33%",
+      "kind": "calculated"
+    },
+    {
+      "id": "ces-late-mortgage",
+      "label": "CES expected late mortgage ~30% (low income, 2024 Q1)",
+      "kind": "observed"
+    },
+    {
+      "id": "sector-dti",
+      "label": "Household debt-to-income 92.8%→87.0% (2022 Q4–2023 Q4)",
+      "kind": "observed"
+    },
+    {
+      "id": "hyp-borrower",
+      "label": "Teaching household and three-buffer split",
+      "kind": "hypothetical"
+    }
+  ],
+  "sources": [
+    {
+      "id": "ecb-ces-housing-2024",
+      "label": "ECB Economic Bulletin 3/2024 — household housing burden (CES)",
+      "url": "https://www.ecb.europa.eu/press/economic-bulletin/focus/2024/html/ecb.ebbox202403_03~5527657e02.en.html"
+    },
+    {
+      "id": "ecb-wp3053",
+      "label": "ECB Working Paper 3053 — bank lending rates and household loan riskiness",
+      "url": "https://www.ecb.europa.eu/pub/pdf/scpwps/ecb.wp3053~1f45ed3bc3.en.pdf"
+    },
+    {
+      "id": "ecb-sector-2023q4",
+      "label": "ECB sector accounts 2023 Q4",
+      "url": "https://www.ecb.europa.eu/press/stats/ffi/html/ecb.eaefd_full2023q4~3d1fcaffef.en.html"
+    },
+    {
+      "id": "sim-source",
+      "label": "rate-buffer-book.ts (seeded illustrative book)"
+    }
+  ],
+  "methodology": "Seven-act decision story. Teaching acts use a cash-flow identity. Book and intersection acts use a deterministic TypeScript simulation (seed 42): amortising payments, floater-only +300bp, thin buffer <6% of income (calibrated v2 so thin-balance shares rhyme with WP 3053 DSTI>40% 26%→33% without equating the metrics). The floating×thin share is withheld until Act 5 so the reader filters to it. Reality check quotes ECB CES, sector accounts, and WP 3053. Reproduce: npx tsx scripts/run-rate-buffer-sim.ts · calibrate: npx tsx scripts/calibrate-rate-buffer.ts",
+  "limitations": "Calibrated illustrative book — not a live portfolio and not HFCS microdata. Thin-buffer threshold is a teaching cut moment-matched to published DSTI-stress intensification, not a regulatory definition. WP 3053 figures are simulations. CES expectations are not defaults. Country and fixed/adjustable mix are hidden in euro-area averages. Not investment or credit advice.",
+  "a11y": {
+    "alt": "Interactive decision story that unfolds a mechanism before revealing the floating thin-buffer sleeve: rate-payment-buffer spine, causal chain, three borrowers, 2,000-loan field, animated filter to the sleeve, evidence board with counterpoint, and a portfolio cut restating the discovered sleeve.",
+    "reducedMotionNote": "The sticky panel updates as each act crosses the scroll trigger. Filter animations snap under reduced motion. Methodology and sources appear at the end of the page."
+  }
+}

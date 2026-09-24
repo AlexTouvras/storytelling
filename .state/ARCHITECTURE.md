@@ -1,0 +1,76 @@
+# Architecture (working log)
+
+> Tracked in git. Living decisions for this repo — not a substitute for root `ARCHITECTURE.md` or `docs/FLAGSHIP.md`.
+
+## Overview
+
+**Interactive Decision Storytelling** — Orbit flagship. Engine (Layer 1) is a boring stage; grammar (Layer 2) and decision stories (Layer 3) carry the product. Reference: `when-rates-rise`. Fixture: `rates-and-defaults`.
+
+## Data shapes
+
+| Name | Shape / location | Notes |
+|------|------------------|-------|
+| Flagship | `docs/FLAGSHIP.md` | Product positioning |
+| Reference Story Spec | `docs/reference-story-spec.md` | Editorial + evidence |
+| Story Grammar | `docs/STORY_GRAMMAR.md` | Earned Layer 2 verbs + persistent objects |
+| StoryManifest | `src/stories/schemas/manifest.ts` | Zod; optional hero + role |
+| Visual allowlist | `src/stories/schemas/visualAllowlist.ts` | Per-visual states |
+| Evidence Pack v2 | `data/figures/when-rates-rise.v2.json` | Frozen modeled + observed |
+| Sims | `src/lib/sim/rate-buffer-book.ts` | Calibrated thin cutoff 6% |
+
+## Design patterns
+
+- Decision story = reasoning process; scroll UI is the interface
+- Approach B manifests; allow-listed visuals only
+- react-scrollama + CSS sticky; one path all breakpoints
+- **Continuous spine:** `TransmissionSpine` + `BufferMarkField` — acts change zoom/filter, not metaphor
+- Extract grammar from real stories; no speculative template farm
+- AI in production pipeline later — not the brand headline
+- Evidence: notebooks/MCP → freeze JSON → manifest display (never invent at render)
+
+## Dependencies
+
+| Dependency | Why introduced | Date |
+|------------|----------------|------|
+| next 16 / react 19 | App host | 2026-09-23 |
+| tailwindcss 3 | Orbit-parity styling | 2026-09-23 |
+| framer-motion | Non-essential visual transitions + layout | 2026-09-23 |
+| zod | Manifest validation | 2026-09-23 |
+| clsx / tailwind-merge | `cn()` | 2026-09-23 |
+| tsx | validate + sim + freeze scripts | 2026-09-23 |
+| react-scrollama | Step enter → visualState | 2026-09-23 |
+
+## Simulations
+
+| Module | Role |
+|--------|------|
+| `src/lib/sim/rate-buffer-book.ts` | Floater shock → thin-buffer shares; calibrated v2 |
+| `src/lib/sim/calibration.ts` | Moment targets (WP 3053 rhyme) |
+| `scripts/run-rate-buffer-sim.ts` | CLI reprint |
+| `scripts/calibrate-rate-buffer.ts` | Cutoff search |
+| `scripts/freeze-evidence-pack.ts` | Write `data/figures/*.json` |
+
+## Grammar (Layer 2)
+
+| Module | Role |
+|--------|------|
+| `grammar/TransmissionSpine.tsx` | Persistent CB→…→buffer nodes |
+| `grammar/BufferMarkField.tsx` | Stable residual-capacity marks |
+| `grammar/stageConfig.ts` | visualState → job / behavior / field |
+
+## Key decisions
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-09-23 | Standalone repo, not inside Orbit | Engine first; later `/stories` host |
+| 2026-09-23 | sticky + react-scrollama | One layout; drop split-pane |
+| 2026-09-23 | Reference story + ECB evidence + book sim | Decision story, not chart demo |
+| 2026-09-23 | **Interactive Decision Storytelling** as Orbit flagship | Stronger than “scrollytelling side feature” |
+| 2026-09-23 | Three layers; no five templates yet | Extract grammar from When Rates Rise |
+| 2026-09-23 | Flagship Story v1 after FLAGSHIP_AUDIT | Experience matches analytical substance |
+| 2026-09-23 | Continuous spine + grammar extract (track A) | Stop swapping metaphors per act |
+| 2026-09-23 | Calibrated thin 6% + Evidence Pack v2 (track B) | Rhyme WP 3053 26→33 without claiming identity |
+| 2026-09-23 | Global MCP `eu-finance` | ECB/Eurostat refresh for evidence pack |
+| 2026-09-23 | Engine harden: Vitest + Playwright/axe; safe Scrollama offset; SceneRenderer state guard | Catch broken observers and invalid visual states |
+| 2026-09-24 | Cinematic chrome = PressureSky (living buffer field) | Pinloop-level craft; atmosphere is the mechanism, not empty sky |
+| 2026-09-24 | Atmosphere motif registry (5 allow-listed motifs) | Reusable intro/outro/ambient; not five story templates |

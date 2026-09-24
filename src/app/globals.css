@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Orbit-parity OKLCH tokens */
+  --void: 0.12 0.025 264;
+  --void-800: 0.14 0.028 264;
+  --foreground: 0.93 0.015 264;
+  --muted: 0.68 0.025 264;
+  --accent-cyan: 0.78 0.14 195;
+  --accent-violet: 0.62 0.22 300;
+  --accent-blue: 0.62 0.16 255;
+  --border: 1 0 0;
+}
+
+@layer base {
+  * {
+    border-color: oklch(var(--border) / 0.08);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: oklch(var(--void));
+    color: oklch(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    background-color: oklch(var(--accent-cyan) / 0.28);
+    color: white;
+  }
+}
+
+@layer components {
+  .glass {
+    background: linear-gradient(
+      135deg,
+      oklch(1 0 0 / 0.06) 0%,
+      oklch(1 0 0 / 0.02) 100%
+    );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid oklch(1 0 0 / 0.08);
+  }
+
+  .glass-hover {
+    transition:
+      border-color 0.25s ease,
+      box-shadow 0.25s ease,
+      background-color 0.25s ease;
+  }
+  .glass-hover:hover {
+    border-color: oklch(var(--accent-cyan) / 0.35);
+    box-shadow: 0 0 24px -12px oklch(var(--accent-cyan) / 0.45);
+  }
+
+  .text-gradient {
+    background: linear-gradient(
+      120deg,
+      oklch(var(--accent-cyan)),
+      oklch(var(--accent-violet))
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/55 focus-visible:ring-offset-2 focus-visible:ring-offset-void;
+  }
+}
+
+@layer utilities {
+  .text-display {
+    font-size: clamp(2.25rem, 4.5vw + 1rem, 3.75rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  .text-section {
+    font-size: clamp(1.5rem, 2vw + 0.75rem, 2.25rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

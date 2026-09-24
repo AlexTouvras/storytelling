@@ -1,0 +1,46 @@
+---
+description: Interactive Decision Storytelling — Orbit flagship; engine is a stage
+alwaysApply: true
+---
+
+# Interactive Decision Storytelling
+
+This repo is the **Orbit flagship**: a reusable system for turning complex data, AI, analytics, and business problems into interactive experiences that help people **understand and decide**.
+
+Canonical positioning: `docs/FLAGSHIP.md`.  
+Do not brand this as merely a “scrollytelling engine.”
+
+## Two artifacts
+
+1. **The engine** — schema-driven runtime, visual registry, sticky scenes, sims, validation, a11y, evidence provenance.  
+2. **The reference story** — `when-rates-rise`: proves a hard portfolio decision can be rendered as an interactive experience.
+
+The **story is the interface**; the product is a **reasoning / decision process** (Question → Evidence → Model → Mechanism → Uncertainty → Scenarios → Visual narrative → Decision frame).
+
+## Locked decisions
+
+1. **Approach B** — agent/human writes a manifest; the engine renders it. Do not invent a new page architecture per story.
+2. **Engine is a stage** — sticky graphic + `react-scrollama` (one path all breakpoints). Keep Layer 1 boring; put intelligence in grammar + decision composition.
+3. **Reference story first** — extract primitives from `when-rates-rise` / `docs/reference-story-spec.md`. `rates-and-defaults` is an engine fixture only.
+4. **Decision Spec before code** — Question, Evidence, Model, Mechanism, Uncertainty, Scenarios, Decision frame (+ beat × visual-grammar map) before manifest + visuals.
+5. **Beats over rigid story templates** — do not invent five *page architectures* up front; earn grammar from real stories. **Atmosphere motifs** (cinematic intro/outro chrome) are allowed as Layer 2 — see `docs/ATMOSPHERE_MOTIFS.md`.
+6. **Visual grammar** — behaviors such as `reveal`, `transform`, `compare`, `split`, `trace`, `annotate`, `zoom`, … — not only opaque `visualState` strings.
+7. **Allow-listed visuals** — map `visualId` through `SceneRenderer` only. Never eval component names from a manifest.
+8. **No invented evidence** — label observed / calculated / illustrative / hypothetical distinctly.
+9. **Human gate on publish** — drafts and previews are fine; do not auto-publish.
+10. **Validate before render** — `npm run validate:stories` and `loadStoryManifest` must reject invalid manifests.
+11. **Progressive enhancement** — readable with reduced motion and without sticky positioning.
+12. **Orbit stays separate** — do not modify `C:\Users\kater\Documents\Orbit` from this project. Future host: Orbit `/stories/[slug]`. IDS is the flagship system for that host, not a side feature.
+13. **AI is pipeline, not headline** — research/evidence/architect agents later; do not lead with “AI-powered storytelling.”
+
+## Three layers
+
+| Layer | Job |
+|-------|-----|
+| 1 Story Engine | Sticky scenes, steps, responsive layout, a11y, registry |
+| 2 Story Grammar | Visual behaviors + **atmosphere motifs** |
+| 3 Decision Stories | Concrete implementations (When Rates Rise, …) |
+
+## Deferred
+
+Weekly topic discovery, auto-publish, five speculative *story* templates, chart libraries, Mermaid, GSAP, Python pipelines, Orbit packaging, WebGL motif backends (Tier B) — until earned from real decision stories. Atmosphere motifs (SVG/Framer) are in scope.

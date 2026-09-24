@@ -1,0 +1,116 @@
+{
+  "meta": {
+    "slug": "rates-and-defaults",
+    "title": "When rates rise, what happens to credit risk?",
+    "summary": "An illustrative walkthrough of how higher interest rates can pressure borrower capacity and shift risk bands — without claiming observed default outcomes.",
+    "date": "2026-09-23",
+    "templateId": "scrolling-narrative",
+    "role": "fixture"
+  },
+  "sections": [
+    {
+      "id": "hook",
+      "headline": "Hook",
+      "body": "A rate hike is easy to announce and hard to absorb. For a household or firm with floating-rate debt, the payment changes before income does. This story is about the **pathway** from policy rates to credit stress — not a forecast of tomorrow’s defaults.\n\nScroll to watch an illustrative panel update as each chapter focuses a different part of the mechanism.",
+      "scenes": [
+        {
+          "id": "hook-scene",
+          "trigger": "section-visible",
+          "visualId": "rate-risk-mechanism",
+          "visualState": "baseline"
+        }
+      ]
+    },
+    {
+      "id": "context",
+      "headline": "Context",
+      "body": "Central banks raise policy rates to cool demand. Lenders reprice floating credit. Borrowers face higher debt service. That chain is familiar; what varies is **how much buffer** each borrower has before capacity breaks.\n\nWe treat the numbers in the panel as **hypothetical labels** for teaching the structure — not market observations.",
+      "scenes": [
+        {
+          "id": "context-scene",
+          "trigger": "section-visible",
+          "visualId": "rate-risk-mechanism",
+          "visualState": "rate-step-up"
+        }
+      ]
+    },
+    {
+      "id": "mechanism",
+      "headline": "Mechanism",
+      "body": "When the rate step-up hits, monthly obligations rise. Holding income and other costs fixed in this toy model, the spare cash that absorbed shocks shrinks. The panel shows a **rate step-up** so you can see the pressure point move — still illustrative, still not a claim about any portfolio.",
+      "scenes": [
+        {
+          "id": "mechanism-scene",
+          "trigger": "section-visible",
+          "visualId": "rate-risk-mechanism",
+          "visualState": "buffer-shrink"
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "headline": "Evidence (illustrative)",
+      "body": "In a real study you would bring observed arrears, vintage curves, or stress results. Here we only show a **risk-band shift** in the illustration: more weight in higher illustrative risk bands after the rate step.\n\nThat is a teaching diagram of *direction*, not evidence that defaults will rise by any particular amount.",
+      "scenes": [
+        {
+          "id": "evidence-scene",
+          "trigger": "section-visible",
+          "visualId": "rate-risk-mechanism",
+          "visualState": "risk-band-shift"
+        }
+      ]
+    },
+    {
+      "id": "implications",
+      "headline": "Implications",
+      "body": "For delivery and risk work, the useful question is rarely “will defaults spike?” It is: **which segments lose buffer first**, what early signals move, and which assumptions fail under a rate path. The illustration’s risk bands are a reminder to keep those questions segment-aware.",
+      "scenes": [
+        {
+          "id": "implications-scene",
+          "trigger": "section-visible",
+          "visualId": "rate-risk-mechanism",
+          "visualState": "segment-focus"
+        }
+      ]
+    },
+    {
+      "id": "conclusion",
+      "headline": "Conclusion",
+      "body": "Rates can raise debt service; thinner buffers raise credit stress risk. Separating **mechanism**, **illustration**, and **observed evidence** keeps the story honest. This page is a reusable scrollytelling shell — swap the manifest, keep the engine.",
+      "scenes": [
+        {
+          "id": "conclusion-scene",
+          "trigger": "section-visible",
+          "visualId": "rate-risk-mechanism",
+          "visualState": "conclusion"
+        }
+      ]
+    }
+  ],
+  "dataRefs": [
+    {
+      "id": "toy-rate",
+      "label": "Hypothetical policy / lending rate labels in the panel",
+      "kind": "hypothetical",
+      "note": "Numbers are teaching labels only; not market quotes."
+    },
+    {
+      "id": "toy-bands",
+      "label": "Illustrative risk-band weights",
+      "kind": "illustrative",
+      "note": "Band heights are invented to show direction of a rate-pressure story."
+    }
+  ],
+  "sources": [
+    {
+      "id": "engine-note",
+      "label": "Storytelling engine demo — no external empirical source for panel values"
+    }
+  ],
+  "methodology": "Narrative chapters drive Scrollama step-enter scene activation. The rate-risk-mechanism visual maps each chapter to a state on one coherent diagram (baseline → rate-step-up → buffer-shrink → risk-band-shift → segment-focus → conclusion). No statistical model is estimated; no historical default series is loaded.",
+  "limitations": "Does not predict defaults. Does not use observed loan-level or portfolio data. Hypothetical rates and band weights must not be cited as evidence. Progress-triggered scenes are reserved for a later schema revision. This file is an engine fixture — see when-rates-rise for the reference story.",
+  "a11y": {
+    "alt": "Illustrative mechanism diagram that transforms across chapters: hypothetical rate and borrower buffer, transmission chain, buffer shrink, risk bands, segment focus, and a compact pathway summary. Teaching labels only — not observed evidence.",
+    "reducedMotionNote": "A sticky diagram updates as each chapter crosses the scroll trigger (Scrollama). On small screens the diagram sticks to the top and chapter text is padded to read below it. With reduced motion, transitions snap instantly."
+  }
+}
