@@ -19,7 +19,10 @@ Motifs never invent metrics. No fake KPIs in the rain.
 2. What moves vs what stays still
 3. Domain vernacular (why this object belongs to finance / data / AI…)
 4. Intensity mapping: `subtle` | `hero` | `curtain`
-5. Reduced-motion end frame
+5. Reduced-motion end frame: a still, readable hold of the opening — not a halfway blend
+6. A transition changes the objects already on screen. The arrival is those objects in a new state.
+7. If the shot travels, travel only increases, then eases to a stop. The stop is the destination.
+8. An entry has no hard rim. The path that led in is gone once the view is inside.
 
 ## Catalog
 

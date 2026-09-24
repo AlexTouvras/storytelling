@@ -80,3 +80,4 @@
 | 2026-09-24 | Directed film route for When Rates Rise | One camera over loan-level sim output; sliders recompute payments. Essay route unchanged. |
 | 2026-09-24 | Landing is a product index with a data-field hero | Gradient wordmark, then the shared path cuts through the field. No per-story poster. |
 | 2026-09-24 | Landing camera enters one record | Top-down lanes sit close. One vertical thread joins a single dot on each lane with irregular sideways steps. Other points fade, the thread disappears, and that dot opens into a soft hole centered on the warp. The same streaks then shorten onto their heads; those heads are the horizon stars, and the brightest open into galaxies. |
+| 2026-09-24 | Landing flight becomes craft rules, not a template | `docs/STORY_GRAMMAR.md` and the story-engine rule: same marks through a transition, one camera, neighbor-only thread, monotonic travel, unlabeled field. The vortex stays product-index chrome. |

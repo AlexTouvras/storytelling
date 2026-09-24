@@ -16,6 +16,7 @@
 - [x] Directed film: When Rates Rise as one scroll-scrubbed shot plus an operable sleeve
 - [x] Film narration: prologue, beat copy, and decision context for an online reader
 - [x] Landing is the product index: data-field hero, shared path, story list
+- [x] Landing flight craft written into story grammar (not a new template)
 
 ## Next (after sign-off)
 

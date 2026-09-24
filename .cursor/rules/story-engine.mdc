@@ -24,7 +24,7 @@ The **story is the interface**; the product is a **reasoning / decision process*
 3. **Reference story first** — extract primitives from `when-rates-rise` / `docs/reference-story-spec.md`. `rates-and-defaults` is an engine fixture only.
 4. **Decision Spec before code** — Question, Evidence, Model, Mechanism, Uncertainty, Scenarios, Decision frame (+ beat × visual-grammar map) before manifest + visuals.
 5. **Beats over rigid story templates** — do not invent five *page architectures* up front; earn grammar from real stories. **Atmosphere motifs** (cinematic intro/outro chrome) are allowed as Layer 2 — see `docs/ATMOSPHERE_MOTIFS.md`.
-6. **Visual grammar** — behaviors such as `reveal`, `transform`, `compare`, `split`, `trace`, `annotate`, `zoom`, … — not only opaque `visualState` strings.
+6. **Visual grammar** — behaviors such as `reveal`, `transform`, `compare`, `split`, `trace`, `annotate`, `zoom`, … — not only opaque `visualState` strings. Scrubbed shots keep the same marks through a transition, move the camera, and let travel increase and then stop. See `docs/STORY_GRAMMAR.md` (Craft earned from the landing flight). Do not turn that flight into a template.
 7. **Allow-listed visuals** — map `visualId` through `SceneRenderer` only. Never eval component names from a manifest.
 8. **No invented evidence** — label observed / calculated / illustrative / hypothetical distinctly.
 9. **Human gate on publish** — drafts and previews are fine; do not auto-publish.
