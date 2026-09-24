@@ -79,4 +79,4 @@
 | 2026-09-24 | Atmosphere motif registry (5 allow-listed motifs) | Reusable intro/outro/ambient; not five story templates |
 | 2026-09-24 | Directed film route for When Rates Rise | One camera over loan-level sim output; sliders recompute payments. Essay route unchanged. |
 | 2026-09-24 | Landing is a product index with a data-field hero | Gradient wordmark, then the shared path cuts through the field. No per-story poster. |
-| 2026-09-24 | Landing flight is approach, warp, arrival | Lanes join by irregular jumps. Scroll zooms onto one lane until it is horizontal, then the z-divide warp starts. Acceleration stops into a slow field of stars, galaxies, and larger bodies. |
+| 2026-09-24 | Landing camera pitches into one record | Top-down, lanes are vertical and links step only to the next lane. Scroll orbits from overhead to the side of one dot, then the z-divide warp starts. Acceleration stops into a slow horizon. |
