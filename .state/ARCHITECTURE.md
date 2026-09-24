@@ -18,7 +18,7 @@
 | Evidence Pack v2 | `data/figures/when-rates-rise.v2.json` | Frozen modeled + observed |
 | Sims | `src/lib/sim/rate-buffer-book.ts` | Calibrated thin cutoff 6% |
 | Directed film | `src/components/film/` · `/stories/when-rates-rise/film` | Scroll-scrubbed canvas of the seeded book. Not a template. |
-| Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Horizontal lanes with drifting points, one vertical thread, a pitch that aligns that thread as the road ahead, then a z-divide warp and a slow horizon. Not a story template. |
+| Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Tight horizontal lanes, one irregular vertical thread, a zoom into a soft hole on the warp center, then a z-divide vortex and a new horizon. Not a story template. |
 
 ## Design patterns
 
@@ -79,4 +79,4 @@
 | 2026-09-24 | Atmosphere motif registry (5 allow-listed motifs) | Reusable intro/outro/ambient; not five story templates |
 | 2026-09-24 | Directed film route for When Rates Rise | One camera over loan-level sim output; sliders recompute payments. Essay route unchanged. |
 | 2026-09-24 | Landing is a product index with a data-field hero | Gradient wordmark, then the shared path cuts through the field. No per-story poster. |
-| 2026-09-24 | Landing camera pitches into one record | Top-down, record lanes run horizontal and the points drift. One vertical thread joins a single dot on each lane, stepping only to the next lane. Scroll pitches until that thread is the road ahead, then the z-divide warp leaves along it. |
+| 2026-09-24 | Landing camera enters one record | Top-down lanes sit close. One vertical thread joins a single dot on each lane with irregular sideways steps. Other points fade, the thread disappears, and that dot opens into a soft hole centered on the warp. The streaks ease into a new horizon. |

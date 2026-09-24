@@ -5,12 +5,13 @@ import { memo, useEffect, useRef, type RefObject } from "react";
 /**
  * Three acts of one flight.
  *
- * 1. Top-down. Record lanes run horizontal and the points drift along them.
- *    One vertical thread ties a single dot on each lane to the next lane only.
- * 2. The camera pitches until that vertical thread is the road ahead, and the
- *    dot on it fills the frame. Then warp: screen = center + worldXY * focal / z,
- *    streak from the previous depth, leaving along the same line.
- * 3. Acceleration stops. Streaks shorten into a slow horizon of stars and galaxies.
+ * 1. Top-down. Record lanes run horizontal, a little tight, and the points drift.
+ *    One vertical thread ties a single dot on each lane to the next, stepping
+ *    sideways at random.
+ * 2. The camera pitches along that thread, the other points fade, and the line
+ *    disappears as one dot opens into a soft hole. Warp leaves from that same
+ *    center: screen = center + worldXY * focal / z.
+ * 3. The streaks ease off into a new horizon of stars and galaxies.
  */
 
 type Star = {
@@ -33,7 +34,7 @@ const LANES = 16;
 const SAMPLES = 96;
 const CHOSEN = 8;
 const TARGET_U = 0.57;
-const GAP = 1.55;
+const GAP = 1.1;
 const LEN = 16;
 const MIN_Z = 6;
 const Z_SPAN = 94;
@@ -52,20 +53,25 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-/** Sideways step to the next lane. Alternates so the thread weaves instead of running straight. */
-function pathStep(seed: number, lane: number) {
-  const sign = lane % 2 === 0 ? 1 : -1;
-  return sign * (0.05 + hash(seed) * 0.07);
-}
-
-/** One thread: a single dot on each horizontal lane, stepped only to the next lane. */
+/**
+ * One thread: a single dot on each horizontal lane, stepped only to the next lane.
+ * Most steps flip direction. A few continue, so the line wanders instead of zigzagging evenly.
+ */
 function buildPath(): Node[] {
   const u = new Array<number>(LANES).fill(TARGET_U);
+  let sign = 1;
   for (let lane = CHOSEN - 1; lane >= 0; lane--) {
-    u[lane] = Math.min(0.82, Math.max(0.18, u[lane + 1] + pathStep(lane * 19 + 4, lane)));
+    const seed = lane * 19 + 4;
+    if (hash(seed) > 0.34) sign = -sign;
+    const mag = 0.04 + hash(seed + 2.2) * 0.1;
+    u[lane] = Math.min(0.84, Math.max(0.16, u[lane + 1] + sign * mag));
   }
+  sign = -1;
   for (let lane = CHOSEN + 1; lane < LANES; lane++) {
-    u[lane] = Math.min(0.82, Math.max(0.18, u[lane - 1] + pathStep(lane * 23 + 8, lane)));
+    const seed = lane * 23 + 8;
+    if (hash(seed) > 0.34) sign = -sign;
+    const mag = 0.04 + hash(seed + 3.4) * 0.1;
+    u[lane] = Math.min(0.84, Math.max(0.16, u[lane - 1] + sign * mag));
   }
   u[CHOSEN] = TARGET_U;
   return u.map((value, lane) => ({ lane, u: value }));
@@ -254,29 +260,29 @@ function frameOf(pos: V3, target: V3): Frame {
 }
 
 /**
- * Overhead, the violet thread is screen-vertical because world +Z is up.
- * The camera drops behind that thread and looks along it, so the line
- * runs from the near dot to a vanishing point. That point is where warp begins.
+ * Overhead, the violet thread is screen-vertical. The camera drops behind it,
+ * then commits onto the chosen dot so that dot sits on the warp center.
  */
 function approachCamera(zoom: number, time: number, reduced: boolean) {
   const entry = worldOf(CHOSEN, TARGET_U);
-  const pitch = lerp(1.46, 0.36, zoom);
-  const dist = lerp(14.5, 3.4, Math.pow(zoom, 0.8));
-  const close = smoothstep(0.35, 1, zoom);
+  const commit = smoothstep(0.48, 1, zoom);
+  const pitch = lerp(1.46, lerp(0.34, 0.04, commit), zoom);
+  const dist = lerp(13.6, lerp(2.4, 0.12, commit), Math.pow(zoom, 0.75));
+  const close = smoothstep(0.3, 1, zoom);
   const horiz = Math.cos(pitch) * dist;
-  const idle = reduced ? 0 : (1 - zoom) * (1 - zoom);
-  const sway = Math.sin(Math.PI * zoom) * 0.28 * (1 - close);
+  const idle = reduced ? 0 : (1 - zoom) * (1 - zoom) * (1 - commit);
+  const sway = Math.sin(Math.PI * zoom) * 0.2 * (1 - commit);
   const pos = {
-    x: entry.x + sway + Math.sin(time * 0.22 + 1.3) * 0.22 * idle,
-    y: lerp(Math.sin(pitch) * dist, 1.15, close),
-    z: entry.z - lerp(horiz, 2.6, close) + Math.sin(time * 0.35) * 0.4 * idle,
+    x: entry.x + sway + Math.sin(time * 0.22 + 1.3) * 0.2 * idle,
+    y: lerp(Math.sin(pitch) * dist, lerp(0.85, 0.015, commit), close),
+    z: entry.z - lerp(horiz, lerp(2.1, 0.12, commit), close) + Math.sin(time * 0.35) * 0.35 * idle,
   };
-  const ahead = lerp(0.05, 5.5, smoothstep(0.08, 0.85, zoom));
+  const ahead = lerp(0.04, 4.2, smoothstep(0.08, 0.72, zoom)) * (1 - commit);
   const lane = Math.min(LANES - 1.001, CHOSEN + ahead);
   const i0 = Math.floor(lane);
   const i1 = Math.min(LANES - 1, i0 + 1);
   const look = worldOf(lane, lerp(PATH[i0].u, PATH[i1].u, lane - i0));
-  const blend = smoothstep(0.12, 0.8, zoom);
+  const blend = smoothstep(0.1, 0.62, zoom) * (1 - commit);
   const target = {
     x: lerp(entry.x, look.x, blend),
     y: 0,
@@ -318,16 +324,19 @@ function draw(
 ) {
   const p = reduced ? 0 : progress;
   const zoom = smoothstep(0.12, 0.52, p);
-  const warpIn = smoothstep(0.5, 0.64, p);
-  const cruise = smoothstep(0.5, 0.68, p);
-  const brake = smoothstep(0.66, 0.86, p);
-  const horizon = smoothstep(0.76, 0.94, p);
-  const lanesAlpha = 1 - smoothstep(0.54, 0.66, p);
-  const travel = smoothstep(0.5, 0.74, p) * 220;
-  const stretch = lerp(4, 26, cruise) * (1 - brake);
-  const warpAlpha = warpIn * (1 - smoothstep(0.8, 0.96, p));
-  const cx = width * lerp(lerp(0.5, 0.58, warpIn), 0.5, horizon);
-  const cy = height * lerp(0.46, 0.48, warpIn);
+  const warpIn = smoothstep(0.46, 0.66, p);
+  const cruise = smoothstep(0.46, 0.7, p);
+  const brake = smoothstep(0.66, 0.88, p);
+  const horizon = smoothstep(0.72, 0.94, p);
+  const fieldAlpha = (1 - smoothstep(0.18, 0.5, zoom)) * (1 - smoothstep(0.48, 0.6, p));
+  const threadAlpha = (1 - smoothstep(0.52, 0.8, zoom)) * (1 - smoothstep(0.46, 0.58, p));
+  const holeT = smoothstep(0.34, 1, zoom);
+  const holeFade = 1 - smoothstep(0.5, 0.7, p);
+  const travel = smoothstep(0.46, 0.74, p) * 220;
+  const stretch = lerp(3, 26, cruise) * (1 - brake);
+  const warpAlpha = warpIn * (1 - smoothstep(0.74, 0.94, p));
+  const cx = width * 0.5;
+  const cy = height * 0.46;
 
   ctx.clearRect(0, 0, width, height);
   const bg = ctx.createLinearGradient(0, 0, 0, height);
@@ -337,17 +346,7 @@ function draw(
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
 
-  if (warpAlpha > 0.05) {
-    const glowA = 0.04 + warpAlpha * 0.1 * (1 - brake * 0.7);
-    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(width, height) * 0.38);
-    core.addColorStop(0, `rgba(186, 150, 255, ${glowA})`);
-    core.addColorStop(0.4, `rgba(110, 210, 226, ${glowA * 0.3})`);
-    core.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = core;
-    ctx.fillRect(0, 0, width, height);
-  }
-
-  if (lanesAlpha > 0.03) {
+  if (fieldAlpha > 0.03) {
     const cam = approachCamera(zoom, time, reduced);
     const focal = Math.min(width, height) * 0.92;
     const seen = (q: { x: number; y: number } | null) =>
@@ -368,7 +367,7 @@ function draw(
       );
       if (!q || q.k > 90 || q.x < -8 || q.y < -8 || q.x > width + 8 || q.y > height + 8) continue;
       const radius = Math.min(3.2, Math.max(0.6, mote.r * q.k));
-      ctx.fillStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.45 * lanesAlpha})`;
+      ctx.fillStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.45 * fieldAlpha})`;
       ctx.fillRect(q.x, q.y, radius, radius);
     }
 
@@ -387,11 +386,10 @@ function draw(
           pen = true;
         } else ctx.lineTo(q.x, q.y);
       }
-      ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.34 * lanesAlpha})`;
+      ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.34 * fieldAlpha})`;
       ctx.stroke();
     }
 
-    const cap = Math.min(width, height) * 0.85;
     const trail = 0.02 * (1 - zoom * 0.85);
     ctx.beginPath();
     for (let lane = 0; lane < LANES; lane++) {
@@ -409,7 +407,7 @@ function draw(
         ctx.lineTo(q.x, q.y);
       }
     }
-    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.45 * lanesAlpha})`;
+    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.45 * fieldAlpha})`;
     ctx.lineWidth = 1.15;
     ctx.stroke();
 
@@ -425,7 +423,7 @@ function draw(
         const pulse = reduced ? 1 : 0.78 + 0.22 * Math.sin(flowTime * (1.6 + star.rad) + lane + star.u * 40);
         const worldR = star.kind === 2 ? 0.04 : 0.026;
         const radius = Math.min(6.5, Math.max(0.7, worldR * q.k * pulse));
-        const alpha = (0.42 + 0.28 * pulse) * lanesAlpha;
+        const alpha = (0.42 + 0.28 * pulse) * fieldAlpha;
         ctx.fillStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${alpha})`;
         ctx.beginPath();
         ctx.arc(q.x, q.y, radius, 0, Math.PI * 2);
@@ -433,40 +431,76 @@ function draw(
       }
     }
 
+  }
+
+  if (threadAlpha > 0.03) {
+    const cam = approachCamera(zoom, time, reduced);
+    const focal = Math.min(width, height) * 0.92;
     ctx.globalCompositeOperation = "source-over";
     ctx.beginPath();
     let pen = false;
     for (const node of PATH) {
       const q = project(worldOf(node.lane, node.u), cam.pos, cam.frame, focal, width, height);
-      // Far offscreen points make the stroke drop the visible road.
-      if (!q || q.x < -120 || q.y < -120 || q.x > width + 120 || q.y > height + 120) {
-        pen = false;
-        continue;
+        if (!q || q.x < -120 || q.y < -120 || q.x > width + 120 || q.y > height + 120) {
+          pen = false;
+          continue;
+        }
+        if (!pen) {
+          ctx.moveTo(q.x, q.y);
+          pen = true;
+        } else ctx.lineTo(q.x, q.y);
       }
-      if (!pen) {
-        ctx.moveTo(q.x, q.y);
-        pen = true;
-      } else ctx.lineTo(q.x, q.y);
-    }
-    ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.95 * lanesAlpha})`;
-    ctx.lineWidth = lerp(1.8, 3.2, zoom);
-    ctx.stroke();
+      ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.9 * threadAlpha})`;
+      ctx.lineWidth = lerp(1.6, 2.4, zoom);
+      ctx.stroke();
 
-    for (let lane = 0; lane < LANES; lane++) {
-      const pathIndex = LANE_INDEX[lane].find((index) => STARS[index].onPath);
-      if (pathIndex === undefined) continue;
-      const star = STARS[pathIndex];
-      const q = project(worldOf(lane, star.u), cam.pos, cam.frame, focal, width, height);
-      if (!q || q.x < -20 || q.y < -20 || q.x > width + 20 || q.y > height + 20) continue;
-      const target = lane === CHOSEN;
-      const worldR = target ? lerp(0.05, 0.09, zoom) : 0.04;
-      const limit = target ? 64 : 11;
-      const radius = Math.min(cap, limit, Math.max(0.8, worldR * q.k));
-      const rgb = target ? [236, 220, 255] : VIOLET;
-      ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${lanesAlpha})`;
+      for (let lane = 0; lane < LANES; lane++) {
+        if (lane === CHOSEN) continue;
+        const pathIndex = LANE_INDEX[lane].find((index) => STARS[index].onPath);
+        if (pathIndex === undefined) continue;
+        const star = STARS[pathIndex];
+        const q = project(worldOf(lane, star.u), cam.pos, cam.frame, focal, width, height);
+        if (!q || q.x < -20 || q.y < -20 || q.x > width + 20 || q.y > height + 20) continue;
+        const radius = Math.min(10, Math.max(0.8, 0.038 * q.k));
+        ctx.fillStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.9 * threadAlpha})`;
+        ctx.beginPath();
+        ctx.arc(q.x, q.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+  }
+
+  if (holeFade > 0.02) {
+    const cam = approachCamera(zoom, time, reduced);
+    const focal = Math.min(width, height) * 0.92;
+    const entry = project(worldOf(CHOSEN, TARGET_U), cam.pos, cam.frame, focal, width, height);
+    if (entry) {
+      const mouth = Math.pow(holeT, 1.15);
+      const reach = lerp(8, Math.hypot(width, height) * 1.65, mouth);
+      const radius = Math.max(reach, Math.min(Math.hypot(width, height) * 1.7, 0.08 * entry.k));
+      ctx.globalCompositeOperation = "source-over";
+      const soft = ctx.createRadialGradient(entry.x, entry.y, 0, entry.x, entry.y, radius);
+      const dark = 0.2 + holeT * 0.75;
+      soft.addColorStop(0, `rgba(2, 3, 10, ${dark * holeFade})`);
+      soft.addColorStop(0.22, `rgba(6, 5, 16, ${(0.45 + holeT * 0.4) * holeFade})`);
+      soft.addColorStop(0.5, `rgba(40, 24, 70, ${0.12 * (1 - mouth * 0.85) * holeFade})`);
+      soft.addColorStop(0.78, `rgba(90, 140, 170, ${0.04 * (1 - mouth) * holeFade})`);
+      soft.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = soft;
       ctx.beginPath();
-      ctx.arc(q.x, q.y, radius, 0, Math.PI * 2);
+      ctx.arc(entry.x, entry.y, radius, 0, Math.PI * 2);
       ctx.fill();
+      if (holeT < 0.72) {
+        const seed = lerp(3.2, 18, holeT);
+        const glow = ctx.createRadialGradient(entry.x, entry.y, 0, entry.x, entry.y, seed * 2.4);
+        const seedA = (1 - holeT) * holeFade;
+        glow.addColorStop(0, `rgba(244, 232, 255, ${0.95 * seedA})`);
+        glow.addColorStop(0.45, `rgba(190, 150, 255, ${0.45 * seedA})`);
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(entry.x, entry.y, seed * 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
