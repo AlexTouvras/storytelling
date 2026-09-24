@@ -370,16 +370,16 @@ function draw(
   reduced: boolean,
 ) {
   const p = reduced ? 0 : progress;
-  const zoom = smoothstep(0.12, 0.58, p);
-  const warpIn = smoothstep(0.54, 0.7, p);
-  const cruise = smoothstep(0.54, 0.74, p);
+  const zoom = smoothstep(0.14, 0.46, p);
+  const warpIn = smoothstep(0.43, 0.58, p);
+  const cruise = smoothstep(0.43, 0.64, p);
   const settle = smoothstep(0.64, 0.92, p);
   const bloom = smoothstep(0.66, 0.88, p);
   const horizon = smoothstep(0.84, 0.98, p);
-  const fieldAlpha = (1 - smoothstep(0.18, 0.5, zoom)) * (1 - smoothstep(0.48, 0.6, p));
-  const threadAlpha = (1 - smoothstep(0.55, 0.86, zoom)) * (1 - smoothstep(0.48, 0.6, p));
-  const holeFade = 1 - smoothstep(0.58, 0.74, p);
-  const travel = smoothstep(0.54, 0.78, p) * TRAVEL_END;
+  const fieldAlpha = (1 - smoothstep(0.18, 0.5, zoom)) * (1 - smoothstep(0.32, 0.44, p));
+  const threadAlpha = (1 - smoothstep(0.55, 0.86, zoom)) * (1 - smoothstep(0.34, 0.46, p));
+  const holeFade = 1 - smoothstep(0.5, 0.66, p);
+  const travel = smoothstep(0.43, 0.74, p) * TRAVEL_END;
   const stretch = lerp(lerp(3, 26, cruise), 0.38, settle);
   const lineAlpha = warpIn * (1 - smoothstep(0.82, 0.96, p));
   const laneAlpha = lineAlpha * (1 - smoothstep(0.68, 0.84, p));
@@ -525,7 +525,7 @@ function draw(
     if (entry) {
       const unit = Math.min(width, height);
       const dotR = Math.min(unit * 0.34, Math.max(3.5, 0.046 * entry.k));
-      const engulf = smoothstep(0.8, 1, zoom) * smoothstep(0.52, 0.66, p);
+      const engulf = smoothstep(0.82, 1, zoom) * smoothstep(0.4, 0.52, p);
       const radius = lerp(dotR, Math.hypot(width, height) * 1.35, engulf);
       const pupil = smoothstep(0.48, 0.9, zoom);
       const limb = (1 - engulf) * holeFade;
