@@ -56,6 +56,8 @@ manifests (JSON)  →  Zod schema  →  template registry  →  StoryLayout
 
 Current visuals: `rate-risk-mechanism` (fixture) and `cashflow-pressure` (reference).
 
+The reference story also has a bespoke film at `/stories/when-rates-rise/film` (`src/components/film/`). Scroll progress drives one canvas — loan dots from the seeded book — through a close-up, a pullback, a reprice, and the sleeve. It is not a new `templateId`. The essay route stays on the manifest engine.
+
 ## Scroll behavior
 
 1. `StoryLayout` wraps content in `ScrollSceneProvider` + `StoryScrollama`.

@@ -72,15 +72,29 @@ export function FlagshipLanding({ stories }: Props) {
                 animate={{ opacity: 1 }}
                 transition={{ duration: dur, delay: 0.3 }}
               >
-                <Link
-                  href={`/stories/${primary.slug}`}
-                  className="focus-ring inline-flex items-center gap-3 border border-white/20 bg-white/[0.04] px-5 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-white transition-colors hover:border-neon-cyan/50 hover:bg-neon-cyan/10"
-                >
-                  Enter {primary.title.split(":")[0]?.trim() ?? "the story"}
-                  <span aria-hidden className="text-neon-cyan">
-                    →
-                  </span>
-                </Link>
+                <div className="flex flex-wrap items-center gap-6">
+                  <Link
+                    href={
+                      primary.slug === "when-rates-rise"
+                        ? "/stories/when-rates-rise/film"
+                        : `/stories/${primary.slug}`
+                    }
+                    className="focus-ring inline-flex items-center gap-3 border border-white/20 bg-white/[0.04] px-5 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-white transition-colors hover:border-neon-cyan/50 hover:bg-neon-cyan/10"
+                  >
+                    Watch the cut
+                    <span aria-hidden className="text-neon-cyan">
+                      →
+                    </span>
+                  </Link>
+                  {primary.slug === "when-rates-rise" ? (
+                    <Link
+                      href="/stories/when-rates-rise"
+                      className="focus-ring font-mono text-[11px] uppercase tracking-[0.16em] text-white/45 hover:text-white"
+                    >
+                      Essay version
+                    </Link>
+                  ) : null}
+                </div>
               </motion.div>
             ) : null}
           </div>
@@ -121,25 +135,38 @@ export function FlagshipLanding({ stories }: Props) {
         <ul className="mt-8 space-y-0 divide-y divide-white/10 border-y border-white/10">
           {stories.map((story) => (
             <li key={story.slug}>
-              <Link
-                href={`/stories/${story.slug}`}
-                className="focus-ring group flex flex-col gap-2 py-8 transition-colors sm:flex-row sm:items-baseline sm:justify-between"
-              >
+              <div className="flex flex-col gap-3 py-8 sm:flex-row sm:items-baseline sm:justify-between">
                 <div className="max-w-2xl">
                   <p className="font-mono text-[10px] uppercase tracking-wider text-neon-cyan/80">
                     {story.date}
                   </p>
-                  <h3 className="mt-2 font-display text-2xl text-white group-hover:text-neon-cyan">
-                    {story.title}
+                  <h3 className="mt-2 font-display text-2xl text-white">
+                    <Link
+                      href={
+                        story.slug === "when-rates-rise"
+                          ? "/stories/when-rates-rise/film"
+                          : `/stories/${story.slug}`
+                      }
+                      className="focus-ring hover:text-neon-cyan"
+                    >
+                      {story.title}
+                    </Link>
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-white/50">
                     {story.question ?? story.summary}
                   </p>
                 </div>
-                <span className="font-mono text-[11px] uppercase tracking-wider text-white/30 group-hover:text-neon-cyan">
-                  Open →
-                </span>
-              </Link>
+                <Link
+                  href={
+                    story.slug === "when-rates-rise"
+                      ? "/stories/when-rates-rise/film"
+                      : `/stories/${story.slug}`
+                  }
+                  className="focus-ring font-mono text-[11px] uppercase tracking-wider text-white/30 hover:text-neon-cyan"
+                >
+                  {story.slug === "when-rates-rise" ? "Watch →" : "Open →"}
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

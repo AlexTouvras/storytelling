@@ -13,6 +13,7 @@
 - [x] Cinematic art pass: PressureSky hero/landing + mechanism-as-atmosphere
 - [x] Atmosphere motif system (5 motifs, intro/outro/ambient, lab gallery)
 - [ ] Human review of motif craft vs Tier A ceiling
+- [x] Directed film: When Rates Rise as one scroll-scrubbed shot plus an operable sleeve
 
 ## Next (after sign-off)
 

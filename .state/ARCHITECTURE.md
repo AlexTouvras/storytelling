@@ -17,6 +17,7 @@
 | Visual allowlist | `src/stories/schemas/visualAllowlist.ts` | Per-visual states |
 | Evidence Pack v2 | `data/figures/when-rates-rise.v2.json` | Frozen modeled + observed |
 | Sims | `src/lib/sim/rate-buffer-book.ts` | Calibrated thin cutoff 6% |
+| Directed film | `src/components/film/` · `/stories/when-rates-rise/film` | Scroll-scrubbed canvas of the seeded book. Not a template. |
 
 ## Design patterns
 
@@ -24,6 +25,7 @@
 - Approach B manifests; allow-listed visuals only
 - react-scrollama + CSS sticky; one path all breakpoints
 - **Continuous spine:** `TransmissionSpine` + `BufferMarkField` — acts change zoom/filter, not metaphor
+- **Directed film:** one canvas, scroll-scrubbed camera, loan dots from `buildField`. The essay manifest stays the engine path.
 - Extract grammar from real stories; no speculative template farm
 - AI in production pipeline later — not the brand headline
 - Evidence: notebooks/MCP → freeze JSON → manifest display (never invent at render)
@@ -74,3 +76,4 @@
 | 2026-09-23 | Engine harden: Vitest + Playwright/axe; safe Scrollama offset; SceneRenderer state guard | Catch broken observers and invalid visual states |
 | 2026-09-24 | Cinematic chrome = PressureSky (living buffer field) | Pinloop-level craft; atmosphere is the mechanism, not empty sky |
 | 2026-09-24 | Atmosphere motif registry (5 allow-listed motifs) | Reusable intro/outro/ambient; not five story templates |
+| 2026-09-24 | Directed film route for When Rates Rise | One camera over loan-level sim output; sliders recompute payments. Essay route unchanged. |
