@@ -8,9 +8,9 @@ import { memo, useEffect, useRef, type RefObject } from "react";
  * 1. Top-down. Record lanes run horizontal, a little tight, and the points drift.
  *    One vertical thread ties a single dot on each lane to the next, stepping
  *    sideways at random.
- * 2. The camera pitches along that thread, the other points fade, and the line
- *    disappears as one dot opens into a soft hole. Warp leaves from that same
- *    center: screen = center + worldXY * focal / z.
+ * 2. The camera pitches along that thread and closes on one dot until that
+ *    dot fills the frame. Its center opens, softer than the limb, and the
+ *    warp leaves from inside it: screen = center + worldXY * focal / z.
  * 3. The streaks shorten into the same points, and the brightest open into galaxies.
  */
 
@@ -309,17 +309,20 @@ function frameOf(pos: V3, target: V3): Frame {
  */
 function approachCamera(zoom: number, time: number, reduced: boolean) {
   const entry = worldOf(CHOSEN, TARGET_U);
-  const commit = smoothstep(0.48, 1, zoom);
-  const pitch = lerp(1.46, lerp(0.34, 0.04, commit), zoom);
-  const dist = lerp(13.6, lerp(2.4, 0.12, commit), Math.pow(zoom, 0.75));
-  const close = smoothstep(0.3, 1, zoom);
+  const commit = smoothstep(0.42, 0.78, zoom);
+  const nestle = smoothstep(0.7, 1, zoom);
+  const pitch = lerp(1.46, lerp(0.34, 0.05, commit), zoom);
+  const glide = lerp(13.6, 2.15, Math.pow(zoom, 0.7));
+  const near = lerp(0.28, 0.05, nestle);
+  const dist = lerp(glide, near, commit);
+  const close = smoothstep(0.28, 0.85, zoom);
   const horiz = Math.cos(pitch) * dist;
   const idle = reduced ? 0 : (1 - zoom) * (1 - zoom) * (1 - commit);
   const sway = Math.sin(Math.PI * zoom) * 0.2 * (1 - commit);
   const pos = {
     x: entry.x + sway + Math.sin(time * 0.22 + 1.3) * 0.2 * idle,
-    y: lerp(Math.sin(pitch) * dist, lerp(0.85, 0.015, commit), close),
-    z: entry.z - lerp(horiz, lerp(2.1, 0.12, commit), close) + Math.sin(time * 0.35) * 0.35 * idle,
+    y: lerp(Math.sin(pitch) * dist, lerp(0.5, 0.006, nestle), close),
+    z: entry.z - lerp(horiz, lerp(1.45, near, commit), close) + Math.sin(time * 0.35) * 0.35 * idle,
   };
   const ahead = lerp(0.04, 4.2, smoothstep(0.08, 0.72, zoom)) * (1 - commit);
   const lane = Math.min(LANES - 1.001, CHOSEN + ahead);
@@ -367,17 +370,16 @@ function draw(
   reduced: boolean,
 ) {
   const p = reduced ? 0 : progress;
-  const zoom = smoothstep(0.12, 0.52, p);
-  const warpIn = smoothstep(0.46, 0.66, p);
-  const cruise = smoothstep(0.46, 0.7, p);
+  const zoom = smoothstep(0.12, 0.58, p);
+  const warpIn = smoothstep(0.54, 0.7, p);
+  const cruise = smoothstep(0.54, 0.74, p);
   const settle = smoothstep(0.64, 0.92, p);
   const bloom = smoothstep(0.66, 0.88, p);
   const horizon = smoothstep(0.84, 0.98, p);
   const fieldAlpha = (1 - smoothstep(0.18, 0.5, zoom)) * (1 - smoothstep(0.48, 0.6, p));
-  const threadAlpha = (1 - smoothstep(0.52, 0.8, zoom)) * (1 - smoothstep(0.46, 0.58, p));
-  const holeT = smoothstep(0.34, 1, zoom);
-  const holeFade = 1 - smoothstep(0.5, 0.7, p);
-  const travel = smoothstep(0.46, 0.78, p) * TRAVEL_END;
+  const threadAlpha = (1 - smoothstep(0.55, 0.86, zoom)) * (1 - smoothstep(0.48, 0.6, p));
+  const holeFade = 1 - smoothstep(0.58, 0.74, p);
+  const travel = smoothstep(0.54, 0.78, p) * TRAVEL_END;
   const stretch = lerp(lerp(3, 26, cruise), 0.38, settle);
   const lineAlpha = warpIn * (1 - smoothstep(0.82, 0.96, p));
   const laneAlpha = lineAlpha * (1 - smoothstep(0.68, 0.84, p));
@@ -521,31 +523,33 @@ function draw(
     const focal = Math.min(width, height) * 0.92;
     const entry = project(worldOf(CHOSEN, TARGET_U), cam.pos, cam.frame, focal, width, height);
     if (entry) {
-      const mouth = Math.pow(holeT, 1.15);
-      const reach = lerp(8, Math.hypot(width, height) * 1.65, mouth);
-      const radius = Math.max(reach, Math.min(Math.hypot(width, height) * 1.7, 0.08 * entry.k));
+      const unit = Math.min(width, height);
+      const dotR = Math.min(unit * 0.34, Math.max(3.5, 0.046 * entry.k));
+      const engulf = smoothstep(0.8, 1, zoom) * smoothstep(0.52, 0.66, p);
+      const radius = lerp(dotR, Math.hypot(width, height) * 1.35, engulf);
+      const pupil = smoothstep(0.48, 0.9, zoom);
+      const limb = (1 - engulf) * holeFade;
       ctx.globalCompositeOperation = "source-over";
-      const soft = ctx.createRadialGradient(entry.x, entry.y, 0, entry.x, entry.y, radius);
-      const dark = 0.2 + holeT * 0.75;
-      soft.addColorStop(0, `rgba(2, 3, 10, ${dark * holeFade})`);
-      soft.addColorStop(0.22, `rgba(6, 5, 16, ${(0.45 + holeT * 0.4) * holeFade})`);
-      soft.addColorStop(0.5, `rgba(40, 24, 70, ${0.12 * (1 - mouth * 0.85) * holeFade})`);
-      soft.addColorStop(0.78, `rgba(90, 140, 170, ${0.04 * (1 - mouth) * holeFade})`);
-      soft.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = soft;
+      const body = ctx.createRadialGradient(entry.x, entry.y, 0, entry.x, entry.y, Math.max(radius, 4));
+      body.addColorStop(0, `rgba(244, 236, 255, ${0.92 * limb})`);
+      body.addColorStop(0.18, `rgba(214, 170, 255, ${0.72 * limb})`);
+      body.addColorStop(0.42, `rgba(120, 70, 170, ${(0.28 + 0.2 * pupil) * limb})`);
+      body.addColorStop(0.72, `rgba(40, 18, 64, ${0.16 * limb})`);
+      body.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = body;
       ctx.beginPath();
-      ctx.arc(entry.x, entry.y, radius, 0, Math.PI * 2);
+      ctx.arc(entry.x, entry.y, Math.max(radius, 4), 0, Math.PI * 2);
       ctx.fill();
-      if (holeT < 0.72) {
-        const seed = lerp(3.2, 18, holeT);
-        const glow = ctx.createRadialGradient(entry.x, entry.y, 0, entry.x, entry.y, seed * 2.4);
-        const seedA = (1 - holeT) * holeFade;
-        glow.addColorStop(0, `rgba(244, 232, 255, ${0.95 * seedA})`);
-        glow.addColorStop(0.45, `rgba(190, 150, 255, ${0.45 * seedA})`);
-        glow.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = glow;
+      if (pupil > 0.04) {
+        const mouth = lerp(radius * 0.18, radius * 0.72, pupil);
+        const core = ctx.createRadialGradient(entry.x, entry.y, 0, entry.x, entry.y, Math.max(mouth, 2));
+        const ink = (0.18 + 0.32 * pupil) * holeFade;
+        core.addColorStop(0, `rgba(4, 3, 12, ${ink})`);
+        core.addColorStop(0.55, `rgba(10, 6, 22, ${ink * 0.55})`);
+        core.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = core;
         ctx.beginPath();
-        ctx.arc(entry.x, entry.y, seed * 2.4, 0, Math.PI * 2);
+        ctx.arc(entry.x, entry.y, Math.max(mouth, 2), 0, Math.PI * 2);
         ctx.fill();
       }
     }
