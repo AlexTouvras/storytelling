@@ -36,11 +36,9 @@ const PATH = [
   },
 ] as const;
 
-function storyLinks(slug: string) {
-  if (slug === "when-rates-rise") {
-    return [{ href: "/stories/when-rates-rise/film", label: "Watch the film" }];
-  }
-  return [{ href: `/stories/${slug}`, label: "Open" }];
+function storyHref(slug: string) {
+  if (slug === "when-rates-rise") return "/stories/when-rates-rise/film";
+  return `/stories/${slug}`;
 }
 
 function fadeFor(progress: number) {
@@ -193,10 +191,13 @@ export function FlagshipLanding({ stories }: Props) {
               </h2>
               {stories.length > 0 ? (
                 <ul className="mt-10 divide-y divide-white/10 border-y border-white/10">
-                  {stories.map((story) => {
-                    const links = storyLinks(story.slug);
-                    return (
-                      <li key={story.slug} className="py-8">
+                  {stories.map((story) => (
+                    <li key={story.slug}>
+                      <Link
+                        href={storyHref(story.slug)}
+                        aria-label={story.title}
+                        className="focus-ring group block py-8"
+                      >
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-neon-cyan/80">
                             {story.role === "reference" ? "Reference" : "Story"}
@@ -205,31 +206,15 @@ export function FlagshipLanding({ stories }: Props) {
                             {story.date}
                           </p>
                         </div>
-                        <h3 className="mt-3 font-display text-3xl text-white md:text-4xl">
-                          <Link
-                            href={links[0]?.href ?? `/stories/${story.slug}`}
-                            className="focus-ring hover:text-neon-cyan"
-                          >
-                            {story.title}
-                          </Link>
+                        <h3 className="mt-3 font-display text-3xl text-white group-hover:text-neon-cyan md:text-4xl">
+                          {story.title}
                         </h3>
                         <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/65">
                           {story.question ?? story.summary}
                         </p>
-                        <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 font-mono text-[11px] uppercase tracking-[0.16em]">
-                          {links.map((link) => (
-                            <Link
-                              key={link.href}
-                              href={link.href}
-                              className="focus-ring text-white/55 hover:text-neon-cyan"
-                            >
-                              {link.label} →
-                            </Link>
-                          ))}
-                        </div>
-                      </li>
-                    );
-                  })}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               ) : (
                 <p className="mt-10 text-white/50">No story is published yet.</p>
