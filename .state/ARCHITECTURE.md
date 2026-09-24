@@ -26,7 +26,7 @@
 - Approach B manifests; allow-listed visuals only
 - react-scrollama + CSS sticky; one path all breakpoints
 - **Continuous spine:** `TransmissionSpine` + `BufferMarkField` — acts change zoom/filter, not metaphor
-- **Directed film:** one canvas, scroll-scrubbed camera, loan dots from `buildField`. The essay manifest stays the engine path.
+- **Directed film:** one canvas, scroll-scrubbed camera, loan dots from `buildField`. This is the reference story people open. The essay manifest stays on the engine and is not linked from the landing or the film.
 - Extract grammar from real stories; no speculative template farm
 - AI in production pipeline later — not the brand headline
 - Evidence: notebooks/MCP → freeze JSON → manifest display (never invent at render)
@@ -66,7 +66,7 @@
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-09-23 | Standalone repo, not inside Orbit | Engine first; later `/stories` host |
-| 2026-09-24 | Portfolio teaser, flagship landing, then the story | First Orbit section after the title is a short teaser with one visual and a button. The button opens `/stories`, where stories accumulate as rows. |
+| 2026-09-24 | Portfolio teaser, flagship landing, then the story | First Orbit section after the title is a short teaser with one visual and a button. The button opens `/stories`, where stories accumulate as rows. When Rates Rise opens the film. |
 | 2026-09-23 | sticky + react-scrollama | One layout; drop split-pane |
 | 2026-09-23 | Reference story + ECB evidence + book sim | Decision story, not chart demo |
 | 2026-09-23 | **Interactive Decision Storytelling** as Orbit flagship | Stronger than “scrollytelling side feature” |

@@ -38,10 +38,7 @@ const PATH = [
 
 function storyLinks(slug: string) {
   if (slug === "when-rates-rise") {
-    return [
-      { href: "/stories/when-rates-rise/film", label: "Watch the film" },
-      { href: "/stories/when-rates-rise", label: "Read the essay" },
-    ];
+    return [{ href: "/stories/when-rates-rise/film", label: "Watch the film" }];
   }
   return [{ href: `/stories/${slug}`, label: "Open" }];
 }

@@ -30,7 +30,7 @@ The **story is the interface**; the product is a **reasoning / decision process*
 9. **Human gate on publish** — drafts and previews are fine; do not auto-publish.
 10. **Validate before render** — `npm run validate:stories` and `loadStoryManifest` must reject invalid manifests.
 11. **Progressive enhancement** — readable with reduced motion and without sticky positioning.
-12. **Orbit stays separate** — do not modify `C:\Users\kater\Documents\Orbit` from this project. On Orbit, the first section after the title is a teaser (short copy, one visual, a button). The button opens the flagship landing at `/stories`, where stories are added as rows. Essays live at `/stories/[slug]`. IDS is that system, not a side feature.
+12. **Orbit stays separate** — do not modify `C:\Users\kater\Documents\Orbit` from this project. On Orbit, the first section after the title is a teaser (short copy, one visual, a button). The button opens the flagship landing at `/stories`, where stories are added as rows. When Rates Rise opens its film. IDS is that system, not a side feature.
 13. **AI is pipeline, not headline** — research/evidence/architect agents later; do not lead with “AI-powered storytelling.”
 
 ## Three layers

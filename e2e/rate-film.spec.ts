@@ -15,6 +15,7 @@ test.describe("when rates rise film", () => {
     await expect(
       page.getByRole("link", { name: /watch the film/i }),
     ).toHaveAttribute("href", "/stories/when-rates-rise/film");
+    await expect(page.getByRole("link", { name: /essay/i })).toHaveCount(0);
   });
 
   test("scrubs from the question to the sleeve", async ({ page }) => {

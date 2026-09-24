@@ -7,9 +7,9 @@ Orbit flagship: a reusable system for turning complex data, AI, analytics, and b
 Two artifacts:
 
 1. **The engine** — schema-driven runtime, sticky scenes, visual registry, deterministic sims, validation, evidence provenance.
-2. **The reference story** — [*When Rates Rise*](http://localhost:3000/stories/when-rates-rise): where should a portfolio manager cut?
+2. **The reference story** — [*When Rates Rise*](http://localhost:3000/stories/when-rates-rise/film): where should a portfolio manager cut? The film is the story you enter.
 
-Future host: an Orbit portfolio teaser (first section after the title) that opens the flagship landing at `/stories`. Stories are rows there; each essay is `/stories/[slug]`. This repo stays standalone until packaging.
+Future host: an Orbit portfolio teaser (first section after the title) that opens the flagship landing at `/stories`. Stories are rows there. When Rates Rise opens the film. This repo stays standalone until packaging.
 
 ## Stack
 
@@ -27,7 +27,7 @@ npm run validate:stories
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — flagship landing — then `/stories/when-rates-rise`.
+Open [http://localhost:3000](http://localhost:3000) — flagship landing — then `/stories/when-rates-rise/film`.
 
 Reproduce the book shock figures:
 

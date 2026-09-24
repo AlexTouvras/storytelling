@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import type { FieldModel } from "@/lib/sim/book-field";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import { frameAt, beatAt } from "@/components/film/frame";
@@ -369,9 +368,6 @@ export function RateFilm({ model }: Props) {
             credit advice.
           </p>
           <div className="mt-8 flex flex-wrap gap-6 font-mono text-[11px] uppercase tracking-[0.16em]">
-            <Link href="/stories/when-rates-rise" className="focus-ring text-neon-cyan">
-              Essay version
-            </Link>
             <a href="#method" className="focus-ring text-white/50">
               Method
             </a>

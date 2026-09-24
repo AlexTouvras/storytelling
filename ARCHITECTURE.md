@@ -6,7 +6,7 @@
 
 Two artifacts: (1) the reusable **engine**, (2) the **reference decision story** (`when-rates-rise`). The story is the interface; the product is a reasoning process (Question → Evidence → Model → Mechanism → Uncertainty → Scenarios → Visual narrative → Decision frame).
 
-Future host: Orbit portfolio teaser (first section after the title) → flagship landing at `/stories` → essay at `/stories/[slug]`. New stories are rows on `/stories`. Do not overload Orbit’s prose `/writes` MDX model.
+Future host: Orbit portfolio teaser (first section after the title) → flagship landing at `/stories` → the film for When Rates Rise. New stories are rows on `/stories`. The essay manifest stays on the engine and is not the public entry. Do not overload Orbit’s prose `/writes` MDX model.
 
 ## Three layers
 
@@ -56,7 +56,7 @@ manifests (JSON)  →  Zod schema  →  template registry  →  StoryLayout
 
 Current visuals: `rate-risk-mechanism` (fixture) and `cashflow-pressure` (reference).
 
-The reference story also has a bespoke film at `/stories/when-rates-rise/film` (`src/components/film/`). Scroll progress drives one canvas — loan dots from the seeded book — through a close-up, a pullback, a reprice, and the sleeve. It is not a new `templateId`. The essay route stays on the manifest engine.
+The reference story people open is the film at `/stories/when-rates-rise/film` (`src/components/film/`). Scroll progress drives one canvas — loan dots from the seeded book — through a close-up, a pullback, a reprice, and the sleeve. It is not a new `templateId`. The essay route stays on the manifest engine and is not linked from the landing or the film.
 
 ## Scroll behavior
 
@@ -82,7 +82,7 @@ Mirrored from Orbit (not full Orbit chrome): OKLCH void/neon, Syne / IBM Plex Sa
 1. Publish or path-import this engine’s components + schema.
 2. Add a portfolio teaser as the first section after the Orbit title: short copy, one visual, a button to `/stories`.
 3. Add `/stories` as this flagship landing. New stories are rows on that page.
-4. Add `/stories/[slug]` for the essay manifest. Films keep their own route.
+4. When Rates Rise opens `/stories/when-rates-rise/film`. The essay manifest stays available to the engine and is not the public entry.
 5. Keep `/writes` as prose MDX; do not overload `WriteFrontmatter`.
 6. Human approve before production publish.
 7. Treat IDS as Orbit’s flagship system, not a blog garnish.
