@@ -24,7 +24,7 @@ type Star = {
   dust: boolean;
 };
 
-type Link = { aLane: number; aU: number; bLane: number; bU: number };
+type Link = { lanes: number[]; us: number[] };
 
 const CYAN: [number, number, number] = [126, 224, 234];
 const VIOLET: [number, number, number] = [214, 160, 255];
@@ -85,22 +85,20 @@ function buildStars(): Star[] {
   return stars;
 }
 
-/** Separate jumps. Each hop picks its own lane gap and its own sideways step. */
+/** Short elbows. Endpoints do not line up into one curve or one cut. */
 function buildLinks(): Link[] {
   const links: Link[] = [];
-  for (let i = 0; i < 26; i++) {
-    const lane = Math.floor(hash(i * 13 + 2) * (LANES - 4));
-    const jump = 1 + Math.floor(hash(i * 17 + 5) * 3.2);
-    const u0 = 0.08 + hash(i * 19 + 8) * 0.84;
-    const sign = hash(i * 23 + 1) > 0.5 ? 1 : -1;
-    const du = sign * (0.14 + hash(i * 29 + 3) * 0.38);
-    let u1 = u0 + du;
-    if (u1 < 0.06 || u1 > 0.94) u1 = u0 - du;
+  for (let i = 0; i < 14; i++) {
+    const lane = Math.floor(hash(i * 13 + 2) * (LANES - 5));
+    const jump = 1 + Math.floor(hash(i * 17 + 5) * 3);
+    const midJump = hash(i * 41 + 9) > 0.5 ? jump : Math.max(1, jump - 1);
+    const u0 = 0.08 + hash(i * 19 + 8) * 0.55;
+    const sign = hash(i * 23 + 1) > 0.48 ? 1 : -1;
+    const u1 = Math.min(0.94, Math.max(0.06, u0 + sign * (0.18 + hash(i * 29) * 0.28)));
+    const u2 = Math.min(0.94, Math.max(0.06, u1 - sign * (0.1 + hash(i * 31) * 0.34)));
     links.push({
-      aLane: lane,
-      aU: u0,
-      bLane: Math.min(LANES - 1, lane + jump),
-      bU: Math.min(0.94, Math.max(0.06, u1)),
+      lanes: [lane, Math.min(LANES - 1, lane + midJump), Math.min(LANES - 1, lane + jump + 1)],
+      us: [u0, u1, u2],
     });
   }
   return links;
@@ -185,8 +183,8 @@ function warpPoint(
 function rawLane(lane: number, u: number, width: number, height: number, zoom: number) {
   const t = lane / (LANES - 1);
   const ct = CHOSEN / (LANES - 1);
-  const yBase = height * (0.14 + t * 0.64);
-  const tilt = lane === CHOSEN ? 0.78 * (1 - zoom) : (t - ct) * 0.9 * (1 - zoom * 0.25);
+  const yBase = height * (0.1 + t * 0.74);
+  const tilt = lane === CHOSEN ? 0.36 * (1 - zoom) : (t - ct) * 0.06;
   return {
     x: width * (0.05 + u * 0.9),
     y: yBase + (u - 0.5) * width * tilt * 0.52,
@@ -253,7 +251,7 @@ function draw(
       if (a.y < -80 && b.y < -80) continue;
       if (a.y > height + 80 && b.y > height + 80) continue;
       const chosen = lane === CHOSEN;
-      const fade = chosen ? 1 : 1 - zoom * 0.55;
+      const fade = chosen ? 1 : 1 - smoothstep(0.12, 0.42, zoom);
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
@@ -262,27 +260,24 @@ function draw(
       ctx.stroke();
     }
 
-    const linkFade = lanesAlpha * (1 - smoothstep(0.22, 0.4, p));
+    const linkFade = lanesAlpha * (1 - smoothstep(0.04, 0.28, zoom));
     if (linkFade > 0.04) {
-      ctx.beginPath();
-      for (const link of LINKS) {
-        const a = framePoint(link.aLane, link.aU, width, height, zoom);
-        const b = framePoint(link.bLane, link.bU, width, height, zoom);
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-      }
-      ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.8 * linkFade})`;
       ctx.lineWidth = 1.15;
-      ctx.stroke();
+      ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.85 * linkFade})`;
       for (const link of LINKS) {
-        for (const end of [
-          framePoint(link.aLane, link.aU, width, height, zoom),
-          framePoint(link.bLane, link.bU, width, height, zoom),
-        ]) {
+        ctx.beginPath();
+        link.lanes.forEach((lane, n) => {
+          const pt = framePoint(lane, link.us[n], width, height, zoom);
+          if (n === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        });
+        ctx.stroke();
+        for (let n = 0; n < link.lanes.length; n++) {
+          const end = framePoint(link.lanes[n], link.us[n], width, height, zoom);
           if (end.x < -20 || end.y < -20 || end.x > width + 20 || end.y > height + 20) continue;
-          ctx.fillStyle = `rgba(236, 214, 255, ${0.9 * linkFade})`;
+          ctx.fillStyle = `rgba(236, 214, 255, ${0.95 * linkFade})`;
           ctx.beginPath();
-          ctx.arc(end.x, end.y, 2.1 + zoom * 1.4, 0, Math.PI * 2);
+          ctx.arc(end.x, end.y, 2.2, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -290,7 +285,7 @@ function draw(
 
     for (let lane = 0; lane < LANES; lane++) {
       const chosen = lane === CHOSEN;
-      const fade = chosen ? 1 : 1 - zoom * 0.65;
+      const fade = chosen ? 1 : 1 - smoothstep(0.12, 0.42, zoom);
       if (fade < 0.05) continue;
       for (const index of LANE_INDEX[lane]) {
         const star = STARS[index];
