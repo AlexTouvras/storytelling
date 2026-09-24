@@ -5,11 +5,11 @@ import { memo, useEffect, useRef, type RefObject } from "react";
 /**
  * Three acts of one flight.
  *
- * 1. Top-down. The record lanes run horizontal. One vertical thread ties a
- *    single dot on each lane to the next lane only, a short step at a time.
- * 2. The camera leaves overhead and swings to the side of one dot, the way a
- *    strategy view pitches in, until that dot fills the frame. Then warp:
- *    screen = center + worldXY * focal / z, streak from the previous depth.
+ * 1. Top-down. Record lanes run horizontal and the points drift along them.
+ *    One vertical thread ties a single dot on each lane to the next lane only.
+ * 2. The camera pitches until that vertical thread is the road ahead, and the
+ *    dot on it fills the frame. Then warp: screen = center + worldXY * focal / z,
+ *    streak from the previous depth, leaving along the same line.
  * 3. Acceleration stops. Streaks shorten into a slow horizon of stars and galaxies.
  */
 
@@ -112,13 +112,22 @@ function buildStars(): Star[] {
   return stars;
 }
 
-function worldOf(lane: number, u: number): V3 {
+function worldOf(lane: number, u: number, y = 0): V3 {
   return {
     x: (u - 0.5) * LEN,
-    y: 0,
+    y,
     z: (lane - (LANES - 1) / 2) * GAP,
   };
 }
+
+type Mote = { lane: number; u: number; rate: number; lift: number; r: number };
+const MOTES: Mote[] = Array.from({ length: 160 }, (_, i) => ({
+  lane: hash(i * 5 + 2) * (LANES - 1),
+  u: hash(i * 5 + 3),
+  rate: 0.035 + hash(i * 5 + 4) * 0.14,
+  lift: (hash(i * 5 + 5) - 0.5) * 0.45,
+  r: 0.012 + hash(i * 5 + 6) * 0.018,
+}));
 
 const STARS = buildStars();
 const LANE_INDEX: number[][] = Array.from({ length: LANES }, () => []);
@@ -244,16 +253,34 @@ function frameOf(pos: V3, target: V3): Frame {
   };
 }
 
-function approachCamera(zoom: number) {
-  const target = worldOf(CHOSEN, TARGET_U);
-  const pitch = lerp(1.5, 0.05, zoom);
-  const yaw = lerp(0, 1.35, zoom);
-  const dist = lerp(13.5, 0.11, Math.pow(zoom, 0.72));
+/**
+ * Overhead, the violet thread is screen-vertical because world +Z is up.
+ * The camera drops behind that thread and looks along it, so the line
+ * runs from the near dot to a vanishing point. That point is where warp begins.
+ */
+function approachCamera(zoom: number, time: number, reduced: boolean) {
+  const entry = worldOf(CHOSEN, TARGET_U);
+  const pitch = lerp(1.46, 0.22, zoom);
+  const dist = lerp(14.2, 1.1, Math.pow(zoom, 0.75));
+  const close = smoothstep(0.45, 1, zoom);
   const horiz = Math.cos(pitch) * dist;
+  const idle = reduced ? 0 : (1 - zoom) * (1 - zoom);
+  const sway = Math.sin(Math.PI * zoom) * 0.4 * (1 - close);
   const pos = {
-    x: target.x + Math.sin(yaw) * horiz,
-    y: Math.sin(pitch) * dist,
-    z: target.z + Math.cos(yaw) * horiz,
+    x: entry.x + sway + Math.sin(time * 0.22 + 1.3) * 0.22 * idle,
+    y: lerp(Math.sin(pitch) * dist, 0.2, close),
+    z: entry.z - lerp(horiz, 0.55, close) + Math.sin(time * 0.35) * 0.4 * idle,
+  };
+  const ahead = lerp(0.1, 5, smoothstep(0.05, 0.75, zoom));
+  const lane = Math.min(LANES - 1.001, CHOSEN + ahead);
+  const i0 = Math.floor(lane);
+  const i1 = Math.min(LANES - 1, i0 + 1);
+  const look = worldOf(lane, lerp(PATH[i0].u, PATH[i1].u, lane - i0));
+  const blend = smoothstep(0.08, 0.7, zoom);
+  const target = {
+    x: lerp(entry.x, look.x, blend),
+    y: 0,
+    z: lerp(entry.z, look.z, blend),
   };
   return { pos, target, frame: frameOf(pos, target) };
 }
@@ -321,12 +348,30 @@ function draw(
   }
 
   if (lanesAlpha > 0.03) {
-    const cam = approachCamera(zoom);
+    const cam = approachCamera(zoom, time, reduced);
     const focal = Math.min(width, height) * 0.92;
     const seen = (q: { x: number; y: number } | null) =>
       !!q && q.x > -width && q.x < width * 2 && q.y > -height && q.y < height * 2;
+    const flowTime = reduced ? 0 : time;
 
     ctx.globalCompositeOperation = "lighter";
+    for (const mote of MOTES) {
+      const u = mote.u + flowTime * mote.rate;
+      const wrapped = u - Math.floor(u);
+      const q = project(
+        worldOf(mote.lane, wrapped, mote.lift),
+        cam.pos,
+        cam.frame,
+        focal,
+        width,
+        height,
+      );
+      if (!q || q.x < -8 || q.y < -8 || q.x > width + 8 || q.y > height + 8) continue;
+      const radius = Math.max(0.6, mote.r * q.k);
+      ctx.fillStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.45 * lanesAlpha})`;
+      ctx.fillRect(q.x, q.y, radius, radius);
+    }
+
     ctx.lineWidth = 1;
     for (let lane = 0; lane < LANES; lane++) {
       ctx.beginPath();
@@ -360,20 +405,47 @@ function draw(
       } else ctx.lineTo(q.x, q.y);
     }
     ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.95 * lanesAlpha})`;
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = lerp(1.4, 2.4, zoom);
     ctx.stroke();
 
     const cap = Math.min(width, height) * 0.85;
+    const trail = 0.02 * (1 - zoom * 0.85);
+    ctx.beginPath();
     for (let lane = 0; lane < LANES; lane++) {
       for (const index of LANE_INDEX[lane]) {
         const star = STARS[index];
-        if (star.kind === 0 && index % 2 === 1) continue;
-        const q = project(worldOf(lane, star.u), cam.pos, cam.frame, focal, width, height);
+        if (star.onPath || (star.kind === 0 && index % 2 === 1)) continue;
+        const rate = 0.05 + star.kind * 0.05 + star.rad * 0.2;
+        const wrapped = star.u + flowTime * rate;
+        const u = wrapped - Math.floor(wrapped);
+        if (u < trail + 0.004) continue;
+        const q = project(worldOf(lane, u), cam.pos, cam.frame, focal, width, height);
+        const prev = project(worldOf(lane, u - trail), cam.pos, cam.frame, focal, width, height);
+        if (!q || !prev || !seen(q)) continue;
+        ctx.moveTo(prev.x, prev.y);
+        ctx.lineTo(q.x, q.y);
+      }
+    }
+    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.4 * lanesAlpha})`;
+    ctx.lineWidth = 1.15;
+    ctx.stroke();
+
+    for (let lane = 0; lane < LANES; lane++) {
+      for (const index of LANE_INDEX[lane]) {
+        const star = STARS[index];
+        if (!star.onPath && star.kind === 0 && index % 2 === 1) continue;
+        const rate = 0.05 + star.kind * 0.05 + star.rad * 0.2;
+        const wrapped = star.onPath || reduced ? star.u : star.u + flowTime * rate;
+        const u = wrapped - Math.floor(wrapped);
+        const q = project(worldOf(lane, u), cam.pos, cam.frame, focal, width, height);
         if (!q || q.x < -20 || q.y < -20 || q.x > width + 20 || q.y > height + 20) continue;
         const target = lane === CHOSEN && star.onPath;
-        const radius = Math.min(cap, Math.max(0.7, (target ? 0.055 : star.onPath ? 0.04 : 0.03) * q.k));
+        const pulse = reduced ? 1 : 0.78 + 0.22 * Math.sin(flowTime * (1.6 + star.rad) + lane + star.u * 40);
+        const worldR = target ? lerp(0.055, 0.11, zoom) : star.onPath ? 0.04 : star.kind === 2 ? 0.04 : 0.026;
+        const radius = Math.min(cap, Math.max(0.7, worldR * q.k * (target ? 1 : pulse)));
         const rgb = target ? [236, 220, 255] : star.onPath ? VIOLET : CYAN;
-        ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(target ? 1 : 0.75) * lanesAlpha})`;
+        const alpha = (target ? 1 : star.onPath ? 0.9 : 0.62 + 0.28 * pulse) * lanesAlpha;
+        ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
         ctx.beginPath();
         ctx.arc(q.x, q.y, radius, 0, Math.PI * 2);
         ctx.fill();
