@@ -15,6 +15,7 @@ export default function HomePage() {
         summary: manifest.meta.summary,
         date: manifest.meta.date,
         question: manifest.meta.hero?.question,
+        role: manifest.meta.role,
       };
     })
     .sort((a, b) => b.date.localeCompare(a.date));
