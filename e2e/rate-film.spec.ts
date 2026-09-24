@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("when rates rise film", () => {
   test("scrubs from the question to the sleeve", async ({ page }) => {
     await page.goto("/stories/when-rates-rise/film");
+    await expect(page.getByTestId("film-prologue")).toContainText(/buffer/i);
     await expect(page.getByTestId("film-title")).toContainText(
       /where do you cut/i,
     );
@@ -19,6 +20,7 @@ test.describe("when rates rise film", () => {
 
     await expect(page.getByTestId("film-stage")).toHaveAttribute("data-beat", "6");
     await expect(page.getByTestId("hero-figure")).toContainText("21.0%");
+    await expect(page.getByTestId("beat-copy")).toContainText(/overnight rate/i);
   });
 
   test("slider recomputes the sleeve", async ({ page }) => {

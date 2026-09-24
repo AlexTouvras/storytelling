@@ -14,6 +14,7 @@
 - [x] Atmosphere motif system (5 motifs, intro/outro/ambient, lab gallery)
 - [ ] Human review of motif craft vs Tier A ceiling
 - [x] Directed film: When Rates Rise as one scroll-scrubbed shot plus an operable sleeve
+- [x] Film narration: prologue, beat copy, and decision context for an online reader
 
 ## Next (after sign-off)
 

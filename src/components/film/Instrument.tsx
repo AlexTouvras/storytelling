@@ -50,17 +50,22 @@ export function Instrument({ base }: Props) {
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-neon-cyan/80">
             Your turn
           </p>
-          <h2 className="mt-4 max-w-[16ch] font-display text-[clamp(2rem,4vw,3.4rem)] font-semibold leading-[1.02] tracking-[-0.03em] text-white">
+          <h2 className="mt-4 max-w-[18ch] font-display text-[clamp(2rem,4vw,3.4rem)] font-semibold leading-[1.02] tracking-[-0.03em] text-white">
             Move the shock. Change who can reprice.
           </h2>
-          <p
-            className="mt-6 max-w-md text-lg leading-snug text-white/70"
-            data-testid="instrument-sentence"
-          >
-            A {shock}&nbsp;bp shock on a book that is {floating}% floating puts{" "}
-            <span className="text-white">{pct(sleeve)}</span> of unpaid balance
-            in the sleeve.
-          </p>
+          <div className="mt-6 max-w-md space-y-4 text-base leading-relaxed text-white/70">
+            <p>
+              The film held the hike at 300 basis points and the floating share
+              at 35%. Both are assumptions. A smaller hike, or a book with fewer
+              loans that can reprice, changes how much balance ends up in the
+              sleeve.
+            </p>
+            <p data-testid="instrument-sentence">
+              A {shock}&nbsp;bp shock on a book that is {floating}% floating puts{" "}
+              <span className="text-white">{pct(sleeve)}</span> of unpaid balance
+              in the sleeve.
+            </p>
+          </div>
 
           <div className="mt-10 space-y-7">
             <label className="block">
@@ -120,11 +125,13 @@ export function Instrument({ base }: Props) {
               </dd>
             </div>
           </dl>
-          <p className="mt-6 max-w-md text-sm leading-relaxed text-white/40">
-            Modelled book, seed 42, 2,000 loans. Floating status is assigned to
-            the largest balances until the share is filled — a model choice, not
-            a census. Thin means residual income under 6%. Dragging recomputes
-            every payment.
+          <p className="mt-6 max-w-md text-sm leading-relaxed text-white/45">
+            Still the same modelled book: seed 42, 2,000 loans. Dragging
+            recomputes every payment. Raising the floating share assigns
+            floating status to the largest balances until that share is filled,
+            which is why the sleeve grows faster than a random mix would. That
+            assignment is a model choice, not how euro-area mortgages are
+            actually distributed. Thin still means residual income under 6%.
           </p>
         </div>
         <div className="relative h-[min(62vh,560px)] overflow-hidden bg-[oklch(0.1_0.02_264)] ring-1 ring-white/10">

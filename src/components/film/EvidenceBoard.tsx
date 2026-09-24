@@ -29,6 +29,19 @@ export function EvidenceBoard({ thinBefore, thinAfter, sleeve }: Props) {
           The average improved.
           <span className="block text-white/45">The tail did not.</span>
         </h2>
+        <div className="mt-8 max-w-2xl space-y-4 text-base leading-relaxed text-white/70 md:text-lg">
+          <p>
+            The book you just watched is illustrative. These figures are not.
+            They are published euro-area numbers from the same hiking cycle, and
+            they do not all point the same way.
+          </p>
+          <p>
+            If you managed the portfolio off the average, the household sector
+            looked safer: debt fell relative to income. If you looked at
+            mortgagors under payment stress, the stressed share rose. Housing
+            costs for people with mortgages also outran general prices.
+          </p>
+        </div>
 
         <div className="mt-14 grid gap-px bg-white/10 md:grid-cols-2">
           <figure className="bg-void px-1 py-8 md:px-8 md:py-10">
@@ -103,13 +116,23 @@ export function EvidenceBoard({ thinBefore, thinAfter, sleeve }: Props) {
           </p>
         </div>
 
-        <p className="mt-14 max-w-2xl text-base leading-relaxed text-white/60">
-          In the modelled book, thin residual income moves {pct(thinBefore)} →{" "}
-          {pct(thinAfter)} of balances. The decision quantity is narrower:{" "}
-          <span className="text-white">{pct(sleeve)}</span> is floating and
-          already thin. A manager watching only the debt-to-income average would
-          have called this period a relief.
-        </p>
+        <div className="mt-14 max-w-2xl space-y-4 text-base leading-relaxed text-white/65">
+          <p>
+            Read the two big figures as a disagreement, not as a tie-break. Debt
+            to income is an observed sector average. The 26 to 33 is a published
+            simulation of borrowers whose debt service exceeds 40% of income. It
+            is not this book’s 6% buffer, and it is not loan-level European data.
+          </p>
+          <p>
+            The rhyme is the direction. In the modelled book, thin residual
+            income moves {pct(thinBefore)} → {pct(thinAfter)} of balances, the
+            same way the published stressed share rose. The decision quantity is
+            narrower than either average:{" "}
+            <span className="text-white">{pct(sleeve)}</span> is floating and
+            already thin. A manager watching only the debt-to-income ratio would
+            have called this period a relief.
+          </p>
+        </div>
       </div>
     </section>
   );

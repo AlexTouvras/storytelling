@@ -80,7 +80,7 @@ export function RateFilm({ model }: Props) {
     const node = document.getElementById("film-status");
     if (!node) return;
     const spoken = copyFor(beat, model);
-    node.textContent = `${spoken.kicker}. ${spoken.title} ${spoken.detail}`;
+    node.textContent = `${spoken.kicker}. ${spoken.title} ${spoken.paragraphs.join(" ")}`;
   }, [beat, model]);
 
   return (
@@ -93,7 +93,69 @@ export function RateFilm({ model }: Props) {
       </a>
       <p id="film-status" className="sr-only" aria-live="polite" />
 
-      <div ref={trackRef} data-testid="rate-film" className="relative h-[680vh]">
+      <section
+        data-testid="film-prologue"
+        className="mx-auto max-w-3xl px-5 pb-8 pt-28 md:pt-36"
+      >
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-neon-cyan/80">
+          For someone watching a mortgage book
+        </p>
+        <h2 className="mt-4 font-display text-[clamp(2rem,4.5vw,3.4rem)] font-semibold leading-[1.02] tracking-[-0.03em] text-white">
+          The policy rate is the number everyone quotes. It is not where you cut.
+        </h2>
+        <div className="mt-8 space-y-5 text-base leading-relaxed text-white/70 md:text-lg">
+          <p>
+            When rates rise, the commentary follows the print. A portfolio
+            manager still has to decide which balances to watch. The rate
+            reaches a household only if that loan’s coupon can reprice. The
+            monthly payment goes up. What is left after essentials and the
+            mortgage — the buffer — is the cash that can absorb the hit.
+          </p>
+          <p>
+            Fixed-rate borrowers do not feel this hike in their payment.
+            Floating-rate borrowers do. Two households with the same coupon
+            shock can end in different places, because one started with room
+            and the other did not.
+          </p>
+          <p>
+            The picture that follows is a modelled book of 2,000 mortgages,
+            built so the path can be replayed. It is a way to see where
+            pressure concentrates. It is not a forecast, not a census of the
+            euro area, and not credit advice. Euro-area figures come after the
+            model, as a check on whether the direction is real.
+          </p>
+        </div>
+        <dl className="mt-12 grid gap-8 border-t border-white/10 pt-8 sm:grid-cols-3">
+          <div>
+            <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-neon-cyan/80">
+              Buffer
+            </dt>
+            <dd className="mt-2 text-sm leading-relaxed text-white/65">
+              Monthly income left after essentials and the mortgage payment.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-neon-violet/80">
+              Floating
+            </dt>
+            <dd className="mt-2 text-sm leading-relaxed text-white/65">
+              A coupon that can reprice when market rates move. A fixed coupon
+              stays where it is.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/50">
+              Thin
+            </dt>
+            <dd className="mt-2 text-sm leading-relaxed text-white/65">
+              Residual income under 6% of income. A teaching line for this
+              story, not a regulatory definition.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <div ref={trackRef} data-testid="rate-film" className="relative h-[1040vh]">
         <div
           data-testid="film-stage"
           data-beat={beat}
@@ -130,8 +192,10 @@ export function RateFilm({ model }: Props) {
             >
               Where do you cut when rates rise?
             </h1>
-            <p className="mt-6 max-w-sm text-base text-white/60 md:text-lg">
-              Everyone watches the policy rate. The risk is a sleeve inside the book.
+            <p className="mt-6 max-w-md text-base leading-relaxed text-white/60 md:text-lg">
+              Scroll follows one floating mortgage, then every loan in the
+              book. The cut is the group whose payment can still rise and whose
+              cash is already thin.
             </p>
             <div className="mt-12 h-14 w-px bg-gradient-to-b from-white/80 to-transparent" />
           </div>
@@ -147,9 +211,14 @@ export function RateFilm({ model }: Props) {
             <h2 className="mt-3 font-display text-[clamp(1.7rem,3vw,2.7rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-white">
               {copy.title}
             </h2>
-            <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/65 md:text-base">
-              {copy.detail}
-            </p>
+            <div
+              data-testid="beat-copy"
+              className="mt-3 max-w-md space-y-3 text-sm leading-relaxed text-white/70 md:text-[15px]"
+            >
+              {copy.paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
             {showCash ? (
               <CashMeter
                 className="max-w-sm md:hidden"
@@ -234,26 +303,50 @@ export function RateFilm({ model }: Props) {
           <h2 className="mt-4 font-display text-[clamp(2.4rem,5.5vw,4.6rem)] font-semibold leading-[0.96] tracking-[-0.035em] text-white">
             Size the watchlist from the sleeve, not the policy rate.
           </h2>
-          <p className="mt-8 text-lg leading-relaxed text-white/70">
-            In this modelled book that sleeve is{" "}
-            <span className="text-white">{pct(sleeve)}</span> of unpaid
-            principal: floating-rate balances with less than 6% of income left
-            after essentials and the mortgage.
+          <div className="mt-8 space-y-5 text-lg leading-relaxed text-white/70">
+            <p>
+              In this modelled book the sleeve is{" "}
+              <span className="text-white">{pct(sleeve)}</span> of unpaid
+              principal: floating-rate balances with less than 6% of income
+              left after essentials and the mortgage. The other{" "}
+              {pct(1 - sleeve)} either cannot reprice, or still has more room
+              than that line.
+            </p>
+            <p>
+              Cutting on the overnight rate treats every loan as the same
+              exposure. Cutting on “thin” alone includes fixed-rate names whose
+              payment will not move because of this hike. The sleeve is the
+              intersection: the coupon can still change, and the household is
+              already close to the wall.
+            </p>
+          </div>
+          <p className="mt-10 font-mono text-[10px] uppercase tracking-[0.16em] text-white/40">
+            What to watch inside that sleeve
           </p>
-          <ol className="mt-10 space-y-4 text-white/80">
+          <ol className="mt-4 space-y-5 text-white/80">
             <li className="flex gap-4">
               <span className="font-mono text-neon-cyan">01</span>
-              Reset dates inside that sleeve.
+              <span>
+                Reset dates. A floating loan that does not reprice for years is
+                not the same problem as one that resets this quarter.
+              </span>
             </li>
             <li className="flex gap-4">
               <span className="font-mono text-neon-cyan">02</span>
-              The buffer after the next reset — not the overnight print.
+              <span>
+                The buffer after the next payment change. The policy print is
+                upstream. The residual is the quantity that got smaller.
+              </span>
             </li>
             <li className="flex gap-4">
               <span className="font-mono text-neon-cyan">03</span>
-              Names that were already short of room.{" "}
-              {pct(model.summary.concentration.newThinFromBottomTercileShare)}{" "}
-              of newly thin accounts sat in the weakest third before the shock.
+              <span>
+                Names that were already short of room.{" "}
+                {pct(model.summary.concentration.newThinFromBottomTercileShare)}{" "}
+                of the accounts that became thin were already in the weakest
+                third of buffers before the shock. The hike mostly found
+                households that had little slack.
+              </span>
             </li>
           </ol>
           <p className="mt-10 text-sm text-white/40">
@@ -315,44 +408,66 @@ function copyFor(beat: number, model: FieldModel) {
   const thinAfter = pct(model.summary.after.thinBalanceShare);
   const sleeve = pct(model.summary.actionableSlice.floatingThinBalanceShare);
   const rest = pct(1 - model.summary.actionableSlice.floatingThinBalanceShare);
+  const income = eur(featured.incomeMonthly);
+  const balance = eur(featured.balance);
+  const bufferBefore = eur(featured.bufferBefore);
+  const paymentBefore = eur(featured.paymentBefore);
+  const paymentAfter = eur(featured.paymentAfter);
 
   switch (beat) {
     case 1:
       return {
-        kicker: `Loan ${featured.id} · floating · ${eur(featured.balance)} unpaid`,
+        kicker: `Loan ${featured.id} · floating · ${balance} unpaid`,
         title: "This one still has room.",
-        detail: `${eur(featured.incomeMonthly)} comes in each month. Essentials and the mortgage still leave a buffer.`,
+        paragraphs: [
+          `Loan ${featured.id} is one floating-rate mortgage in the model, with ${balance} still unpaid. ${income} comes in each month. Essentials take their share, the payment is ${paymentBefore}, and ${bufferBefore} is left. That remainder is the buffer.`,
+          "The dot is this loan. Left means less residual income. The line you are moving toward is the teaching cut: under 6% of income left. This loan is still to the right of it.",
+        ],
       };
     case 2:
       return {
-        kicker: "The coupon steps up 300 bp",
+        kicker: "The coupon steps up 300 basis points",
         title: "The payment eats the buffer.",
-        detail: "Same household. What disappears is the residual, not an abstract risk score.",
+        paragraphs: [
+          `A 300 basis point rise is three percentage points on the coupon. Only this loan’s rate changes. The payment moves from ${paymentBefore} to ${paymentAfter}. Essentials and income stay put, so the buffer is what shrinks.`,
+          "Nothing abstract was added to the household. Euros that used to be left over now go to the mortgage. When the dot crosses the line, residual income is under 6%.",
+        ],
       };
     case 3:
       return {
         kicker: "Seed 42 · illustrative book",
         title: "Now the rest of the book.",
-        detail:
-          "Across is residual income. Up is unpaid balance. The line is 6% of income left.",
+        paragraphs: [
+          "That loan is one name. The cloud is 2,000 amortising mortgages, generated from a fixed seed so the same picture can be replayed. About 35% of unpaid balance is floating. In this model the largest balances are made floating first — a choice, not a census.",
+          "Across is residual income, more room to the right. Up is unpaid balance, so larger loans sit higher. Cyan is a fixed coupon. Violet can still reprice. The line is still 6% of income left.",
+        ],
       };
     case 4:
       return {
         kicker: "Fixed coupons do not move",
         title: "Only the floating loans travel.",
-        detail: `Thin balances go from ${thinBefore} to ${thinAfter}. Watch who crosses the line.`,
+        paragraphs: [
+          "The same 300 basis point shock now hits every floating loan. Fixed coupons stay on their old payment, which is why the cyan dots do not move. A parallel rate move is not a parallel risk move.",
+          `The share of balances under the line goes from ${thinBefore} to ${thinAfter}. Most of the book is still fine. The useful question is which balances crossed, and whether “thin” is already the right watchlist.`,
+        ],
       };
     case 5:
       return {
         kicker: "Floating and already thin",
         title: "This is the sleeve.",
-        detail: `${sleeve} of unpaid balance can still reprice and is already short of room.`,
+        paragraphs: [
+          "Thin on its own mixes two kinds of loan. Some were already short of room and are fixed: this hike does not change their payment. The balances that matter for a rate shock are the ones that can still reprice and are already under the line.",
+          `In this book that sleeve is ${sleeve} of unpaid principal. The dimmed dots are outside it. What stays bright is the watchlist.`,
+        ],
       };
     default:
       return {
         kicker: "Where you cut",
         title: "Not the overnight rate.",
-        detail: `The watchlist is this sleeve. ${rest} of balances sit outside it.`,
+        paragraphs: [
+          `The overnight rate is common to the whole book, so it cannot tell you where to look. ${rest} of balances sit outside the sleeve. The cut starts with the ${sleeve} that are floating and already thin.`,
+          "From there the work is ordinary credit work: when those coupons reset, what the buffer is after the new payment, and which names were already in the weakest third before the hike.",
+        ],
       };
   }
 }
