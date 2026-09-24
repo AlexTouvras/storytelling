@@ -1,6 +1,18 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("when rates rise film", () => {
+  test("landing leads with the decision, not the motif lab", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /where do you cut/i,
+    );
+    await expect(page.getByRole("link", { name: /enter the story/i })).toHaveAttribute(
+      "href",
+      "/stories/when-rates-rise/film",
+    );
+    await expect(page.getByRole("heading", { name: "The book" })).toBeVisible();
+  });
+
   test("scrubs from the question to the sleeve", async ({ page }) => {
     await page.goto("/stories/when-rates-rise/film");
     await expect(page.getByTestId("film-prologue")).toContainText(/buffer/i);

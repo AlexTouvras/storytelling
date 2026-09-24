@@ -15,6 +15,7 @@
 - [ ] Human review of motif craft vs Tier A ceiling
 - [x] Directed film: When Rates Rise as one scroll-scrubbed shot plus an operable sleeve
 - [x] Film narration: prologue, beat copy, and decision context for an online reader
+- [x] Landing leads with the reference decision; motif lab is a footer link
 
 ## Next (after sign-off)
 
