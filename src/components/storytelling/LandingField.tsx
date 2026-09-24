@@ -371,7 +371,8 @@ function draw(
   const warpIn = smoothstep(0.46, 0.66, p);
   const cruise = smoothstep(0.46, 0.7, p);
   const settle = smoothstep(0.64, 0.92, p);
-  const horizon = smoothstep(0.78, 0.97, p);
+  const bloom = smoothstep(0.66, 0.88, p);
+  const horizon = smoothstep(0.84, 0.98, p);
   const fieldAlpha = (1 - smoothstep(0.18, 0.5, zoom)) * (1 - smoothstep(0.48, 0.6, p));
   const threadAlpha = (1 - smoothstep(0.52, 0.8, zoom)) * (1 - smoothstep(0.46, 0.58, p));
   const holeT = smoothstep(0.34, 1, zoom);
@@ -614,9 +615,9 @@ function draw(
     ctx.stroke();
   }
 
-  if (dotAlpha > 0.02) {
+  if (dotAlpha > 0.02 || bloom > 0.02) {
     ctx.globalCompositeOperation = "source-over";
-    for (const i of DUST_INDEX) {
+    if (dotAlpha > 0.02) for (const i of DUST_INDEX) {
       if (GALAXY_SET.has(i) || ORB_SET.has(i)) continue;
       const star = STARS[i];
       const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
@@ -629,9 +630,9 @@ function draw(
       const targetR = warm ? 255 : 236;
       const targetG = warm ? 214 : 238;
       const targetB = warm ? 170 : 248;
-      const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * horizon);
-      const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * horizon);
-      const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * horizon);
+      const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * bloom);
+      const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * bloom);
+      const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * bloom);
       ctx.fillStyle = `rgba(${r},${g},${b},${0.88 * dotAlpha})`;
       ctx.beginPath();
       ctx.arc(x, y, dotR, 0, Math.PI * 2);
@@ -644,10 +645,10 @@ function draw(
       const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
       const ox = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
       const oy = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
-      const radius = lerp(2.4, orb.r, horizon);
-      const body = ctx.createRadialGradient(ox - radius * 0.3, oy - radius * 0.3, radius * 0.1, ox, oy, radius);
-      body.addColorStop(0, `rgba(230, 236, 245, ${0.75 * dotAlpha})`);
-      body.addColorStop(0.55, `rgba(140, 160, 190, ${0.38 * horizon})`);
+      const radius = lerp(2.4, orb.r, bloom);
+      const body = ctx.createRadialGradient(ox - radius * 0.3, oy - radius * 0.3, radius * 0.08, ox, oy, radius);
+      body.addColorStop(0, `rgba(244, 240, 255, ${0.95 * Math.max(dotAlpha, bloom)})`);
+      body.addColorStop(0.45, `rgba(170, 190, 220, ${0.55 * bloom})`);
       body.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = body;
       ctx.beginPath();
@@ -661,27 +662,27 @@ function draw(
       const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
       const gx = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
       const gy = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
-      const rx = lerp(3.2, galaxy.rx, horizon);
-      const ry = lerp(3.2, galaxy.ry, horizon);
+      const rx = lerp(4, galaxy.rx, bloom);
+      const ry = lerp(4, galaxy.ry, bloom);
       ctx.save();
       ctx.translate(gx, gy);
       ctx.rotate(galaxy.rot);
       ctx.scale(1, ry / rx);
       const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
-      g.addColorStop(0, `rgba(236, 228, 255, ${0.62 * Math.max(dotAlpha, horizon)})`);
-      g.addColorStop(0.22, `rgba(170, 140, 230, ${0.32 * horizon})`);
-      g.addColorStop(0.55, `rgba(90, 140, 170, ${0.12 * horizon})`);
+      g.addColorStop(0, `rgba(248, 242, 255, ${0.92 * Math.max(dotAlpha, bloom)})`);
+      g.addColorStop(0.16, `rgba(190, 150, 245, ${0.62 * bloom})`);
+      g.addColorStop(0.42, `rgba(120, 160, 200, ${0.28 * bloom})`);
       g.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(0, 0, rx, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      if (horizon > 0.35) {
+      if (bloom > 0.45) {
         ctx.save();
         ctx.translate(gx, gy);
         ctx.rotate(galaxy.rot);
-        ctx.strokeStyle = `rgba(210, 190, 255, ${0.22 * horizon})`;
+        ctx.strokeStyle = `rgba(210, 190, 255, ${0.28 * bloom})`;
         ctx.lineWidth = 1.2;
         ctx.beginPath();
         ctx.ellipse(0, 0, rx * 0.62, ry * 0.7, 0.4, 0.2, 2.4);
