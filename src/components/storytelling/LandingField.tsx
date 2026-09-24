@@ -52,16 +52,20 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+/** Sideways step to the next lane. Alternates so the thread weaves instead of running straight. */
+function pathStep(seed: number, lane: number) {
+  const sign = lane % 2 === 0 ? 1 : -1;
+  return sign * (0.05 + hash(seed) * 0.07);
+}
+
 /** One thread: a single dot on each horizontal lane, stepped only to the next lane. */
 function buildPath(): Node[] {
   const u = new Array<number>(LANES).fill(TARGET_U);
   for (let lane = CHOSEN - 1; lane >= 0; lane--) {
-    const du = (hash(lane * 19 + 4) - 0.5) * 0.03;
-    u[lane] = Math.min(0.72, Math.max(0.28, u[lane + 1] + du));
+    u[lane] = Math.min(0.82, Math.max(0.18, u[lane + 1] + pathStep(lane * 19 + 4, lane)));
   }
   for (let lane = CHOSEN + 1; lane < LANES; lane++) {
-    const du = (hash(lane * 23 + 8) - 0.5) * 0.03;
-    u[lane] = Math.min(0.72, Math.max(0.28, u[lane - 1] + du));
+    u[lane] = Math.min(0.82, Math.max(0.18, u[lane - 1] + pathStep(lane * 23 + 8, lane)));
   }
   u[CHOSEN] = TARGET_U;
   return u.map((value, lane) => ({ lane, u: value }));
