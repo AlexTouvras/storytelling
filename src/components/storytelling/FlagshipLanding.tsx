@@ -47,12 +47,12 @@ function storyLinks(slug: string) {
 }
 
 function fadeFor(progress: number) {
-  const t = Math.min(1, Math.max(0, (progress - 0.36) / 0.28));
+  const t = Math.min(1, Math.max(0, (progress - 0.18) / 0.34));
   return 1 - t * t * (3 - 2 * t);
 }
 
 /**
- * Product index. A data corridor is the hero. The path cuts through it.
+ * Product index. Records converge into a vortex, then the path arrives through it.
  */
 export function FlagshipLanding({ stories }: Props) {
   const reduced = usePrefersReducedMotion();

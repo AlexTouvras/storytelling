@@ -18,7 +18,7 @@
 | Evidence Pack v2 | `data/figures/when-rates-rise.v2.json` | Frozen modeled + observed |
 | Sims | `src/lib/sim/rate-buffer-book.ts` | Calibrated thin cutoff 6% |
 | Directed film | `src/components/film/` · `/stories/when-rates-rise/film` | Scroll-scrubbed canvas of the seeded book. Not a template. |
-| Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Scroll-scrubbed data streams, not a story template. |
+| Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Same seeded records morph from streams into a vortex. Not a story template. |
 
 ## Design patterns
 
@@ -79,3 +79,4 @@
 | 2026-09-24 | Atmosphere motif registry (5 allow-listed motifs) | Reusable intro/outro/ambient; not five story templates |
 | 2026-09-24 | Directed film route for When Rates Rise | One camera over loan-level sim output; sliders recompute payments. Essay route unchanged. |
 | 2026-09-24 | Landing is a product index with a data-field hero | Gradient wordmark, then the shared path cuts through the field. No per-story poster. |
+| 2026-09-24 | Signal convergence on the landing | Scroll morphs the same records: streams → selected chain → vortex → the path section. Canvas only. |
