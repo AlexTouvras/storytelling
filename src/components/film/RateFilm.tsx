@@ -201,10 +201,25 @@ export function RateFilm({ model }: Props) {
           </div>
 
           <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-[52%] bg-gradient-to-b from-void from-25% via-void/95 to-transparent md:hidden"
+            style={{ opacity: body }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 hidden w-[min(100%,38rem)] bg-gradient-to-r from-void from-[22%] via-void/95 to-transparent md:block"
+            style={{ opacity: body }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-void via-void/85 to-transparent"
+            style={{ opacity: body }}
+          />
+
+          <div
             className="pointer-events-none absolute left-5 right-5 top-20 max-w-md md:left-10 md:top-24"
             style={{ opacity: body }}
           >
-            <div className="absolute -inset-x-6 -inset-y-8 -z-10 bg-[radial-gradient(ellipse_at_left,oklch(0.12_0.025_264)_20%,transparent_72%)]" />
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/80">
               {copy.kicker}
             </p>
