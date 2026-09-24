@@ -260,23 +260,23 @@ function frameOf(pos: V3, target: V3): Frame {
  */
 function approachCamera(zoom: number, time: number, reduced: boolean) {
   const entry = worldOf(CHOSEN, TARGET_U);
-  const pitch = lerp(1.46, 0.22, zoom);
-  const dist = lerp(14.2, 1.1, Math.pow(zoom, 0.75));
-  const close = smoothstep(0.45, 1, zoom);
+  const pitch = lerp(1.46, 0.36, zoom);
+  const dist = lerp(14.5, 3.4, Math.pow(zoom, 0.8));
+  const close = smoothstep(0.35, 1, zoom);
   const horiz = Math.cos(pitch) * dist;
   const idle = reduced ? 0 : (1 - zoom) * (1 - zoom);
-  const sway = Math.sin(Math.PI * zoom) * 0.4 * (1 - close);
+  const sway = Math.sin(Math.PI * zoom) * 0.28 * (1 - close);
   const pos = {
     x: entry.x + sway + Math.sin(time * 0.22 + 1.3) * 0.22 * idle,
-    y: lerp(Math.sin(pitch) * dist, 0.2, close),
-    z: entry.z - lerp(horiz, 0.55, close) + Math.sin(time * 0.35) * 0.4 * idle,
+    y: lerp(Math.sin(pitch) * dist, 1.15, close),
+    z: entry.z - lerp(horiz, 2.6, close) + Math.sin(time * 0.35) * 0.4 * idle,
   };
-  const ahead = lerp(0.1, 5, smoothstep(0.05, 0.75, zoom));
+  const ahead = lerp(0.05, 5.5, smoothstep(0.08, 0.85, zoom));
   const lane = Math.min(LANES - 1.001, CHOSEN + ahead);
   const i0 = Math.floor(lane);
   const i1 = Math.min(LANES - 1, i0 + 1);
   const look = worldOf(lane, lerp(PATH[i0].u, PATH[i1].u, lane - i0));
-  const blend = smoothstep(0.08, 0.7, zoom);
+  const blend = smoothstep(0.12, 0.8, zoom);
   const target = {
     x: lerp(entry.x, look.x, blend),
     y: 0,
@@ -366,8 +366,8 @@ function draw(
         width,
         height,
       );
-      if (!q || q.x < -8 || q.y < -8 || q.x > width + 8 || q.y > height + 8) continue;
-      const radius = Math.max(0.6, mote.r * q.k);
+      if (!q || q.k > 90 || q.x < -8 || q.y < -8 || q.x > width + 8 || q.y > height + 8) continue;
+      const radius = Math.min(3.2, Math.max(0.6, mote.r * q.k));
       ctx.fillStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.45 * lanesAlpha})`;
       ctx.fillRect(q.x, q.y, radius, radius);
     }
@@ -378,7 +378,7 @@ function draw(
       let pen = false;
       for (let i = 0; i <= 28; i++) {
         const q = project(worldOf(lane, i / 28), cam.pos, cam.frame, focal, width, height);
-        if (!seen(q) || !q) {
+        if (!q || q.k > 110 || q.x < -160 || q.y < -160 || q.x > width + 160 || q.y > height + 160) {
           pen = false;
           continue;
         }
@@ -390,23 +390,6 @@ function draw(
       ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.34 * lanesAlpha})`;
       ctx.stroke();
     }
-
-    ctx.beginPath();
-    let pen = false;
-    for (const node of PATH) {
-      const q = project(worldOf(node.lane, node.u), cam.pos, cam.frame, focal, width, height);
-      if (!q) {
-        pen = false;
-        continue;
-      }
-      if (!pen) {
-        ctx.moveTo(q.x, q.y);
-        pen = true;
-      } else ctx.lineTo(q.x, q.y);
-    }
-    ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.95 * lanesAlpha})`;
-    ctx.lineWidth = lerp(1.4, 2.4, zoom);
-    ctx.stroke();
 
     const cap = Math.min(width, height) * 0.85;
     const trail = 0.02 * (1 - zoom * 0.85);
@@ -421,35 +404,69 @@ function draw(
         if (u < trail + 0.004) continue;
         const q = project(worldOf(lane, u), cam.pos, cam.frame, focal, width, height);
         const prev = project(worldOf(lane, u - trail), cam.pos, cam.frame, focal, width, height);
-        if (!q || !prev || !seen(q)) continue;
+        if (!q || !prev || q.k > 90 || !seen(q)) continue;
         ctx.moveTo(prev.x, prev.y);
         ctx.lineTo(q.x, q.y);
       }
     }
-    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.4 * lanesAlpha})`;
+    ctx.strokeStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${0.45 * lanesAlpha})`;
     ctx.lineWidth = 1.15;
     ctx.stroke();
 
     for (let lane = 0; lane < LANES; lane++) {
       for (const index of LANE_INDEX[lane]) {
         const star = STARS[index];
-        if (!star.onPath && star.kind === 0 && index % 2 === 1) continue;
+        if (star.onPath || (star.kind === 0 && index % 2 === 1)) continue;
         const rate = 0.05 + star.kind * 0.05 + star.rad * 0.2;
-        const wrapped = star.onPath || reduced ? star.u : star.u + flowTime * rate;
+        const wrapped = star.u + flowTime * rate;
         const u = wrapped - Math.floor(wrapped);
         const q = project(worldOf(lane, u), cam.pos, cam.frame, focal, width, height);
-        if (!q || q.x < -20 || q.y < -20 || q.x > width + 20 || q.y > height + 20) continue;
-        const target = lane === CHOSEN && star.onPath;
+        if (!q || q.k > 90 || q.x < -20 || q.y < -20 || q.x > width + 20 || q.y > height + 20) continue;
         const pulse = reduced ? 1 : 0.78 + 0.22 * Math.sin(flowTime * (1.6 + star.rad) + lane + star.u * 40);
-        const worldR = target ? lerp(0.055, 0.11, zoom) : star.onPath ? 0.04 : star.kind === 2 ? 0.04 : 0.026;
-        const radius = Math.min(cap, Math.max(0.7, worldR * q.k * (target ? 1 : pulse)));
-        const rgb = target ? [236, 220, 255] : star.onPath ? VIOLET : CYAN;
-        const alpha = (target ? 1 : star.onPath ? 0.9 : 0.62 + 0.28 * pulse) * lanesAlpha;
-        ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+        const worldR = star.kind === 2 ? 0.04 : 0.026;
+        const radius = Math.min(6.5, Math.max(0.7, worldR * q.k * pulse));
+        const alpha = (0.42 + 0.28 * pulse) * lanesAlpha;
+        ctx.fillStyle = `rgba(${CYAN[0]},${CYAN[1]},${CYAN[2]},${alpha})`;
         ctx.beginPath();
         ctx.arc(q.x, q.y, radius, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+
+    ctx.globalCompositeOperation = "source-over";
+    ctx.beginPath();
+    let pen = false;
+    for (const node of PATH) {
+      const q = project(worldOf(node.lane, node.u), cam.pos, cam.frame, focal, width, height);
+      // Far offscreen points make the stroke drop the visible road.
+      if (!q || q.x < -120 || q.y < -120 || q.x > width + 120 || q.y > height + 120) {
+        pen = false;
+        continue;
+      }
+      if (!pen) {
+        ctx.moveTo(q.x, q.y);
+        pen = true;
+      } else ctx.lineTo(q.x, q.y);
+    }
+    ctx.strokeStyle = `rgba(${VIOLET[0]},${VIOLET[1]},${VIOLET[2]},${0.95 * lanesAlpha})`;
+    ctx.lineWidth = lerp(1.8, 3.2, zoom);
+    ctx.stroke();
+
+    for (let lane = 0; lane < LANES; lane++) {
+      const pathIndex = LANE_INDEX[lane].find((index) => STARS[index].onPath);
+      if (pathIndex === undefined) continue;
+      const star = STARS[pathIndex];
+      const q = project(worldOf(lane, star.u), cam.pos, cam.frame, focal, width, height);
+      if (!q || q.x < -20 || q.y < -20 || q.x > width + 20 || q.y > height + 20) continue;
+      const target = lane === CHOSEN;
+      const worldR = target ? lerp(0.05, 0.09, zoom) : 0.04;
+      const limit = target ? 64 : 11;
+      const radius = Math.min(cap, limit, Math.max(0.8, worldR * q.k));
+      const rgb = target ? [236, 220, 255] : VIOLET;
+      ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${lanesAlpha})`;
+      ctx.beginPath();
+      ctx.arc(q.x, q.y, radius, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
