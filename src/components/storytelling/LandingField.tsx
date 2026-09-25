@@ -182,20 +182,26 @@ function settledReach(star: Star) {
 }
 
 /**
- * Warp frame scale. On portrait phones, min(w,h) alone crushes the horizon
- * into the center — boost so stars, orbs, and galaxies reach toward the edges.
+ * Warp frame scale on the short axis. Portrait phones also get an elliptical
+ * Y stretch in `warpPoint` so the horizon fills the tall frame without
+ * overshooting the sides into an empty vertical column.
  */
 function warpUnit(width: number, height: number) {
   const short = Math.min(width, height);
   if (short >= 760) return short;
-  const aspect = Math.max(width, height) / short;
-  const boost = 1.32 + Math.min(0.42, (aspect - 1) * 0.3);
-  return short * boost;
+  // ~1.4× pulls the old center cluster outward without clearing the left/right edges.
+  return short * 1.4;
+}
+
+/** Extra Y scale on narrow portrait so galaxies/stars reach the top and bottom. */
+function warpAspectY(width: number, height: number) {
+  if (width >= 760) return 1;
+  return Math.min(1.65, (height / Math.max(width, 1)) * 0.75);
 }
 
 /** Galaxy / orb pixel sizes: scaled down on narrow frames so they don't swamp the field. */
 function bodyScale(width: number) {
-  return width < 760 ? 0.58 : 1;
+  return width < 760 ? 0.55 : 1;
 }
 
 type Ranked = { i: number; reach: number; ang: number };
@@ -256,7 +262,9 @@ function warpPoint(
   const z = flightZ(star.z, travel);
   const prevZ = Math.min(MIN_Z + Z_SPAN, z + stretch);
   const unit = warpUnit(width, height);
-  const focal = unit * 0.2;
+  const ay = warpAspectY(width, height);
+  // Depth from the true short side so boost doesn't double-count in focal.
+  const focal = Math.min(width, height) * 0.2;
   const dist = star.rad * unit;
   const twist = (1 - (z - MIN_Z) / Z_SPAN) * 1.6;
   const prevTwist = (1 - (prevZ - MIN_Z) / Z_SPAN) * 1.6;
@@ -265,9 +273,9 @@ function warpPoint(
   const a = star.ang + twist;
   const pa = star.ang + prevTwist;
   WARP.x = cx + Math.cos(a) * dist * k;
-  WARP.y = cy + Math.sin(a) * dist * k;
+  WARP.y = cy + Math.sin(a) * dist * k * ay;
   WARP.px = cx + Math.cos(pa) * dist * pk;
-  WARP.py = cy + Math.sin(pa) * dist * pk;
+  WARP.py = cy + Math.sin(pa) * dist * pk * ay;
   return WARP;
 }
 
@@ -651,29 +659,29 @@ function draw(
         if (x < -8 || y < -8 || x > width + 8 || y > height + 8) continue;
         const apparent = star.rad / flightZ(star.z, travel);
         const near = Math.min(1, apparent / 0.0022);
-        // Narrow frames: keep dots as pinpricks; desktop stays slightly larger.
+        // Floor core size so mobile DPR antialias does not dull them to grey dust.
         const core = narrow
-          ? 0.22 + near * 0.55
-          : 0.35 + near * 0.95;
+          ? 0.55 + near * 0.65
+          : 0.4 + near * 0.9;
         const halo = narrow
-          ? 0.55 + near * 1.1
-          : 0.7 + near * 1.55;
-        const fade = lerp(0.7, 1, dotAlpha);
+          ? 1.35 + near * 1.5
+          : 0.85 + near * 1.45;
+        const fade = lerp(0.75, 1, dotAlpha);
         const warm = hash(i * 21) > 0.84;
-        const targetR = warm ? 255 : 248;
-        const targetG = warm ? 228 : 246;
-        const targetB = warm ? 190 : 255;
+        const targetR = warm ? 255 : 250;
+        const targetG = warm ? 232 : 248;
+        const targetB = warm ? 198 : 255;
         const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * bloom);
         const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * bloom);
         const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * bloom);
-        const bright = (0.55 + 0.45 * bloom) * dotAlpha;
-        ctx.fillStyle = `rgba(${r},${g},${b},${0.38 * bright})`;
+        const bright = (0.7 + 0.3 * bloom) * dotAlpha;
+        ctx.fillStyle = `rgba(${r},${g},${b},${0.55 * bright})`;
         ctx.beginPath();
         ctx.arc(x, y, halo * fade, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = `rgba(255,255,255,${0.95 * bright})`;
+        ctx.fillStyle = `rgba(255,255,255,${1.0 * bright})`;
         ctx.beginPath();
-        ctx.arc(x, y, Math.max(0.35, core * fade), 0, Math.PI * 2);
+        ctx.arc(x, y, Math.max(0.55, core * fade), 0, Math.PI * 2);
         ctx.fill();
       }
     }
