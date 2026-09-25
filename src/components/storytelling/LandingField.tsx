@@ -181,6 +181,23 @@ function settledReach(star: Star) {
   return (star.rad * 900 * focal) / z;
 }
 
+/**
+ * Warp frame scale. On portrait phones, min(w,h) alone crushes the horizon
+ * into the center — boost so stars, orbs, and galaxies reach toward the edges.
+ */
+function warpUnit(width: number, height: number) {
+  const short = Math.min(width, height);
+  if (short >= 760) return short;
+  const aspect = Math.max(width, height) / short;
+  const boost = 1.32 + Math.min(0.42, (aspect - 1) * 0.3);
+  return short * boost;
+}
+
+/** Galaxy / orb pixel sizes: scaled down on narrow frames so they don't swamp the field. */
+function bodyScale(width: number) {
+  return width < 760 ? 0.58 : 1;
+}
+
 type Ranked = { i: number; reach: number; ang: number };
 
 function pickSpread(pool: Ranked[], count: number, minSep: number) {
@@ -238,7 +255,7 @@ function warpPoint(
 ) {
   const z = flightZ(star.z, travel);
   const prevZ = Math.min(MIN_Z + Z_SPAN, z + stretch);
-  const unit = Math.min(width, height);
+  const unit = warpUnit(width, height);
   const focal = unit * 0.2;
   const dist = star.rad * unit;
   const twist = (1 - (z - MIN_Z) / Z_SPAN) * 1.6;
@@ -620,36 +637,55 @@ function draw(
   }
 
   if (dotAlpha > 0.02 || bloom > 0.02) {
-    ctx.globalCompositeOperation = "source-over";
-    if (dotAlpha > 0.02) for (const i of DUST_INDEX) {
-      if (GALAXY_SET.has(i) || ORB_SET.has(i)) continue;
-      const star = STARS[i];
-      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
-      const x = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
-      const y = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
-      if (x < -8 || y < -8 || x > width + 8 || y > height + 8) continue;
-      const apparent = star.rad / flightZ(star.z, travel);
-      const dotR = (0.85 + Math.min(1, apparent / 0.0022) * 2.1) * lerp(0.65, 1, dotAlpha);
-      const warm = hash(i * 21) > 0.84;
-      const targetR = warm ? 255 : 236;
-      const targetG = warm ? 214 : 238;
-      const targetB = warm ? 170 : 248;
-      const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * bloom);
-      const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * bloom);
-      const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * bloom);
-      ctx.fillStyle = `rgba(${r},${g},${b},${0.88 * dotAlpha})`;
-      ctx.beginPath();
-      ctx.arc(x, y, dotR, 0, Math.PI * 2);
-      ctx.fill();
+    const scale = bodyScale(width);
+    const narrow = width < 760;
+    if (dotAlpha > 0.02) {
+      // Additive so pinpricks read as stars instead of soft grey discs.
+      ctx.globalCompositeOperation = "lighter";
+      for (const i of DUST_INDEX) {
+        if (GALAXY_SET.has(i) || ORB_SET.has(i)) continue;
+        const star = STARS[i];
+        const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
+        const x = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
+        const y = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
+        if (x < -8 || y < -8 || x > width + 8 || y > height + 8) continue;
+        const apparent = star.rad / flightZ(star.z, travel);
+        const near = Math.min(1, apparent / 0.0022);
+        // Narrow frames: keep dots as pinpricks; desktop stays slightly larger.
+        const core = narrow
+          ? 0.22 + near * 0.55
+          : 0.35 + near * 0.95;
+        const halo = narrow
+          ? 0.55 + near * 1.1
+          : 0.7 + near * 1.55;
+        const fade = lerp(0.7, 1, dotAlpha);
+        const warm = hash(i * 21) > 0.84;
+        const targetR = warm ? 255 : 248;
+        const targetG = warm ? 228 : 246;
+        const targetB = warm ? 190 : 255;
+        const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * bloom);
+        const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * bloom);
+        const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * bloom);
+        const bright = (0.55 + 0.45 * bloom) * dotAlpha;
+        ctx.fillStyle = `rgba(${r},${g},${b},${0.38 * bright})`;
+        ctx.beginPath();
+        ctx.arc(x, y, halo * fade, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,255,255,${0.95 * bright})`;
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(0.35, core * fade), 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
+    ctx.globalCompositeOperation = "source-over";
     for (let n = 0; n < ORB_AT.length; n++) {
       const star = STARS[ORB_AT[n]];
       const orb = ORBS[n];
       const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
       const ox = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
       const oy = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
-      const radius = lerp(2.4, orb.r, bloom);
+      const radius = lerp(2.4, orb.r * scale, bloom);
       const body = ctx.createRadialGradient(ox - radius * 0.3, oy - radius * 0.3, radius * 0.08, ox, oy, radius);
       body.addColorStop(0, `rgba(244, 240, 255, ${0.95 * Math.max(dotAlpha, bloom)})`);
       body.addColorStop(0.45, `rgba(170, 190, 220, ${0.55 * bloom})`);
@@ -666,8 +702,8 @@ function draw(
       const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
       const gx = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
       const gy = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
-      const rx = lerp(4, galaxy.rx, bloom);
-      const ry = lerp(4, galaxy.ry, bloom);
+      const rx = lerp(4, galaxy.rx * scale, bloom);
+      const ry = lerp(4, galaxy.ry * scale, bloom);
       ctx.save();
       ctx.translate(gx, gy);
       ctx.rotate(galaxy.rot);
@@ -697,9 +733,18 @@ function draw(
   }
 
   ctx.globalCompositeOperation = "source-over";
-  const vignette = ctx.createRadialGradient(width * 0.5, height * 0.5, width * 0.12, width * 0.5, height * 0.5, width * 0.75);
+  // Softer vignette on narrow frames so edge stars stay visible after the spread boost.
+  const vigStrength = width < 760 ? 0.28 : 0.42;
+  const vignette = ctx.createRadialGradient(
+    width * 0.5,
+    height * 0.5,
+    Math.min(width, height) * 0.18,
+    width * 0.5,
+    height * 0.5,
+    Math.hypot(width, height) * 0.55,
+  );
   vignette.addColorStop(0, "rgba(0,0,0,0)");
-  vignette.addColorStop(1, "rgba(6,8,18,0.42)");
+  vignette.addColorStop(1, `rgba(6,8,18,${vigStrength})`);
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, width, height);
 }
