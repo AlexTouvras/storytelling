@@ -107,8 +107,10 @@ export function FlagshipLanding({ stories }: Props) {
   }, [reduced]);
 
   return (
-    <div className={`overflow-x-hidden ${reduced ? "bg-void pb-20" : "pb-8"}`}>
-      <div ref={trackRef} data-testid="landing-track" className="relative z-0 overflow-x-hidden">
+    // Do not put overflow-x on ancestors of the sticky field — it breaks stickiness
+    // and the canvas scrolls away with the top of the track.
+    <div className={reduced ? "bg-void pb-20" : "pb-8"}>
+      <div ref={trackRef} data-testid="landing-track" className="relative z-0">
         <div
           className={
             reduced
@@ -144,10 +146,10 @@ export function FlagshipLanding({ stories }: Props) {
           </div>
         </div>
 
-        <div className={reduced ? "relative z-20 overflow-x-hidden bg-void" : "relative z-20 overflow-x-hidden"}>
+        <div className={reduced ? "relative z-20 overflow-x-clip bg-void" : "relative z-20 overflow-x-clip"}>
           {reduced ? null : <div className="h-[78vh]" aria-hidden />}
 
-          <section className="relative overflow-x-hidden">
+          <section className="relative overflow-x-clip">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/75 via-void/35 to-transparent"
@@ -176,7 +178,7 @@ export function FlagshipLanding({ stories }: Props) {
 
           {reduced ? null : <div className="h-[70vh]" aria-hidden />}
 
-          <section id="stories" className="relative scroll-mt-24 overflow-x-hidden">
+          <section id="stories" className="relative scroll-mt-24 overflow-x-clip">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/80 via-void/40 to-transparent"
