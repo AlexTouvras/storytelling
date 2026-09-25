@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "slug": "where-should-the-cutoff-sit",
+    "title": "Where Should the Cut-Off Sit?",
+    "summary": "Under a volume need and a bad-rate appetite, the PD gate is a policy point on an acceptance frontier — not the score that maximises a pure ranking metric. Home Credit sample scorecard; OOT figures frozen and labeled.",
+    "date": "2026-09-25",
+    "templateId": "scrolling-narrative",
+    "role": "reference",
+    "hero": {
+      "kicker": "Decision story",
+      "title": "Where Should the Cut-Off Sit?",
+      "question": "Where should the PD cut-off sit under a volume / risk budget?"
+    }
+  },
+  "sections": [
+    {
+      "id": "gate",
+      "headline": "The gate is a policy choice",
+      "body": "This story ships as a directed film. Open /stories/where-should-the-cutoff-sit/film.\n\nRanking skill (Gini) is not the same as a cut-off you can ship. The operating point maximises approval subject to a bad-rate appetite among the approved.",
+      "scenes": [
+        {
+          "id": "gate-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "cut",
+          "transition": "reveal"
+        }
+      ]
+    }
+  ],
+  "dataRefs": [
+    {
+      "id": "hc-sample-default",
+      "label": "Home Credit sample default rate ~8.07%",
+      "kind": "observed"
+    },
+    {
+      "id": "operating-cut",
+      "label": "Operating PD ≤ 7.5% under 4% appetite",
+      "kind": "calculated"
+    },
+    {
+      "id": "oot-gini",
+      "label": "OOT Gini ~55.3%",
+      "kind": "calculated"
+    }
+  ],
+  "sources": [
+    {
+      "id": "home-credit",
+      "label": "Home Credit Default Risk (Kaggle)",
+      "url": "https://www.kaggle.com/c/home-credit-default-risk"
+    },
+    {
+      "id": "evidence-pack",
+      "label": "Frozen evidence pack v1 (where-should-the-cutoff-sit)"
+    }
+  ],
+  "methodology": "Directed film scrubbing a seeded application PD field. Champion scorecard and OOT cut-off metrics are frozen from PowerBI/11-credit-risk gold (LightGBM + Platt). Operating policy maximises OOT approval subject to bad rate among approved ≤ 4% appetite. Cloud marks are illustrative; published figures are calculated or observed as tagged in the evidence pack.",
+  "limitations": "Sample model only — not production IRB or IFRS 9. Competition history is not a live euro-area retail book. LGD 0.45 is illustrative. Mid-50s time-OOT Gini is honest for this public feature set. Budgeted appetite is an illustrative policy input.",
+  "a11y": {
+    "alt": "Interactive film of an application PD field with a moving origination cut-off gate",
+    "reducedMotionNote": "With reduced motion, camera poses snap without smooth interpolation. Skip link jumps to the decision section."
+  }
+}

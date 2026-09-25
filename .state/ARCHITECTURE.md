@@ -12,12 +12,17 @@
 |------|------------------|-------|
 | Flagship | `docs/FLAGSHIP.md` | Product positioning |
 | Reference Story Spec | `docs/reference-story-spec.md` | Editorial + evidence |
+| Dataset catalogue | `docs/DATASET_CATALOGUE.md` | Scored shortlist for next story; pick locked: `home-credit-pd` |
+| Decision Spec (story 2) | `docs/decision-specs/home-credit-cutoff.md` | Cut-off policy story; **approved** 2026-09-25 |
+| Evidence pack (story 2) | `data/figures/where-should-the-cutoff-sit.v1.json` | Frozen from `11-credit-risk` gold; `npm run freeze:cutoff` |
 | Story Grammar | `docs/STORY_GRAMMAR.md` | Earned Layer 2 verbs + persistent objects |
 | StoryManifest | `src/stories/schemas/manifest.ts` | Zod; optional hero + role |
 | Visual allowlist | `src/stories/schemas/visualAllowlist.ts` | Per-visual states |
 | Evidence Pack v2 | `data/figures/when-rates-rise.v2.json` | Frozen modeled + observed |
 | Sims | `src/lib/sim/rate-buffer-book.ts` | Calibrated thin cutoff 6% |
-| Directed film | `src/components/film/` · `/stories/when-rates-rise/film` | Scroll-scrubbed canvas of the seeded book. Not a template. |
+| Directed film (Rates) | `src/components/film/RateFilm.tsx` · `/stories/when-rates-rise/film` | Scroll-scrubbed loan field |
+| Directed film (Cut-off) | `src/components/film/CutoffFilm.tsx` · `/stories/where-should-the-cutoff-sit/film` | App PD field + gate; evidence from frozen pack |
+| Cut-off horizon chart | `src/components/film/CutoffHorizonChart.tsx` in `CutoffInstrument` | Frozen OOT frontier (approval + bad vs PD cut) + live gate dots from cloud stats |
 | Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Tight horizontal lanes, one irregular vertical thread, a zoom into a soft hole on the warp center, then a z-divide vortex whose streaks shorten into the horizon stars and galaxies. On portrait, `warpUnit` (~2× short axis) plus elliptical Y stretch fills the tall frame without emptying the sides; dust draws as additive core+halo pinpricks. Not a story template. |
 
 ## Design patterns

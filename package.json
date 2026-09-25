@@ -11,6 +11,7 @@
     "sim:rate-buffer": "tsx scripts/run-rate-buffer-sim.ts",
     "sim:calibrate": "tsx scripts/calibrate-rate-buffer.ts",
     "freeze:evidence": "tsx scripts/freeze-evidence-pack.ts",
+    "freeze:cutoff": "python scripts/freeze-home-credit-cutoff.py",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",

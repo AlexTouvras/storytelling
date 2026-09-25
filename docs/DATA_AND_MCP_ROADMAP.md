@@ -135,3 +135,5 @@ Python/R notebooks and chart libs stay **analysis-side**. The Next engine keeps 
 ## Decision
 
 Bigger data is the right next *analytical* leap. The right *system* leap is an **Evidence → Analysis → Frozen figures → Decision Spec → Manifest** spine, with MCPs assisting research and QA — not replacing editorial judgment.
+
+**Second-story pick:** score candidates in [`docs/DATASET_CATALOGUE.md`](./DATASET_CATALOGUE.md) before locking a source or writing a Decision Spec.

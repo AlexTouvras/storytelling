@@ -1,0 +1,874 @@
+{
+  "id": "where-should-the-cutoff-sit-evidence-v1",
+  "frozenAt": "2026-09-25",
+  "slug": "where-should-the-cutoff-sit",
+  "decisionSpec": "docs/decision-specs/home-credit-cutoff.md",
+  "source": {
+    "dataset": "Home Credit Default Risk",
+    "attribution": "https://www.kaggle.com/c/home-credit-default-risk",
+    "goldRoot": "PowerBI/11-credit-risk/data/gold",
+    "champion": "LightGBM + Platt calibration",
+    "notes": [
+      "Sample scorecard for portfolio storytelling \u2014 not production IRB / IFRS 9.",
+      "Desktop working grain is stratified 80k; FullN is the competition application_train size.",
+      "LGD fixed at 0.45 for EL illustrations only.",
+      "Operating policy maximises OOT approval subject to bad rate among approved <= budgeted appetite."
+    ]
+  },
+  "sample": {
+    "kind": "observed",
+    "sampleN": 80000,
+    "fullN": 307511,
+    "defaultRate": 0.08072881945686496,
+    "display": {
+      "sampleN": "80,000",
+      "fullN": "307,511",
+      "defaultRate": "8.07%"
+    }
+  },
+  "model": {
+    "kind": "calculated",
+    "champion": "LightGBM + Platt calibration",
+    "train": {
+      "n": 197031,
+      "gini": 0.7407581898138114,
+      "auc": 0.8703790949069057,
+      "ks": 0.5800485883001276
+    },
+    "test": {
+      "n": 49258,
+      "gini": 0.5511233579563972,
+      "auc": 0.7755616789781986,
+      "ks": 0.4190986109044412,
+      "brier": 0.06805231143955207
+    },
+    "oot": {
+      "n": 61222,
+      "gini": 0.553073211227298,
+      "auc": 0.776536605613649,
+      "ks": 0.4255556431444444,
+      "brier": 0.06690240956074793,
+      "calibMeanPredicted": 0.08146449054371614,
+      "calibMeanRealized": 0.07936689425369965
+    },
+    "display": {
+      "ootGini": "55.3%",
+      "ootKs": "0.426",
+      "calib": "8.15% vs 7.94%"
+    }
+  },
+  "policy": {
+    "kind": "calculated",
+    "appetite": {
+      "budgetedBadRate": 0.04,
+      "kind": "illustrative",
+      "display": "4.0%"
+    },
+    "lgd": {
+      "value": 0.45,
+      "kind": "illustrative",
+      "display": "0.45"
+    },
+    "operating": {
+      "method": "Risk-reward (budgeted bad rate)",
+      "cutoffPd": 0.075,
+      "ootApprovalRate": 0.7439319198980758,
+      "ootBadRateApproved": 0.0396750466571522,
+      "note": "Primary: maximise OOT approval subject to bad rate among approved <= budgeted risk appetite. Approve when PD <= cut-off.",
+      "display": {
+        "cutoffPd": "7.5%",
+        "approval": "74.4%",
+        "badAmongApproved": "4.0%"
+      }
+    },
+    "youdenReference": {
+      "method": "Youden / max KS (train ROC)",
+      "cutoffPd": 0.07,
+      "ootApprovalRate": 0.711231256737774,
+      "ootBadRateApproved": 0.0368371494844177,
+      "note": "Supporting statistical cut (Youden = max TPR-FPR; coincides with max KS for a single score). Not the operating policy.",
+      "display": {
+        "cutoffPd": "7.0%",
+        "approval": "71.1%",
+        "badAmongApproved": "3.7%"
+      }
+    }
+  },
+  "frontier": {
+    "kind": "calculated",
+    "description": "Thinned acceptance-frontier rows from gold FactCutoffCurve / FactCutoffLong.",
+    "curveColumns": [
+      "CutoffPD",
+      "CutoffScore",
+      "ApprovalRate",
+      "BadRateApproved",
+      "RejectRate",
+      "ApprovedN",
+      "MarginalPD",
+      "IsOperatingCutoff",
+      "IsYoudenCutoff",
+      "BudgetedBadRate"
+    ],
+    "points": [
+      {
+        "CutoffPD": 0.02,
+        "CutoffScore": 839.0,
+        "ApprovalRate": 0.0,
+        "BadRateApproved": "",
+        "RejectRate": 1.0,
+        "ApprovedN": 0.0,
+        "MarginalPD": 0.02,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.04,
+        "CutoffScore": 828.0,
+        "ApprovalRate": 0.0252523602626506,
+        "BadRateApproved": 0.0051746442432082,
+        "RejectRate": 0.9747476397373492,
+        "ApprovedN": 1546.0,
+        "MarginalPD": 0.04,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.06,
+        "CutoffScore": 817.0,
+        "ApprovalRate": 0.6134559472085198,
+        "BadRateApproved": 0.0296615810634502,
+        "RejectRate": 0.3865440527914802,
+        "ApprovedN": 37557.0,
+        "MarginalPD": 0.06,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.08,
+        "CutoffScore": 806.0,
+        "ApprovalRate": 0.7704746659697495,
+        "BadRateApproved": 0.0419758320966716,
+        "RejectRate": 0.2295253340302505,
+        "ApprovedN": 47170.0,
+        "MarginalPD": 0.08,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.1,
+        "CutoffScore": 795.0,
+        "ApprovalRate": 0.8387017738721375,
+        "BadRateApproved": 0.0491362689154186,
+        "RejectRate": 0.1612982261278625,
+        "ApprovedN": 51347.0,
+        "MarginalPD": 0.1,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.12,
+        "CutoffScore": 784.0,
+        "ApprovalRate": 0.8771683381790859,
+        "BadRateApproved": 0.0538899854754012,
+        "RejectRate": 0.1228316618209141,
+        "ApprovedN": 53702.0,
+        "MarginalPD": 0.12,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.14,
+        "CutoffScore": 773.0,
+        "ApprovalRate": 0.9012283166182092,
+        "BadRateApproved": 0.0571273221567739,
+        "RejectRate": 0.0987716833817908,
+        "ApprovedN": 55175.0,
+        "MarginalPD": 0.14,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.16,
+        "CutoffScore": 762.0,
+        "ApprovalRate": 0.9181340041161674,
+        "BadRateApproved": 0.0596868884540117,
+        "RejectRate": 0.0818659958838325,
+        "ApprovedN": 56210.0,
+        "MarginalPD": 0.16,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.18,
+        "CutoffScore": 751.0,
+        "ApprovalRate": 0.931086864199144,
+        "BadRateApproved": 0.062014279950178,
+        "RejectRate": 0.0689131358008559,
+        "ApprovedN": 57003.0,
+        "MarginalPD": 0.18,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.2,
+        "CutoffScore": 740.0,
+        "ApprovalRate": 0.9409525987390154,
+        "BadRateApproved": 0.0635860225319839,
+        "RejectRate": 0.0590474012609846,
+        "ApprovedN": 57607.0,
+        "MarginalPD": 0.2,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.22,
+        "CutoffScore": 729.0,
+        "ApprovalRate": 0.949135931527882,
+        "BadRateApproved": 0.0653438425001721,
+        "RejectRate": 0.0508640684721178,
+        "ApprovedN": 58108.0,
+        "MarginalPD": 0.22,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.24,
+        "CutoffScore": 718.0,
+        "ApprovalRate": 0.9553265166116756,
+        "BadRateApproved": 0.0664934087916973,
+        "RejectRate": 0.0446734833883244,
+        "ApprovedN": 58487.0,
+        "MarginalPD": 0.24,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.26,
+        "CutoffScore": 707.0,
+        "ApprovalRate": 0.9608310737970012,
+        "BadRateApproved": 0.0674724602203182,
+        "RejectRate": 0.0391689262029989,
+        "ApprovedN": 58824.0,
+        "MarginalPD": 0.26,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.28,
+        "CutoffScore": 696.0,
+        "ApprovalRate": 0.965224919146712,
+        "BadRateApproved": 0.0683329666796405,
+        "RejectRate": 0.034775080853288,
+        "ApprovedN": 59093.0,
+        "MarginalPD": 0.28,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.3,
+        "CutoffScore": 685.0,
+        "ApprovalRate": 0.9688837346052072,
+        "BadRateApproved": 0.0690358581856803,
+        "RejectRate": 0.0311162653947927,
+        "ApprovedN": 59317.0,
+        "MarginalPD": 0.3,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.32,
+        "CutoffScore": 674.0,
+        "ApprovalRate": 0.9720035281434778,
+        "BadRateApproved": 0.0697721314781205,
+        "RejectRate": 0.0279964718565222,
+        "ApprovedN": 59508.0,
+        "MarginalPD": 0.32,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.34,
+        "CutoffScore": 663.0,
+        "ApprovalRate": 0.9745842997615236,
+        "BadRateApproved": 0.0705762075553916,
+        "RejectRate": 0.0254157002384763,
+        "ApprovedN": 59666.0,
+        "MarginalPD": 0.34,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.36,
+        "CutoffScore": 652.0,
+        "ApprovalRate": 0.977067067394074,
+        "BadRateApproved": 0.0712494566852786,
+        "RejectRate": 0.0229329326059259,
+        "ApprovedN": 59818.0,
+        "MarginalPD": 0.36,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.38,
+        "CutoffScore": 641.0,
+        "ApprovalRate": 0.979566169024207,
+        "BadRateApproved": 0.0720014673758983,
+        "RejectRate": 0.0204338309757929,
+        "ApprovedN": 59971.0,
+        "MarginalPD": 0.38,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      },
+      {
+        "CutoffPD": 0.4,
+        "CutoffScore": 630.0,
+        "ApprovalRate": 0.9816732547123584,
+        "BadRateApproved": 0.0726622296173045,
+        "RejectRate": 0.0183267452876416,
+        "ApprovedN": 60100.0,
+        "MarginalPD": 0.4,
+        "IsOperatingCutoff": 0.0,
+        "IsYoudenCutoff": 0.0,
+        "BudgetedBadRate": 0.04
+      }
+    ],
+    "longPoints": [
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.029970531067778545,
+        "BadRateApproved": 0.016736401673640166,
+        "PointSort": 0.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.08702739983698038,
+        "BadRateApproved": 0.021613832853025938,
+        "PointSort": 7.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.1440842686061822,
+        "BadRateApproved": 0.022628372497824196,
+        "PointSort": 14.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.20114113737538403,
+        "BadRateApproved": 0.024625935162094763,
+        "PointSort": 21.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.2581980061445859,
+        "BadRateApproved": 0.0259834871296746,
+        "PointSort": 28.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.3152548749137877,
+        "BadRateApproved": 0.027446300715990454,
+        "PointSort": 35.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.3723117436829895,
+        "BadRateApproved": 0.028292354328056584,
+        "PointSort": 42.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.4293686124521914,
+        "BadRateApproved": 0.03066588785046729,
+        "PointSort": 49.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.4864254812213932,
+        "BadRateApproved": 0.032611497808713585,
+        "PointSort": 56.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.5435450498463854,
+        "BadRateApproved": 0.03356788556926981,
+        "PointSort": 63.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.6006019186155872,
+        "BadRateApproved": 0.0370602359327696,
+        "PointSort": 70.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.657658787384789,
+        "BadRateApproved": 0.04166269425112022,
+        "PointSort": 77.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.7147156561539908,
+        "BadRateApproved": 0.046232125625054826,
+        "PointSort": 84.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.7717725249231927,
+        "BadRateApproved": 0.05036964822487611,
+        "PointSort": 91.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.8288293936923945,
+        "BadRateApproved": 0.05575308268401543,
+        "PointSort": 98.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.8858862624615963,
+        "BadRateApproved": 0.060867718876070495,
+        "PointSort": 105.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 0.9429431312307982,
+        "BadRateApproved": 0.06875457144756965,
+        "PointSort": 112.0
+      },
+      {
+        "Scorecard": "Existing score (EXT_MEAN)",
+        "ApprovalRate": 1.0,
+        "BadRateApproved": 0.07962881685372124,
+        "PointSort": 119.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.07884181499122588,
+        "BadRateApproved": 0.007154213036565978,
+        "PointSort": 6.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.135936324893457,
+        "BadRateApproved": 0.010603964960811434,
+        "PointSort": 13.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.19296816244672851,
+        "BadRateApproved": 0.012991230919129588,
+        "PointSort": 20.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.2500626723489596,
+        "BadRateApproved": 0.016541353383458645,
+        "PointSort": 27.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.30709450990223114,
+        "BadRateApproved": 0.017551020408163264,
+        "PointSort": 34.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.3641890198044623,
+        "BadRateApproved": 0.018413353983823783,
+        "PointSort": 41.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.4212208573577338,
+        "BadRateApproved": 0.020086296682041364,
+        "PointSort": 48.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.47831536725996493,
+        "BadRateApproved": 0.022143605870020965,
+        "PointSort": 55.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.5353472048132364,
+        "BadRateApproved": 0.024467337859985953,
+        "PointSort": 62.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.5924417147154676,
+        "BadRateApproved": 0.026975563313233895,
+        "PointSort": 69.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.649473552268739,
+        "BadRateApproved": 0.030975586220206505,
+        "PointSort": 76.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.7065680621709701,
+        "BadRateApproved": 0.03565726450239489,
+        "PointSort": 83.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.7635998997242417,
+        "BadRateApproved": 0.04128365068942876,
+        "PointSort": 90.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.8206944096264728,
+        "BadRateApproved": 0.04650630011454754,
+        "PointSort": 97.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.8777262471797443,
+        "BadRateApproved": 0.05390931810067833,
+        "PointSort": 104.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.9347580847330158,
+        "BadRateApproved": 0.06262152195776065,
+        "PointSort": 111.0
+      },
+      {
+        "Scorecard": "New scorecard",
+        "ApprovalRate": 0.9918525946352469,
+        "BadRateApproved": 0.07595096676355365,
+        "PointSort": 118.0
+      },
+      {
+        "Scorecard": "Budget",
+        "ApprovalRate": 0.1717948717948718,
+        "BadRateApproved": 0.04,
+        "PointSort": 5.0
+      },
+      {
+        "Scorecard": "Budget",
+        "ApprovalRate": 0.3423076923076923,
+        "BadRateApproved": 0.04,
+        "PointSort": 12.0
+      },
+      {
+        "Scorecard": "Budget",
+        "ApprovalRate": 0.5128205128205129,
+        "BadRateApproved": 0.04,
+        "PointSort": 19.0
+      },
+      {
+        "Scorecard": "Budget",
+        "ApprovalRate": 0.6833333333333333,
+        "BadRateApproved": 0.04,
+        "PointSort": 26.0
+      },
+      {
+        "Scorecard": "Budget",
+        "ApprovalRate": 0.8538461538461539,
+        "BadRateApproved": 0.04,
+        "PointSort": 33.0
+      }
+    ]
+  },
+  "calibrationDeciles": {
+    "kind": "calculated",
+    "rows": [
+      {
+        "Decile": 1.0,
+        "PredictedPD": 0.04057618221128102,
+        "RealizedRate": 0.009472480810060429,
+        "N": 6123.0,
+        "DecileLabel": "D1",
+        "Gap": 0.031103701401220596
+      },
+      {
+        "Decile": 2.0,
+        "PredictedPD": 0.04282482303114886,
+        "RealizedRate": 0.016497876510944136,
+        "N": 6122.0,
+        "DecileLabel": "D2",
+        "Gap": 0.026326946520204723
+      },
+      {
+        "Decile": 3.0,
+        "PredictedPD": 0.044999276714260995,
+        "RealizedRate": 0.027278667102254166,
+        "N": 6122.0,
+        "DecileLabel": "D3",
+        "Gap": 0.01772060961200683
+      },
+      {
+        "Decile": 4.0,
+        "PredictedPD": 0.0476102289613854,
+        "RealizedRate": 0.02907546553413917,
+        "N": 6122.0,
+        "DecileLabel": "D4",
+        "Gap": 0.01853476342724623
+      },
+      {
+        "Decile": 5.0,
+        "PredictedPD": 0.051038964738831676,
+        "RealizedRate": 0.04083632799738648,
+        "N": 6122.0,
+        "DecileLabel": "D5",
+        "Gap": 0.010202636741445198
+      },
+      {
+        "Decile": 6.0,
+        "PredictedPD": 0.05582882640085797,
+        "RealizedRate": 0.04916693890885332,
+        "N": 6122.0,
+        "DecileLabel": "D6",
+        "Gap": 0.006661887492004651
+      },
+      {
+        "Decile": 7.0,
+        "PredictedPD": 0.06333303024010542,
+        "RealizedRate": 0.0800392028748775,
+        "N": 6122.0,
+        "DecileLabel": "D7",
+        "Gap": -0.016706172634772073
+      },
+      {
+        "Decile": 8.0,
+        "PredictedPD": 0.07659233444011573,
+        "RealizedRate": 0.10715452466514211,
+        "N": 6122.0,
+        "DecileLabel": "D8",
+        "Gap": -0.030562190225026376
+      },
+      {
+        "Decile": 9.0,
+        "PredictedPD": 0.10735737108188606,
+        "RealizedRate": 0.15289121202221495,
+        "N": 6122.0,
+        "DecileLabel": "D9",
+        "Gap": -0.04553384094032889
+      },
+      {
+        "Decile": 10.0,
+        "PredictedPD": 0.284457388592506,
+        "RealizedRate": 0.28123468887800096,
+        "N": 6123.0,
+        "DecileLabel": "D10",
+        "Gap": 0.0032226997145050618
+      }
+    ]
+  },
+  "giniCompare": {
+    "kind": "calculated",
+    "rows": [
+      {
+        "Sample": "Train",
+        "SampleSort": 1.0,
+        "AUC": 0.8703790949069057,
+        "Gini": 0.7407581898138114,
+        "KS": 0.5800485883001276,
+        "N": 197031.0
+      },
+      {
+        "Sample": "Test",
+        "SampleSort": 2.0,
+        "AUC": 0.7755616789781986,
+        "Gini": 0.5511233579563972,
+        "KS": 0.4190986109044412,
+        "N": 49258.0
+      },
+      {
+        "Sample": "OOT",
+        "SampleSort": 3.0,
+        "AUC": 0.776536605613649,
+        "Gini": 0.553073211227298,
+        "KS": 0.4255556431444444,
+        "N": 61222.0
+      }
+    ]
+  },
+  "gradeBridge": {
+    "kind": "calculated",
+    "rows": [
+      {
+        "Grade": "G1",
+        "GradeSort": 1.0,
+        "Applications": 13600.0,
+        "DefaultRate": 0.49720588235294116,
+        "AvgPD": 0.43793552235513156,
+        "Exposure": 7017704901.0,
+        "EL": 1378354432.8581223
+      },
+      {
+        "Grade": "G2",
+        "GradeSort": 2.0,
+        "Applications": 14500.0,
+        "DefaultRate": 0.27248275862068966,
+        "AvgPD": 0.19021683587115482,
+        "Exposure": 7752910504.5,
+        "EL": 662715685.3447998
+      },
+      {
+        "Grade": "G3",
+        "GradeSort": 3.0,
+        "Applications": 21808.0,
+        "DefaultRate": 0.18286867204695526,
+        "AvgPD": 0.12064652402733325,
+        "Exposure": 11912476554.0,
+        "EL": 645775605.7509559
+      },
+      {
+        "Grade": "G4",
+        "GradeSort": 4.0,
+        "Applications": 38698.0,
+        "DefaultRate": 0.11127190035660757,
+        "AvgPD": 0.08223806656215317,
+        "Exposure": 22158414463.5,
+        "EL": 819016236.1199441
+      },
+      {
+        "Grade": "G5",
+        "GradeSort": 5.0,
+        "Applications": 88040.0,
+        "DefaultRate": 0.04728532485233985,
+        "AvgPD": 0.05782240234525489,
+        "Exposure": 52277825655.0,
+        "EL": 1358111411.7956665
+      },
+      {
+        "Grade": "G6",
+        "GradeSort": 6.0,
+        "Applications": 130865.0,
+        "DefaultRate": 0.012646620563175792,
+        "AvgPD": 0.04430654861553228,
+        "Exposure": 83087752117.5,
+        "EL": 1654229143.372129
+      }
+    ]
+  },
+  "psi": {
+    "kind": "calculated",
+    "breachCount": 3,
+    "watchCount": 4,
+    "features": [
+      {
+        "Feature": "EXT_SOURCE_3",
+        "PSI": 1.1939,
+        "StabilityFlag": "Breach",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "EXT_SOURCE_2",
+        "PSI": 0.8192,
+        "StabilityFlag": "Breach",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "PREV_REFUSED_RATE",
+        "PSI": 0.2753,
+        "StabilityFlag": "Breach",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "ORGANIZATION_TYPE",
+        "PSI": 0.2217,
+        "StabilityFlag": "Watch",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "AgeYears",
+        "PSI": 0.196,
+        "StabilityFlag": "Watch",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "AMT_CREDIT",
+        "PSI": 0.1761,
+        "StabilityFlag": "Watch",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "NAME_INCOME_TYPE",
+        "PSI": 0.1501,
+        "StabilityFlag": "Watch",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "NAME_EDUCATION_TYPE",
+        "PSI": 0.0905,
+        "StabilityFlag": "Stable",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "INST_DELAY_MEAN",
+        "PSI": 0.0474,
+        "StabilityFlag": "Stable",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      },
+      {
+        "Feature": "BUR_CNT",
+        "PSI": 0.0248,
+        "StabilityFlag": "Stable",
+        "Threshold": 0.1,
+        "BaselineYear": 2018.0,
+        "RecentYear": 2020.0,
+        "RecentWindow": "2020 adverse-mix (PD-weighted)"
+      }
+    ]
+  },
+  "limitations": [
+    "Competition sample history is not a live euro-area retail book.",
+    "Time-OOT Gini mid-50s is honest for this public feature set; not a leaderboard flex.",
+    "LGD is fixed for storytelling EL; not a loss model.",
+    "Stage / IFRS 9 labels in gold are heuristics if present.",
+    "Budgeted 4% bad-rate appetite is an illustrative policy input."
+  ]
+}

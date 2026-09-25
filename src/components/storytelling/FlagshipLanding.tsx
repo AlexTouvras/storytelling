@@ -38,6 +38,8 @@ const PATH = [
 
 function storyHref(slug: string) {
   if (slug === "when-rates-rise") return "/stories/when-rates-rise/film";
+  if (slug === "where-should-the-cutoff-sit")
+    return "/stories/where-should-the-cutoff-sit/film";
   return `/stories/${slug}`;
 }
 

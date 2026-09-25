@@ -19,18 +19,32 @@
 - [x] Landing is the product index: data-field hero, shared path, story list
 - [x] Landing flight craft written into story grammar (not a new template)
 
-## Next (after sign-off)
+## Next (Orbit live — first topic shipped)
 
-- [ ] Integrate into Orbit: portfolio teaser after the title, then `/stories` as the flagship landing, then `/stories/[slug]`
-- [ ] Agent pipeline (research → evidence → spec → manifest)
-- [ ] Weekly decision stories
+- [x] Integrate into Orbit: portfolio teaser after the title, then `/stories` as the flagship landing, then `/stories/[slug]`
+- [ ] Human sign-off: live Orbit pitch reads as Interactive Decision Storytelling (not “scrolly engine”)
+- [x] Dataset selection brief + catalogue scaffold (`docs/DATASET_CATALOGUE.md`)
+- [x] Seed + score existing-repo dataset catalogue → shortlist top 3
+- [x] External online seed round scored into catalogue
+- [x] Deeper online pass (FEMA NFIP, Traficom vehicles, Digitraffic TMS, ACS PUMS, IEEE-CIS; reject SILC PUF)
+- [x] Human pick by highest score → `home-credit-pd` (22)
+- [x] Decision Spec draft — `docs/decision-specs/home-credit-cutoff.md`
+- [x] Human sign-off on Decision Spec
+- [x] Freeze evidence pack `data/figures/where-should-the-cutoff-sit.v1.json`
+- [x] Implement second decision story film (`CutoffFilm` + landing list)
+- [x] Move-the-gate horizon graph (approval + bad vs PD cut, live marker)
+- [x] Human scrub / gate — push to prod for Orbit storytelling-sync
+- [ ] Confirm live Orbit `/stories` shows cut-off film
+- [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
+- [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)
 - [ ] Optional: self-host `socioeconomic-data-mcp` for broader series
 - [ ] Tier B: WebGL backends for motifs that earn it
+
 ## Later
 
 - [ ] Progress-trigger scenes
-- [ ] Package exports for Orbit `/stories/[slug]`
+- [ ] Package exports for Orbit `/stories/[slug]` (if still needed after live integrate)
 - [ ] Research → Evidence → Model → Story Architect pipeline (human approve)
 - [ ] Additional decision stories (build/buy, affordability, concentration, …)
 
