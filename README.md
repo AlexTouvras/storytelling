@@ -9,7 +9,7 @@ Two artifacts:
 1. **The engine** — schema-driven runtime, sticky scenes, visual registry, deterministic sims, validation, evidence provenance.
 2. **The reference story** — [*When Rates Rise*](http://localhost:3000/stories/when-rates-rise/film): where should a portfolio manager cut? The film is the story you enter.
 
-Future host: an Orbit portfolio teaser (first section after the title) that opens the flagship landing at `/stories`. Stories are rows there. When Rates Rise opens the film. This repo stays standalone until packaging.
+Orbit hosts the public surface: a portfolio teaser opens the flagship landing at `/stories`. Stories are rows there. When Rates Rise opens the film. A push to `main` syncs this engine into Orbit and redeploys that route (`notify-orbit`).
 
 ## Stack
 
