@@ -4,6 +4,7 @@
 
 ## Now
 
+- [x] Mobile New Horizon: spread warp field + smaller/brighter star pinpricks
 - [x] PoC: Interactive Decision Storytelling runtime + When Rates Rise
 - [x] Flagship positioning + stripped landing
 - [x] `FLAGSHIP_AUDIT.md` + **Flagship Story v1** (7 acts, zoom visual, decision card)

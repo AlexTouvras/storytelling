@@ -181,6 +181,29 @@ function settledReach(star: Star) {
   return (star.rad * 900 * focal) / z;
 }
 
+/**
+ * Warp frame scale on the short axis. Portrait phones also get an elliptical
+ * Y stretch in `warpPoint` so the horizon fills the tall frame without
+ * overshooting the sides into an empty vertical column.
+ */
+function warpUnit(width: number, height: number) {
+  const short = Math.min(width, height);
+  if (short >= 760) return short;
+  // ~2× pulls the old center cluster out to mid-frame without clearing the sides.
+  return short * 2;
+}
+
+/** Extra Y scale on narrow portrait so galaxies/stars reach the top and bottom. */
+function warpAspectY(width: number, height: number) {
+  if (width >= 760) return 1;
+  return Math.min(1.65, (height / Math.max(width, 1)) * 0.75);
+}
+
+/** Galaxy / orb pixel sizes: scaled down on narrow frames so they don't swamp the field. */
+function bodyScale(width: number) {
+  return width < 760 ? 0.55 : 1;
+}
+
 type Ranked = { i: number; reach: number; ang: number };
 
 function pickSpread(pool: Ranked[], count: number, minSep: number) {
@@ -238,8 +261,10 @@ function warpPoint(
 ) {
   const z = flightZ(star.z, travel);
   const prevZ = Math.min(MIN_Z + Z_SPAN, z + stretch);
-  const unit = Math.min(width, height);
-  const focal = unit * 0.2;
+  const unit = warpUnit(width, height);
+  const ay = warpAspectY(width, height);
+  // Depth from the true short side so boost doesn't double-count in focal.
+  const focal = Math.min(width, height) * 0.2;
   const dist = star.rad * unit;
   const twist = (1 - (z - MIN_Z) / Z_SPAN) * 1.6;
   const prevTwist = (1 - (prevZ - MIN_Z) / Z_SPAN) * 1.6;
@@ -248,9 +273,9 @@ function warpPoint(
   const a = star.ang + twist;
   const pa = star.ang + prevTwist;
   WARP.x = cx + Math.cos(a) * dist * k;
-  WARP.y = cy + Math.sin(a) * dist * k;
+  WARP.y = cy + Math.sin(a) * dist * k * ay;
   WARP.px = cx + Math.cos(pa) * dist * pk;
-  WARP.py = cy + Math.sin(pa) * dist * pk;
+  WARP.py = cy + Math.sin(pa) * dist * pk * ay;
   return WARP;
 }
 
@@ -620,36 +645,55 @@ function draw(
   }
 
   if (dotAlpha > 0.02 || bloom > 0.02) {
-    ctx.globalCompositeOperation = "source-over";
-    if (dotAlpha > 0.02) for (const i of DUST_INDEX) {
-      if (GALAXY_SET.has(i) || ORB_SET.has(i)) continue;
-      const star = STARS[i];
-      const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
-      const x = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
-      const y = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
-      if (x < -8 || y < -8 || x > width + 8 || y > height + 8) continue;
-      const apparent = star.rad / flightZ(star.z, travel);
-      const dotR = (0.85 + Math.min(1, apparent / 0.0022) * 2.1) * lerp(0.65, 1, dotAlpha);
-      const warm = hash(i * 21) > 0.84;
-      const targetR = warm ? 255 : 236;
-      const targetG = warm ? 214 : 238;
-      const targetB = warm ? 170 : 248;
-      const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * bloom);
-      const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * bloom);
-      const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * bloom);
-      ctx.fillStyle = `rgba(${r},${g},${b},${0.88 * dotAlpha})`;
-      ctx.beginPath();
-      ctx.arc(x, y, dotR, 0, Math.PI * 2);
-      ctx.fill();
+    const scale = bodyScale(width);
+    const narrow = width < 760;
+    if (dotAlpha > 0.02) {
+      // Additive so pinpricks read as stars instead of soft grey discs.
+      ctx.globalCompositeOperation = "lighter";
+      for (const i of DUST_INDEX) {
+        if (GALAXY_SET.has(i) || ORB_SET.has(i)) continue;
+        const star = STARS[i];
+        const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
+        const x = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
+        const y = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
+        if (x < -8 || y < -8 || x > width + 8 || y > height + 8) continue;
+        const apparent = star.rad / flightZ(star.z, travel);
+        const near = Math.min(1, apparent / 0.0022);
+        // Floor core size so mobile DPR antialias does not dull them to grey dust.
+        const core = narrow
+          ? 0.55 + near * 0.65
+          : 0.4 + near * 0.9;
+        const halo = narrow
+          ? 1.35 + near * 1.5
+          : 0.85 + near * 1.45;
+        const fade = lerp(0.75, 1, dotAlpha);
+        const warm = hash(i * 21) > 0.84;
+        const targetR = warm ? 255 : 250;
+        const targetG = warm ? 232 : 248;
+        const targetB = warm ? 198 : 255;
+        const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * bloom);
+        const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * bloom);
+        const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * bloom);
+        const bright = (0.7 + 0.3 * bloom) * dotAlpha;
+        ctx.fillStyle = `rgba(${r},${g},${b},${0.55 * bright})`;
+        ctx.beginPath();
+        ctx.arc(x, y, halo * fade, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,255,255,${1.0 * bright})`;
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(0.55, core * fade), 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
+    ctx.globalCompositeOperation = "source-over";
     for (let n = 0; n < ORB_AT.length; n++) {
       const star = STARS[ORB_AT[n]];
       const orb = ORBS[n];
       const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
       const ox = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
       const oy = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
-      const radius = lerp(2.4, orb.r, bloom);
+      const radius = lerp(2.4, orb.r * scale, bloom);
       const body = ctx.createRadialGradient(ox - radius * 0.3, oy - radius * 0.3, radius * 0.08, ox, oy, radius);
       body.addColorStop(0, `rgba(244, 240, 255, ${0.95 * Math.max(dotAlpha, bloom)})`);
       body.addColorStop(0.45, `rgba(170, 190, 220, ${0.55 * bloom})`);
@@ -666,8 +710,8 @@ function draw(
       const wpt = warpPoint(star, travel, stretch, width, height, cx, cy);
       const gx = wpt.x + Math.sin(time * 0.18 + star.ang) * driftAmp;
       const gy = wpt.y + Math.cos(time * 0.13 + star.ang) * driftAmp;
-      const rx = lerp(4, galaxy.rx, bloom);
-      const ry = lerp(4, galaxy.ry, bloom);
+      const rx = lerp(4, galaxy.rx * scale, bloom);
+      const ry = lerp(4, galaxy.ry * scale, bloom);
       ctx.save();
       ctx.translate(gx, gy);
       ctx.rotate(galaxy.rot);
@@ -697,9 +741,18 @@ function draw(
   }
 
   ctx.globalCompositeOperation = "source-over";
-  const vignette = ctx.createRadialGradient(width * 0.5, height * 0.5, width * 0.12, width * 0.5, height * 0.5, width * 0.75);
+  // Softer vignette on narrow frames so edge stars stay visible after the spread boost.
+  const vigStrength = width < 760 ? 0.28 : 0.42;
+  const vignette = ctx.createRadialGradient(
+    width * 0.5,
+    height * 0.5,
+    Math.min(width, height) * 0.18,
+    width * 0.5,
+    height * 0.5,
+    Math.hypot(width, height) * 0.55,
+  );
   vignette.addColorStop(0, "rgba(0,0,0,0)");
-  vignette.addColorStop(1, "rgba(6,8,18,0.42)");
+  vignette.addColorStop(1, `rgba(6,8,18,${vigStrength})`);
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, width, height);
 }
