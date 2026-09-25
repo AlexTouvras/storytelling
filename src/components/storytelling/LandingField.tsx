@@ -659,13 +659,13 @@ function draw(
         if (x < -8 || y < -8 || x > width + 8 || y > height + 8) continue;
         const apparent = star.rad / flightZ(star.z, travel);
         const near = Math.min(1, apparent / 0.0022);
-        // Floor core size so mobile DPR antialias does not dull them to grey dust.
+        // Tiny bright cores — mobile stays sub-pixel-ish with a soft halo only.
         const core = narrow
-          ? 0.55 + near * 0.65
-          : 0.4 + near * 0.9;
+          ? 0.18 + near * 0.28
+          : 0.22 + near * 0.45;
         const halo = narrow
-          ? 1.35 + near * 1.5
-          : 0.85 + near * 1.45;
+          ? 0.45 + near * 0.55
+          : 0.5 + near * 0.75;
         const fade = lerp(0.75, 1, dotAlpha);
         const warm = hash(i * 21) > 0.84;
         const targetR = warm ? 255 : 250;
@@ -674,14 +674,14 @@ function draw(
         const r = Math.round(CYAN[0] + (targetR - CYAN[0]) * bloom);
         const g = Math.round(CYAN[1] + (targetG - CYAN[1]) * bloom);
         const b = Math.round(CYAN[2] + (targetB - CYAN[2]) * bloom);
-        const bright = (0.7 + 0.3 * bloom) * dotAlpha;
-        ctx.fillStyle = `rgba(${r},${g},${b},${0.55 * bright})`;
+        const bright = (0.75 + 0.25 * bloom) * dotAlpha;
+        ctx.fillStyle = `rgba(${r},${g},${b},${0.5 * bright})`;
         ctx.beginPath();
         ctx.arc(x, y, halo * fade, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = `rgba(255,255,255,${1.0 * bright})`;
         ctx.beginPath();
-        ctx.arc(x, y, Math.max(0.55, core * fade), 0, Math.PI * 2);
+        ctx.arc(x, y, Math.max(0.28, core * fade), 0, Math.PI * 2);
         ctx.fill();
       }
     }

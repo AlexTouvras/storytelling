@@ -22,6 +22,7 @@
   html {
     scroll-behavior: smooth;
     color-scheme: dark;
+    overflow-x: hidden;
   }
 
   body {
@@ -31,6 +32,7 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     min-height: 100dvh;
+    overflow-x: hidden;
   }
 
   ::selection {
