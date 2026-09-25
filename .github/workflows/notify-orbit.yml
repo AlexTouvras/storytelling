@@ -6,6 +6,11 @@ name: Notify Orbit storytelling sync
 on:
   push:
     branches: [main]
+    paths:
+      - "src/**"
+      - "data/**"
+      - "package.json"
+      - "package-lock.json"
   workflow_dispatch:
 
 jobs:
