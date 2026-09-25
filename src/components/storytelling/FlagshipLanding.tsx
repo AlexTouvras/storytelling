@@ -107,8 +107,8 @@ export function FlagshipLanding({ stories }: Props) {
   }, [reduced]);
 
   return (
-    <div className={reduced ? "bg-void pb-20" : "pb-8"}>
-      <div ref={trackRef} data-testid="landing-track" className="relative z-0">
+    <div className={`overflow-x-hidden ${reduced ? "bg-void pb-20" : "pb-8"}`}>
+      <div ref={trackRef} data-testid="landing-track" className="relative z-0 overflow-x-hidden">
         <div
           className={
             reduced
@@ -126,10 +126,10 @@ export function FlagshipLanding({ stories }: Props) {
             className="pointer-events-none relative z-10 flex h-full items-end"
           >
             <div className="mx-auto w-full max-w-5xl px-5 pb-[16vh] md:px-8">
-              <div className="relative w-fit max-w-full">
+              <div className="relative w-fit max-w-full overflow-hidden">
                 <div
                   aria-hidden
-                  className="absolute -inset-x-12 -inset-y-8 -z-10 bg-void/75 blur-3xl"
+                  className="absolute -inset-x-4 -inset-y-6 -z-10 bg-void/75 blur-2xl md:-inset-x-12 md:-inset-y-8 md:blur-3xl"
                 />
                 <h1
                   aria-label="Interactive Decision Storytelling"
@@ -144,18 +144,18 @@ export function FlagshipLanding({ stories }: Props) {
           </div>
         </div>
 
-        <div className={reduced ? "relative z-20 bg-void" : "relative z-20"}>
+        <div className={reduced ? "relative z-20 overflow-x-hidden bg-void" : "relative z-20 overflow-x-hidden"}>
           {reduced ? null : <div className="h-[78vh]" aria-hidden />}
 
-          <section className="relative">
+          <section className="relative overflow-x-hidden">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/75 via-void/35 to-transparent"
             />
-            <div className="relative mx-auto max-w-5xl px-5 py-16 md:px-8 md:py-24">
+            <div className="relative mx-auto max-w-5xl overflow-hidden px-5 py-16 md:px-8 md:py-24">
               <div
                 aria-hidden
-                className="pointer-events-none absolute -inset-x-8 -inset-y-10 -z-10 bg-void/80 blur-2xl"
+                className="pointer-events-none absolute inset-x-0 -inset-y-10 -z-10 bg-void/80 blur-2xl md:-inset-x-8"
               />
               <h2 className="max-w-[16ch] font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-white">
                 Every story takes the same path.
@@ -176,15 +176,15 @@ export function FlagshipLanding({ stories }: Props) {
 
           {reduced ? null : <div className="h-[70vh]" aria-hidden />}
 
-          <section id="stories" className="relative scroll-mt-24">
+          <section id="stories" className="relative scroll-mt-24 overflow-x-hidden">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void/80 via-void/40 to-transparent"
             />
-            <div className="relative mx-auto max-w-5xl px-5 py-16 md:px-8 md:py-20">
+            <div className="relative mx-auto max-w-5xl overflow-hidden px-5 py-16 md:px-8 md:py-20">
               <div
                 aria-hidden
-                className="pointer-events-none absolute -inset-x-8 -inset-y-10 -z-10 bg-void/82 blur-2xl"
+                className="pointer-events-none absolute inset-x-0 -inset-y-10 -z-10 bg-void/82 blur-2xl md:-inset-x-8"
               />
               <h2 className="font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-semibold tracking-[-0.03em] text-white">
                 Stories
