@@ -189,8 +189,8 @@ function settledReach(star: Star) {
 function warpUnit(width: number, height: number) {
   const short = Math.min(width, height);
   if (short >= 760) return short;
-  // ~1.4× pulls the old center cluster outward without clearing the left/right edges.
-  return short * 1.4;
+  // ~2× pulls the old center cluster out to mid-frame without clearing the sides.
+  return short * 2;
 }
 
 /** Extra Y scale on narrow portrait so galaxies/stars reach the top and bottom. */
