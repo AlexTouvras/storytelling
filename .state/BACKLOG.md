@@ -73,16 +73,15 @@
 - [x] Implement third decision story film (after the pack is frozen)
 - [x] Review the film beat by beat from screenshots rather than from green tests — which is the only reason any of it was found. Every drawing bug in the film passed every gate: an unlabelled survival swoosh on a second scale, margin bars off-plot, survival-axis labels outside the clip, a service split with only one service on screen that lifted the on-time trains off the baseline, the traced run still fat and cyan seven acts after the camera left it
 - [ ] **Human review: the Act V rendering correction.** "Same marks, two decays" cannot be drawn — by Act V the camera has been on one line since Act II and a line is one service. The split moved to the decay curve, where its 89%/72% figures actually live, and dissolves back for Act VII. Noted in the Spec under Act V. The picture changed; the claim did not
-- [x] Frame-cost budget for the craft layer, desktop + phone — measured in `e2e/frame-cost.spec.ts`. Unthrottled both films hold 60 Hz; at 4× CPU throttle the craft layer costs one frame interval (cut-off 60→30 Hz, rate 30→20 Hz). The added arithmetic is only ~0.4 ms/frame; the rest is that a held frame is now genuinely new and must be composited.
+- [x] Frame-cost budget for the craft layer, desktop + phone — **declined 2026-09-26 as "accepted unprofiled", then overtaken the same day**, because the third film could not ship without it. Measured in `e2e/frame-cost.spec.ts`. Unthrottled both films hold 60 Hz; at 4× CPU throttle the craft layer costs one frame interval (cut-off 60→30 Hz, rate 30→20 Hz). The added arithmetic is only ~0.4 ms/frame; the rest is that a held frame is now genuinely new and must be composited.
 - [x] Reduce held-frame work on small screens (DPR cap / mark count / deliberate 30 Hz) — done as **mark count**, on the delay film where it actually bit: batch marks into one path per colour and alpha step, and thin the *backdrop* by stage area while the selected line never thins. Pixel 7 viewport at 4× throttle went 12 → 30 Hz at the open, and unthrottled from dropping frames to none. DPR cap not needed and not taken
 - [ ] **Narration sits on the canvas on a phone, in all three films.** The stage is laid out in fixed shares of viewport height; a beat's copy wrapped into a 412px column is much taller than the same copy on a desktop, so it rises into the data band. Legible today only because of the void gradient behind it. Engine-level — not specific to the delay film, and not this film's to fix
 - [ ] Re-derive the dead-air floor now that three films exist. Its docstring says it is set by the sparsest frame *any* film holds on; it was set when there were two, and is still the rate film's beat-2 close-up at 1.5× the floor. The delay film's closing hold sits at 2.0×, so nothing is wrong — but the floor is a sample of three now and should be justified rather than inherited
-- [x] Cue-table `rendered` bookkeeping beyond one canvas — the union of two surfaces' channels hides a frozen surface; holds are per-surface. Pinned by a test; both films are single-canvas so nothing to fix today.
+- [x] Cue-table `rendered` bookkeeping beyond one canvas — the union of two surfaces' channels hides a frozen surface; holds are per-surface. Pinned by a test; all three films are single-canvas so nothing to fix today.
 - [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
 - [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)
 - [ ] Optional: self-host `socioeconomic-data-mcp` for broader series
-- [ ] Landing reduced-motion end frame — own piece of work, deferred 2026-09-26. `FlagshipLanding` drops the scroll listener under reduced motion and pins the hero canvas on the flight's *first* frame, so that reader never sees the horizon it travels to. The films are unaffected (they step pose to pose and reach every beat). anidoodle's rule is that a scroll piece should show its finished picture; whether the product index hero should settle on the horizon is an editorial call. Context in `docs/ANIMATION_CRAFT.md`.
 - [ ] Tier B: WebGL backends for motifs that earn it
 
 ## Later
@@ -99,6 +98,7 @@
 - “AI-powered storytelling” as the headline
 - Polishing `rates-and-defaults` as the publish piece
 - Weekly topic discovery / auto-publish
+- Changing the landing hero's reduced-motion end frame (declined 2026-09-26 — it keeps the flight's opening frame; reasoning in `docs/ANIMATION_CRAFT.md`)
 - Modifying the Orbit repo from this project (until packaging)
 - Production deploy of this repo alone (this phase)
 

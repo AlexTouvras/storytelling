@@ -152,11 +152,16 @@ The films already satisfy this in substance. Under reduced motion they still tra
 pose to pose instead of interpolating, so the reader reaches every beat including the decision — they
 lose the tweening, not the story.
 
-The landing is the exception, and it is a real one. `FlagshipLanding` drops the scroll listener
-entirely under reduced motion, pins `progress` at 0 and removes the spacer blocks, so the hero canvas
-holds the *first* frame of the flight permanently. A reduced-motion reader never sees the horizon the
-flight is travelling towards. Left open for a decision rather than changed here, because the landing
-is the product index and what its hero settles on is an editorial call, not a rendering one.
+The landing is the exception. `FlagshipLanding` drops the scroll listener entirely under reduced
+motion, pins `progress` at 0 and removes the spacer blocks, so the hero canvas holds the *first*
+frame of the flight permanently. A reduced-motion reader never sees the horizon the flight is
+travelling towards.
+
+**Decided 2026-09-26: we keep the opening frame.** The landing is the product index, not a story, so
+there is no payoff being withheld — the stories themselves are a list of links directly below, and
+each one honours the rule on its own. What its hero settles on is an editorial call about the index,
+and the lanes read better as a static hero than the horizon does. Recorded here because it is a
+knowing departure from the doctrine above, not an oversight.
 
 **Holds are legitimate here.** Their films hold rarely. Ours hold a third of the time on purpose,
 because the reader is reading prose while the graphic waits. The rule we take is not *stop holding*,
@@ -173,11 +178,16 @@ it is *a hold must stay alive*.
 - The rate film's beat-2 hold is a close-up with one loan and a rule on screen. It passes the hard
   rule with no identical frames, but it is carried almost entirely by the camera, so it is the first
   frame to check after any change to `cameraCreep`.
+- Frame cost was accepted unmeasured when the craft layer shipped, and that was recorded as a
+  decision rather than an oversight. It was overtaken the same day by the third film, which could not
+  ship without the measurement — the table below is what the gate reports. The pointer that decision
+  left behind was wrong in an instructive way: it named the rAF loops and the per-mark `markLife`
+  call, and the cost turned out to be per-call canvas overhead instead of the arithmetic.
 
 ## What a live frame costs (measured 2026-09-26)
 
-Frame cost shipped as an admitted unknown. `e2e/frame-cost.spec.ts` now measures it at the densest
-hold of each film, with and without the craft layer — reduced motion sets `life: 0`, which
+Frame cost shipped as an admitted unknown. `e2e/frame-cost.spec.ts` now measures the frames each film
+declares, with and without the craft layer — reduced motion sets `life: 0`, which
 short-circuits `markLife` and `cameraCreep` while the host still repaints the same marks, so it is a
 clean A/B. CPU throttling at 4× stands in for a mid-range phone.
 
