@@ -194,9 +194,14 @@ and the rate film from 30 Hz to 20 Hz.
 
 **The added arithmetic is not where it goes.** Priced on its own — 2,400 marks, the five `craft.ts`
 calls per mark — the layer adds about **0.4 ms per frame**, a fraction of the ~4 ms of unthrottled
-headroom the A/B implies. Roughly three quarters of that 0.4 ms is `hash()` recomputing constants:
-a mark's drift phases never change, so precomputing them per mark removes the cost with a bit-identical
-result. Worth doing, and it will not move the table above.
+headroom the A/B implies. Roughly three quarters of that 0.4 ms was `hash()` recomputing constants a
+mark never changes, so `hash` now memoises. The memo is exact rather than an approximation and the
+dead-air gate is unmoved, which is the point: it had better return the same bitmap.
+
+It does not buy a frame. Repeated after the change, the cut-off film's throttled median straddles the
+boundary — 33.3, 16.7, 33.2 ms across three runs — where before it sat at 33.3. The film is now close
+enough to 60 Hz on a throttled CPU to touch it and not close enough to hold it. Anyone hoping for the
+next frame has to reduce the work below, not the arithmetic.
 
 The rest is the feature working. A held beat used to produce the same bitmap every frame, and a
 browser can skip compositing an unchanged canvas. Every held frame is now genuinely new, so every

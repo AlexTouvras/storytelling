@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   arrival,
   cameraCreep,
+  hash,
   leadLag,
   markLife,
   rankJitter,
@@ -10,6 +11,43 @@ import {
 
 const RANKS = [0, 0.17, 0.38, 0.5, 0.74, 1];
 const SPREADS = [0.1, 0.3, 0.45];
+
+describe("hash", () => {
+  /**
+   * The draw loop asks for a mark's hashes on every frame and they never change,
+   * so they are memoised. That is only allowed to be a saving, never a shift: the
+   * value must be the one the raw expression gives, to the last bit.
+   */
+  const raw = (id: number, channel: number) => {
+    const x = Math.sin(id * 127.1 + 311.7 + channel * 269.5) * 43758.5453;
+    return x - Math.floor(x);
+  };
+
+  it("returns exactly the unmemoised value, including on repeat", () => {
+    for (const id of [0, 1, 7, 1013, 2399, -4]) {
+      for (const channel of [0, 1, 2, 3, 4]) {
+        expect(hash(id, channel)).toBe(raw(id, channel));
+        expect(hash(id, channel)).toBe(raw(id, channel));
+      }
+    }
+  });
+
+  it("keeps channels independent and stays inside 0–1", () => {
+    for (const id of [3, 512, 2048]) {
+      const channels = [0, 1, 2, 3, 4].map((c) => hash(id, c));
+      expect(new Set(channels).size).toBe(channels.length);
+      for (const v of channels) {
+        expect(v).toBeGreaterThanOrEqual(0);
+        expect(v).toBeLessThan(1);
+      }
+    }
+  });
+
+  it("computes rather than mis-keys ids and channels it cannot pack", () => {
+    expect(hash(2.5, 1)).toBe(raw(2.5, 1));
+    expect(hash(9, 9)).toBe(raw(9, 9));
+  });
+});
 
 describe("leadLag", () => {
   it("holds the cue table's endpoints for every rank", () => {
