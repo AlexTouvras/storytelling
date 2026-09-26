@@ -279,7 +279,99 @@ real decision in it — *how early do you act, when the onset is this predictabl
 That is a defensible story with observed evidence and a counterfactual. It is simply not the
 craft-stress test it was picked for.
 
-**Awaiting:** human pick, with the revised score. No Spec, corpus pull, or film work starts before it.
+---
+
+## Round E — one seed round for a measurable propagation (2026-09-26)
+
+Round D's verification did not just fail a candidate, it named the property worth searching for: a
+propagation whose **lag is recorded per event rather than inferred from a coarsely sampled field**.
+The traffic front failed because 2.3 km detector spacing against a ~15 km/h wave is a ten-minute
+quantum. Anything where the lag is a logged fact, or a rule, cannot fail that way.
+
+Searched on that basis only. Three candidates were examined properly; the rest are recorded as
+rejected so the round does not reopen later on a whim.
+
+| id | source | scale | why it answers Round D |
+|----|--------|-------|------------------------|
+| `rata-delay-propagation` | [Digitraffic Railway](https://www.digitraffic.fi/en/railway-traffic/) `/api/v1/trains/{date}` | ~1,800 trains × ~70k timetable rows per day, ~720 days retained (~50M station events) | Every station event carries its own scheduled and actual time. The lag is not estimated. |
+| `usgs-flood-routing` | [USGS Water Data](https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous) continuous values | 15-minute gauge series, thousands of gauges, decades | A flood wave takes hours to travel between gauges sampled every 15 minutes — a ~20:1 resolution ratio, against traffic's ~1:1. |
+| `bts-rotation-delay` | [BTS Reporting Carrier On-Time](https://www.transtats.bts.gov/tables.asp?QO_VQ=EFD) via PREZIP | ~600k flights/month, 1987–present | Delay travels through an aircraft's day via tail number, and `LateAircraftDelay` is an attributed field. |
+
+Rejected without scoring: seismic arrival times (propagation is perfect, but the decision is sensor
+network design, not a portfolio decision anyone here can own); wastewater-to-clinical lead (clinical
+authority we should not claim); air-quality plume transport (monitor spacing repeats the traffic
+mistake).
+
+### Scores, with C
+
+| id | D | V | A | X | E | score_sum | C | craft_sum |
+|----|--:|--:|--:|--:|--:|----------:|--:|----------:|
+| `rata-delay-propagation` | 5 | 5 | 4 | 5 | 4 | **23** | **5 (measured)** | **28** |
+| `usgs-flood-routing` | 4 | 5 | 4 | 4 | 3 | 20 | 5 (unverified) | 25 |
+| `bts-rotation-delay` | 4 | 4 | 4 | 4 | 3 | 19 | 4 | 23 |
+
+`C` for the rail candidate is the only **measured** craft score in the catalogue. Round D's lesson is
+applied to its own successor: it was verified before being recommended, not after.
+
+### Verification of `rata-delay-propagation` (2026-09-26)
+
+Ten weekdays pulled from the live API (2026-09-14 → 09-25, 205 MB of JSON, ~20 MB per day, no
+authentication, CC BY 4.0, ~720 days retained).
+
+**Coverage.** Of 70,440 timetable rows on a single day, **92.9%** carry an actual time and **96.1%**
+carry delay minutes. Categories are Commuter (1,044 trains), Cargo (222), Long-distance (213) and
+shunting/other. Delay *causes* are attached to only **1.0%** of rows — attribution is for significant
+delays only, and the story must not lean on it as though it were complete.
+
+**Delay carries, and the carry rate is stable.** A train that arrives 5+ minutes late is still 5+
+minutes late at its next stop on **73.6%–83.6% of days** (median 76.9%), every day of the ten.
+
+**The decay is a curve, and it holds its shape.** Share of a 5+ minute delay still 5+ minutes late,
+by stops downstream, across the ten days:
+
+| stops on | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| range across days | 76–84% | 64–76% | 55–69% | 49–64% | 43–63% | 38–63% | 35–66% | 26–60% |
+| day-to-day spread | 8.2% | 11.9% | 13.5% | 14.9% | 20.5% | 24.9% | 30.7% | 33.9% |
+
+Tight and monotone for the first four stops, widening as the samples thin. **This is the thing the
+traffic front was supposed to be**: an ordering with a measured decay, where the decay rate is the
+finding rather than a staging device.
+
+**Individual legs behave consistently.** Taking late trains only and legs with 40+ observations,
+**10 of 12** legs examined keep the same sign on all ten days. `KEM→OL` adds a mean **+6.0 min**
+(range +2.8 to +12.3); `KV→LH` absorbs **−4.8 min** (range −5.7 to −4.2); `OL→YV` absorbs **−8.1 min**.
+The two that flip both sit within a rounding of zero, which is the honest result rather than a problem.
+
+**Proposed question:** *Where should the recovery time sit?* A timetable has a finite budget of padding
+minutes. Spend it on the wrong legs and a delay survives eight stops; spend it on the right ones and
+the same delay is gone in two. That is a budgeted allocation across a network — the cut-off story's
+frontier logic in a wholly different domain — with a mechanism the camera can follow along one run.
+
+| Element | Draft (a Decision Spec settles it, not this) |
+|---|---|
+| Decision-maker | Timetable planning at the infrastructure authority, allocating recovery margin across a line |
+| Stake | Padding buys punctuality and costs journey time and capacity; both are paid every day of the timetable period |
+| Mechanism object | One run's stops in order → delay at each → the schedule's padding absorbing or failing to absorb it → the legs where the budget is misplaced |
+| Observed vs modeled | Observed delays and the measured decay; modeled counterfactual of re-allocated padding, labeled as such |
+| Uncertainty | Thin cause attribution (1% of rows), sample thinning beyond ~4 stops, commuter vs long-distance differences, one 10-weekday window |
+
+**Still to check before a Spec:** whether the decay differs enough between commuter and long-distance
+services to need separating; whether scheduled padding per leg can be derived from the timetable
+itself (so absorption is attributable to the schedule and not to traffic); and one longer window, since
+ten consecutive weekdays is a small sample for a seasonal claim.
+
+### Where this leaves the field
+
+| id | craft_sum | standing |
+|----|----------:|----------|
+| `rata-delay-propagation` | **28** | **Recommended for story 3** — only measured C in the catalogue |
+| `usgs-flood-routing` | 25 | Shortlist. Strong mechanism, US-centric, 3-year request cap, unverified |
+| `digitraffic-tms-raw` | 23 | Still a good decision story (onset timing), not a craft test |
+| `bts-rotation-delay` | 23 | Park. Over-told domain |
+| `entsoe-europe-load` | 24 | Park. Curve rather than field |
+
+**Awaiting:** human pick. No Spec, corpus pull, or film work starts before it.
 
 ---
 
@@ -853,7 +945,10 @@ craft-stress test it was picked for.
 5. ~~Round D: re-score the parked shortlist for craft stress (story 3)~~ → recommended `digitraffic-tms-raw` (25).
 6. ~~Verify the Round D assumptions before committing~~ → format, metadata and licence pass; the
    propagation lag fails, so `digitraffic-tms-raw` falls to **23** and no candidate is clearly ahead.
-7. Human pick for story 3 on the revised scores, then a Decision Spec.
+7. ~~Round E: one seed round for a propagation whose lag is recorded rather than inferred~~ →
+   `rata-delay-propagation` (**28**), verified on ten weekdays before being recommended.
+8. Human pick for story 3, then a Decision Spec.
 
-Catalogue stays closed to new candidates. It reopens only to re-score parked rows when a shipped
-capability changes what a story can be — Round D is the pattern.
+The catalogue reopens for two reasons only: to re-score parked rows when a shipped capability changes
+what a story can be (Round D), and to seed against a property a verification proved we were missing
+(Round E). Not to browse.
