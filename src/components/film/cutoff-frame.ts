@@ -1,4 +1,5 @@
-import { clamp01 } from "@/lib/sim/app-field";
+import { clamp01, lerp, smoothstep } from "@/components/film/craft";
+import { checkCueTable, holdAt } from "@/components/film/cue-table";
 
 export type CutoffFrame = {
   beat: number;
@@ -20,6 +21,8 @@ export type CutoffFrame = {
   frontier: number;
   /** 0–1 decision chrome */
   cut: number;
+  /** 0–1 how far into a span where no drawn channel moves */
+  hold: number;
 };
 
 type Pose = {
@@ -159,14 +162,10 @@ const POSES: Pose[] = [
   },
 ];
 
-function smoothstep(t: number): number {
-  const x = clamp01(t);
-  return x * x * (3 - 2 * x);
-}
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+/** `frontier` and `cut` drive the chart and the DOM, never the canvas. */
+export const CUTOFF_HOLDS = checkCueTable("where-should-the-cutoff-sit", POSES, {
+  rendered: ["population", "focusY", "spanX", "cx", "gate", "gatePd", "filter"],
+});
 
 function poseIndex(progress: number): number {
   const p = clamp01(progress);
@@ -186,7 +185,7 @@ export function cutoffFrameAt(progress: number, reduced = false): CutoffFrame {
 
   if (reduced) {
     const pose = POSES[poseIndex(p)];
-    return { ...pose };
+    return { ...pose, hold: 0 };
   }
 
   let i = 0;
@@ -209,5 +208,6 @@ export function cutoffFrameAt(progress: number, reduced = false): CutoffFrame {
     filter: lerp(a.filter, b.filter, t),
     frontier: lerp(a.frontier, b.frontier, t),
     cut: lerp(a.cut, b.cut, t),
+    hold: holdAt(CUTOFF_HOLDS, p),
   };
 }

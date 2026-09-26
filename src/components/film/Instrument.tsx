@@ -17,6 +17,7 @@ const LIVE: FilmFrame = {
   spanX: 0.72,
   cx: 0.1,
   focusY: 0,
+  hold: 0,
 };
 
 type Props = {

@@ -1,18 +1,39 @@
 import { FIELD_CUTOFF, shareAt, type FieldModel } from "@/lib/sim/book-field";
 import type { FilmFrame } from "@/components/film/frame";
+import {
+  arrival,
+  cameraCreep,
+  clamp01,
+  hash,
+  leadLag,
+  markLife,
+  rankJitter,
+  smoothstep,
+  strokeWeight,
+  type Motion,
+  STILL,
+} from "@/components/film/craft";
 
 const LOG_MIN = Math.log10(70_000);
 const LOG_MAX = Math.log10(430_000);
 const CYAN: [number, number, number] = [92, 214, 226];
 const VIOLET: [number, number, number] = [186, 104, 255];
 
+/** Opening span, so the camera's zoom factor can weight linework. */
+const BASE_SPAN = 0.78;
+/** Share of the shock transition spent as a wave across the book. */
+const SHOCK_SPREAD = 0.3;
+
 function rgba(rgb: [number, number, number], a: number): string {
   return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
 }
 
-function hash(id: number): number {
-  const x = Math.sin(id * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
+/**
+ * Order the book is worked in: the thin edge first, out to the comfortable
+ * loans. Anchored to residual income, so it survives the camera.
+ */
+function rankOf(id: number, shareBefore: number): number {
+  return rankJitter(id, clamp01(shareBefore / (FIELD_CUTOFF * 3)));
 }
 
 function projectX(share: number, frame: FilmFrame, width: number): number {
@@ -53,6 +74,9 @@ function radius(balance: number, frame: FilmFrame): number {
 /**
  * Draw the book. Horizontal position is residual income.
  * Vertical position is unpaid balance. Scroll owns the camera.
+ *
+ * `motion` keeps the field alive while the reader holds still; the craft rules
+ * it feeds are in `craft.ts`.
  */
 export function drawField(
   ctx: CanvasRenderingContext2D,
@@ -60,27 +84,39 @@ export function drawField(
   height: number,
   model: FieldModel,
   frame: FilmFrame,
+  motion: Motion = STILL,
 ): void {
   ctx.clearRect(0, 0, width, height);
 
-  const lineX = projectX(FIELD_CUTOFF, frame, width);
-  if (frame.line > 0.02 && lineX > -20 && lineX < width + 20) {
+  const creep = cameraCreep(motion.time, frame.hold, motion.life);
+  const view: FilmFrame = {
+    ...frame,
+    cx: frame.cx + frame.spanX * creep.pan,
+    spanX: frame.spanX * creep.span,
+  };
+  const zoom = BASE_SPAN / Math.max(view.spanX, 1e-3);
+
+  const lineX = projectX(FIELD_CUTOFF, view, width);
+  // The rule is drawn top-down, then the wash spreads back from it.
+  const drawn = smoothstep(frame.line / 0.55);
+  if (drawn > 0.01 && lineX > -20 && lineX < width + 20) {
     const plotTop = height * 0.14;
     const plotH = height * 0.68;
+    const washW = Math.max(0, lineX - width * 0.07) * smoothstep((frame.line - 0.3) / 0.5);
     ctx.fillStyle = rgba(VIOLET, 0.09 * frame.line);
-    ctx.fillRect(width * 0.07, plotTop, Math.max(0, lineX - width * 0.07), plotH);
+    ctx.fillRect(lineX - washW, plotTop, washW, plotH);
 
     ctx.save();
-    ctx.strokeStyle = `rgba(255,255,255,${0.18 + 0.55 * frame.line})`;
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgba(255,255,255,${0.38 + 0.35 * frame.line})`;
+    ctx.lineWidth = strokeWeight(1, zoom);
     ctx.setLineDash([1.5, 5]);
     ctx.beginPath();
     ctx.moveTo(lineX, plotTop);
-    ctx.lineTo(lineX, plotTop + plotH);
+    ctx.lineTo(lineX, plotTop + plotH * drawn);
     ctx.stroke();
     ctx.restore();
 
-    ctx.fillStyle = `rgba(255,255,255,${0.55 * frame.line})`;
+    ctx.fillStyle = `rgba(255,255,255,${0.55 * frame.line * smoothstep((drawn - 0.85) / 0.15)})`;
     ctx.font = "12px ui-monospace, monospace";
     ctx.textAlign = lineX > width * 0.72 ? "right" : "left";
     ctx.textBaseline = "middle";
@@ -101,22 +137,29 @@ export function drawField(
 
   for (const point of model.points) {
     const isFeatured = point.id === featuredId;
+    const rank = rankOf(point.id, point.shareBefore);
+    // The named loan reprices first; the book then follows as a wave off the
+    // thin edge rather than every mark sliding on the same frame.
     const shock = isFeatured
       ? Math.max(frame.featuredShock, frame.bookShock)
-      : frame.bookShock;
+      : leadLag(frame.bookShock, rank, SHOCK_SPREAD);
     const share = shareAt(point, shock);
     const inSleeve = point.floating && share < FIELD_CUTOFF;
-    const population = isFeatured ? 1 : frame.population;
+    const population = isFeatured ? 1 : arrival(rank, frame.population);
     if (population < 0.01) continue;
     const dim = inSleeve ? 1 : 1 - frame.sleeve * 0.96;
-    const alpha = (point.floating ? 0.92 : 0.62) * population * dim;
+    const r =
+      radius(point.balance, view) *
+      (isFeatured ? 1.2 : inSleeve && frame.sleeve > 0.45 ? 1.35 : 1);
+    const life = markLife(point.id, motion.time, r, motion.life);
+    const alpha = (point.floating ? 0.92 : 0.62) * population * dim * life.glow;
     if (alpha < 0.02) continue;
     layers.push({
-      x: projectX(share, frame, width),
-      y: projectY(point.balance, point.id, frame, model.featured.balance, height),
-      r:
-        radius(point.balance, frame) *
-        (isFeatured ? 1.2 : inSleeve && frame.sleeve > 0.45 ? 1.35 : 1),
+      x: projectX(share, view, width) + life.dx,
+      y:
+        projectY(point.balance, point.id, view, model.featured.balance, height) +
+        life.dy,
+      r,
       color: point.floating ? VIOLET : CYAN,
       alpha: isFeatured ? Math.max(alpha, 0.45 + 0.55 * frame.focusY) : alpha,
       floating: point.floating,
@@ -138,7 +181,7 @@ export function drawField(
       ctx.fill();
       ctx.beginPath();
       ctx.strokeStyle = "rgba(255,255,255,0.85)";
-      ctx.lineWidth = 1.25;
+      ctx.lineWidth = strokeWeight(1.25, zoom);
       ctx.arc(dot.x, dot.y, dot.r + 5, 0, Math.PI * 2);
       ctx.stroke();
     }

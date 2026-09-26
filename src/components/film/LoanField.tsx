@@ -54,27 +54,29 @@ export const LoanField = memo(function LoanField({
     );
     observer.observe(canvas);
 
-    const paint = () => {
+    const started = performance.now();
+
+    const paint = (now = performance.now()) => {
       if (!alive) return;
       const ctx = canvas.getContext("2d");
       if (!ctx || !visible) return;
       const { cssW, cssH, dpr } = fit(canvas);
       if (cssW < 2 || cssH < 2) return;
+      const reduced = reducedRef?.current ?? false;
       const next =
         frame ??
-        frameAtProgress?.(
-          progressRef?.current ?? 0,
-          model.featured,
-          reducedRef?.current ?? false,
-        );
+        frameAtProgress?.(progressRef?.current ?? 0, model.featured, reduced);
       if (!next) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawField(ctx, cssW, cssH, model, next);
+      drawField(ctx, cssW, cssH, model, next, {
+        time: (now - started) / 1000,
+        life: reduced ? 0 : 1,
+      });
     };
 
     let raf = 0;
-    const loop = () => {
-      paint();
+    const loop = (now: number) => {
+      paint(now);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);

@@ -49,26 +49,27 @@ export const AppField = memo(function AppField({
     );
     observer.observe(canvas);
 
-    const paint = () => {
+    const started = performance.now();
+
+    const paint = (now = performance.now()) => {
       if (!alive) return;
       const ctx = canvas.getContext("2d");
       if (!ctx || !visible) return;
       const { cssW, cssH, dpr } = fit(canvas);
       if (cssW < 2 || cssH < 2) return;
-      const next =
-        frame ??
-        frameAtProgress?.(
-          progressRef?.current ?? 0,
-          reducedRef?.current ?? false,
-        );
+      const reduced = reducedRef?.current ?? false;
+      const next = frame ?? frameAtProgress?.(progressRef?.current ?? 0, reduced);
       if (!next) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawApps(ctx, cssW, cssH, model, next);
+      drawApps(ctx, cssW, cssH, model, next, {
+        time: (now - started) / 1000,
+        life: reduced ? 0 : 1,
+      });
     };
 
     let raf = 0;
-    const loop = () => {
-      paint();
+    const loop = (now: number) => {
+      paint(now);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);

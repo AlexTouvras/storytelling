@@ -58,6 +58,17 @@ Field modes: `stub` → `household` → `segments` → `population` → `sleeve`
 
 Rejected and not to be retried: a 2D scale around a point, a tube or orbit camera, a long screen-space lerp between two layouts, fanned lanes, a thread that jumps lanes or collapses into one diagonal, a bright ring on the entry, easing back to the diagram you left.
 
+## Craft earned from animation doctrine
+
+`docs/ANIMATION_CRAFT.md` holds the motion rules read from `alexgreensh/anidoodle` and tested against both films, with the hold audit that produced them and the list of its doctrine we declined. The code is `src/components/film/craft.ts` and `cue-table.ts`; the gate is `e2e/dead-air.spec.ts`. In short:
+
+1. **A hold is not a freeze.** A scrubbed film is a pure function of scroll, so it stops when the reader stops — which is when they are reading. Held beats get camera creep and per-mark life. The cue table declares which spans are holds.
+2. **Marks are made, not faded.** A population arrives in an order; a rule is drawn down the plot and its wash spreads back from it.
+3. **One side leads,** by a fraction of the transition, never half a cycle and never in lockstep. The rank is data-anchored, then roughened so the wavefront is not ruled.
+4. **Marks are sized relative to what they draw,** and line weight grows as `weight × zoom^0.35` under the camera.
+5. **The cue table is checked at load,** against the channels the canvas actually reads — a channel that never reaches pixels cannot rescue a still frame.
+6. **Dead air is measured, not asserted.** The gate scrubs to every declared hold and counts changed pixels; reduced motion must measure exactly zero.
+
 ## Next story rule
 
 Before adding a new visualId, ask: can an existing grammar object + stage config express the beat? Only register a new visual when the metaphor cannot share the spine/field. A new shot still gets its own decision spec; it inherits the craft rules above and does not inherit the landing’s metaphor.

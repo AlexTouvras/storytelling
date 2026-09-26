@@ -1,4 +1,6 @@
-import { clamp01, type FieldPoint } from "@/lib/sim/book-field";
+import { type FieldPoint } from "@/lib/sim/book-field";
+import { clamp01, lerp, smoothstep } from "@/components/film/craft";
+import { checkCueTable, holdAt } from "@/components/film/cue-table";
 
 export type FilmFrame = {
   beat: number;
@@ -15,6 +17,8 @@ export type FilmFrame = {
   cx: number;
   /** 0 = full balance axis, 1 = locked on the featured loan */
   focusY: number;
+  /** 0–1 how far into a span where no drawn channel moves */
+  hold: number;
 };
 
 type Pose = {
@@ -165,14 +169,20 @@ const POSES: Pose[] = [
   },
 ];
 
-function smoothstep(t: number): number {
-  const x = clamp01(t);
-  return x * x * (3 - 2 * x);
-}
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+/** `cut` drives DOM chrome only, so it cannot rescue a still canvas. */
+export const RATE_HOLDS = checkCueTable("when-rates-rise", POSES, {
+  rendered: [
+    "featuredShock",
+    "bookShock",
+    "population",
+    "sleeve",
+    "line",
+    "spanX",
+    "cx",
+    "focusY",
+  ],
+  tracked: ["cx"],
+});
 
 function featuredShare(point: Pick<FieldPoint, "shareBefore" | "shareAfter">, shock: number) {
   return point.shareBefore + (point.shareAfter - point.shareBefore) * shock;
@@ -218,6 +228,7 @@ export function frameAt(
       spanX: pose.spanX,
       cx: resolveCx(pose, featured),
       focusY: pose.focusY,
+      hold: 0,
     };
   }
 
@@ -241,5 +252,6 @@ export function frameAt(
     spanX: lerp(a.spanX, b.spanX, t),
     cx: lerp(resolveCx(a, featured), resolveCx(b, featured), t),
     focusY: lerp(a.focusY, b.focusY, t),
+    hold: holdAt(RATE_HOLDS, p),
   };
 }
