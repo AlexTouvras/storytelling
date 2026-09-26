@@ -32,7 +32,7 @@ test.describe("why don't delays die film", () => {
     await page.goto("/stories/where-should-the-recovery-time-sit/film");
     await expect(page.getByTestId("season-panel")).toBeHidden();
 
-    await scrubTo(page, 0.535);
+    await scrubTo(page, 0.58);
     await expect(page.getByTestId("film-stage")).toHaveAttribute("data-beat", "6");
     const panel = page.getByTestId("season-panel");
     await expect(panel).toBeVisible();
@@ -42,7 +42,7 @@ test.describe("why don't delays die film", () => {
 
   test("the picker refits the line without ranking it", async ({ page }) => {
     await page.goto("/stories/where-should-the-recovery-time-sit/film");
-    await scrubTo(page, 0.71);
+    await scrubTo(page, 0.75);
     await expect(page.getByTestId("film-stage")).toHaveAttribute("data-beat", "8");
 
     const picker = page.getByTestId("line-picker");

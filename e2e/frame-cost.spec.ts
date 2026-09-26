@@ -82,25 +82,49 @@ async function scrubTo(page: Page, track: string, at: number) {
   await page.waitForTimeout(300);
 }
 
-/** The hold with the most marks on screen: the closing beat of each film. */
+const mid = (hold: { from: number; to: number }) => (hold.from + hold.to) / 2;
+
+const lastRecoveryHold = RECOVERY_HOLDS[RECOVERY_HOLDS.length - 1];
+
+/**
+ * Where each film is worst. Two films accumulate, so their closing hold is both
+ * the fullest frame and a creeping one, and one probe covers the worst case.
+ *
+ * The delay film does the opposite: it opens on every line in the network and
+ * then spends nine acts taking them away, so its closing hold draws one line and
+ * is the *cheapest* frame in the film, not the dearest. Probing only that would
+ * have left the expensive end of this film unmeasured — which is how a draw that
+ * paid full per-mark cost for marks too faint to change a pixel survived a green
+ * gate once already. So it gets two probes: the held closing beat, for the craft
+ * layer on a creeping camera, and the open, for the whole field at once.
+ */
 const FILMS = [
   {
     name: "when-rates-rise",
     path: "/stories/when-rates-rise/film",
     track: "rate-film",
-    hold: RATE_HOLDS[RATE_HOLDS.length - 1],
+    probes: [
+      { name: `beat ${RATE_HOLDS[RATE_HOLDS.length - 1].beat} hold`, at: mid(RATE_HOLDS[RATE_HOLDS.length - 1]) },
+    ],
   },
   {
     name: "where-should-the-cutoff-sit",
     path: "/stories/where-should-the-cutoff-sit/film",
     track: "cutoff-film",
-    hold: CUTOFF_HOLDS[CUTOFF_HOLDS.length - 1],
+    probes: [
+      { name: `beat ${CUTOFF_HOLDS[CUTOFF_HOLDS.length - 1].beat} hold`, at: mid(CUTOFF_HOLDS[CUTOFF_HOLDS.length - 1]) },
+    ],
   },
   {
     name: "why-dont-delays-die",
     path: "/stories/where-should-the-recovery-time-sit/film",
     track: "recovery-film",
-    hold: RECOVERY_HOLDS[RECOVERY_HOLDS.length - 1],
+    probes: [
+      { name: `beat ${lastRecoveryHold.beat} hold`, at: mid(lastRecoveryHold) },
+      // Just past the open, where the population has finished arriving and the
+      // camera has not yet started putting lines away: every mark in the field.
+      { name: "open, whole field", at: 0.05 },
+    ],
   },
 ];
 
@@ -123,25 +147,30 @@ for (const film of FILMS) {
       if (!craft) await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(film.path);
       await expect(page.locator("[data-testid='film-stage'] canvas")).toBeVisible();
-      await scrubTo(page, film.track, (film.hold.from + film.hold.to) / 2);
 
-      const plain = await frameCost(page);
+      for (const probe of film.probes) {
+        await scrubTo(page, film.track, probe.at);
 
-      const cdp = await page.context().newCDPSession(page);
-      await cdp.send("Emulation.setCPUThrottlingRate", { rate: PHONE_CPU });
-      const throttled = await frameCost(page);
-      await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
-      await cdp.detach();
+        const plain = await frameCost(page);
 
-      console.log(`\n  ${film.name} beat ${film.hold.beat} hold — ${label}`);
-      console.log(`    ${report("unthrottled", plain)}`);
-      console.log(`    ${report(`${PHONE_CPU}x CPU throttle`, throttled)}`);
+        const cdp = await page.context().newCDPSession(page);
+        await cdp.send("Emulation.setCPUThrottlingRate", { rate: PHONE_CPU });
+        const throttled = await frameCost(page);
+        await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+        await cdp.detach();
 
-      expect(plain.p95, `unthrottled: ${report("", plain)}`).toBeLessThan(P95_BUDGET_MS);
-      expect(
-        throttled.p50,
-        `${PHONE_CPU}x throttled: ${report("", throttled)}`,
-      ).toBeLessThan(THROTTLED_P50_CEILING_MS);
+        console.log(`\n  ${film.name} — ${probe.name} — ${label}`);
+        console.log(`    ${report("unthrottled", plain)}`);
+        console.log(`    ${report(`${PHONE_CPU}x CPU throttle`, throttled)}`);
+
+        expect(plain.p95, `${probe.name} unthrottled: ${report("", plain)}`).toBeLessThan(
+          P95_BUDGET_MS,
+        );
+        expect(
+          throttled.p50,
+          `${probe.name} ${PHONE_CPU}x throttled: ${report("", throttled)}`,
+        ).toBeLessThan(THROTTLED_P50_CEILING_MS);
+      }
     });
   }
 }
