@@ -771,4 +771,4 @@ false statement, not merely a dull one. If the film ever draws a second canvas, 
 - [x] Explicit non-goals respected (no speaking for the operator, no plan cosplay)
 - [x] Film built and reviewed beat by beat from screenshots — `RecoveryFilm`, the arrival-mark field, the route and the manifest; gated by e2e beats, dead air, frame cost and axe on desktop and a phone viewport
 - [ ] **Act V rendering correction reviewed** — the service split moved from the marks to the decay curve (see the note under Act V). The picture changed; the claim did not
-- [ ] Published — the slug is deliberately absent from `LISTED_SLUGS`, so the landing page does not link it yet
+- [x] **Published** (human gate exercised 2026-09-26) — the slug is in `LISTED_SLUGS`, so `/stories` links the film. Asked for and granted without waiting on the Act V review above, which stays open

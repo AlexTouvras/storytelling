@@ -12,6 +12,13 @@ async function scrubTo(page: Page, at: number) {
 }
 
 test.describe("why don't delays die film", () => {
+  test("landing lists the delay story to its film", async ({ page }) => {
+    await page.goto("/");
+    await expect(
+      page.getByRole("link", { name: "Why Don't Delays Die?" }),
+    ).toHaveAttribute("href", "/stories/where-should-the-recovery-time-sit/film");
+  });
+
   test("opens on the reader's question, not the planner's", async ({ page }) => {
     await page.goto("/stories/where-should-the-recovery-time-sit/film");
     await expect(page.getByTestId("film-prologue")).toContainText(
