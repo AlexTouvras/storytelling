@@ -5,7 +5,6 @@ import { FlagshipLanding } from "@/components/storytelling/FlagshipLanding";
 const LISTED_SLUGS = new Set<string>([
   "when-rates-rise",
   "where-should-the-cutoff-sit",
-  "where-should-the-recovery-time-sit",
 ]);
 
 export default function HomePage() {

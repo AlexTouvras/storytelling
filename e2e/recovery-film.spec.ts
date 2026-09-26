@@ -12,11 +12,15 @@ async function scrubTo(page: Page, at: number) {
 }
 
 test.describe("why don't delays die film", () => {
-  test("landing lists the delay story to its film", async ({ page }) => {
+  // Unlisted on 2026-09-26 after the human read it: too dense to follow. The film
+  // still builds and still has to hold its gates, but the index must not link it
+  // until the story is cut down, so the absence is asserted rather than assumed.
+  test("landing does not link the delay story", async ({ page }) => {
     await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Stories" })).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Why Don't Delays Die?" }),
-    ).toHaveAttribute("href", "/stories/where-should-the-recovery-time-sit/film");
+    ).toHaveCount(0);
   });
 
   test("opens on the reader's question, not the planner's", async ({ page }) => {
