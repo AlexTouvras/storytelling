@@ -8,49 +8,82 @@ import { CUTOFF_HOLDS } from "../src/components/film/cutoff-frame";
  * Both cue tables contain spans where no drawn channel moves — a third of the
  * rate film and nearly half of the cut-off film, closing beats included. Those
  * are the spans a reader dwells in, because that is when they are reading. This
- * walks to the middle of each one, stops, and measures how much of the canvas
- * changes over the next second.
+ * walks to the middle of each one, stops, and measures the canvas frame by
+ * frame.
+ *
+ * Frame by frame is the point. The first version of this gate compared two
+ * reads a second apart, and a drift far too slow for anyone to perceive sailed
+ * through it while a third of consecutive frames were bit-identical. anidoodle
+ * warns about exactly that: a creeping camera changes every pixel and satisfies
+ * the tool while the eye sees a still. So the floors here are its floors — no
+ * identical consecutive frames, and no short window that is effectively still.
  */
 
 /** Per-channel difference that counts as a changed pixel. */
 const THRESHOLD = 4;
-/** Every seventh pixel; the marks are far smaller than the stride's error. */
-const STRIDE = 7;
-/** Share of sampled pixels that must change while the reader holds still. */
-const FLOOR = 0.001;
-const WINDOW_MS = 1000;
+/** Frames sampled per probe: half a second at 60 Hz. */
+const FRAMES = 30;
+/** Downscale before comparing, as the reference metric does. */
+const PROBE_W = 320;
+const PROBE_H = 200;
+/**
+ * Mean share of pixels that must change from one frame to the next. The hard
+ * rule is `identical === 0`; this floor is the backstop against a frame that
+ * technically moves and visually does not. It is set by the sparsest frame
+ * either film holds on — the rate film's beat-2 close-up, where one loan and a
+ * rule are the only things on screen, and which measures about 0.3%.
+ */
+const FLOOR = 0.002;
 
-async function changedFraction(page: Page, ms: number): Promise<number> {
+type Probe = {
+  /** Mean changed-pixel fraction between consecutive frames. */
+  mean: number;
+  /** Consecutive frames that were bit-identical. Must be zero. */
+  identical: number;
+};
+
+async function probe(page: Page, frames = FRAMES): Promise<Probe> {
   return page.evaluate(
-    async ({ ms, threshold, stride }) => {
+    async ({ frames, threshold, w, h }) => {
       const canvas = document.querySelector<HTMLCanvasElement>(
         "[data-testid='film-stage'] canvas",
       );
       if (!canvas) throw new Error("no film canvas");
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const scratch = document.createElement("canvas");
+      scratch.width = w;
+      scratch.height = h;
+      const ctx = scratch.getContext("2d", { willReadFrequently: true });
       if (!ctx) throw new Error("no 2d context");
-      const read = () => ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
-      const before = read();
-      await new Promise((resolve) => setTimeout(resolve, ms));
-      const after = read();
-
-      let changed = 0;
-      let total = 0;
-      for (let i = 0; i < before.length; i += 4 * stride) {
-        total++;
-        if (
-          Math.abs(before[i] - after[i]) > threshold ||
-          Math.abs(before[i + 1] - after[i + 1]) > threshold ||
-          Math.abs(before[i + 2] - after[i + 2]) > threshold ||
-          Math.abs(before[i + 3] - after[i + 3]) > threshold
-        ) {
-          changed++;
-        }
+      const shots: Uint8ClampedArray[] = [];
+      for (let i = 0; i < frames; i++) {
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(canvas, 0, 0, w, h);
+        shots.push(ctx.getImageData(0, 0, w, h).data);
       }
-      return total === 0 ? 0 : changed / total;
+
+      let total = 0;
+      let identical = 0;
+      for (let f = 1; f < shots.length; f++) {
+        const a = shots[f - 1];
+        const b = shots[f];
+        let changed = 0;
+        for (let i = 0; i < a.length; i += 4) {
+          if (
+            Math.abs(a[i] - b[i]) > threshold ||
+            Math.abs(a[i + 1] - b[i + 1]) > threshold ||
+            Math.abs(a[i + 2] - b[i + 2]) > threshold
+          ) {
+            changed++;
+          }
+        }
+        if (changed === 0) identical++;
+        total += changed / (w * h);
+      }
+      return { mean: total / (shots.length - 1), identical };
     },
-    { ms, threshold: THRESHOLD, stride: STRIDE },
+    { frames, threshold: THRESHOLD, w: PROBE_W, h: PROBE_H },
   );
 }
 
@@ -92,11 +125,10 @@ for (const film of FILMS) {
       for (const hold of film.holds) {
         const mid = (hold.from + hold.to) / 2;
         await scrubTo(page, film.track, mid);
-        const fraction = await changedFraction(page, WINDOW_MS);
-        expect(
-          fraction,
-          `beat ${hold.beat} at ${(mid * 100).toFixed(0)}% was still`,
-        ).toBeGreaterThan(FLOOR);
+        const where = `beat ${hold.beat} at ${(mid * 100).toFixed(0)}%`;
+        const { mean, identical } = await probe(page);
+        expect(identical, `${where} repeated a frame`).toBe(0);
+        expect(mean, `${where} was effectively still`).toBeGreaterThan(FLOOR);
       }
     });
 
@@ -107,7 +139,9 @@ for (const film of FILMS) {
 
       const hold = film.holds[film.holds.length - 1];
       await scrubTo(page, film.track, (hold.from + hold.to) / 2);
-      expect(await changedFraction(page, 600)).toBe(0);
+      const { mean, identical } = await probe(page, 12);
+      expect(mean).toBe(0);
+      expect(identical).toBe(11);
     });
   });
 }

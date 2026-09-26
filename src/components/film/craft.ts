@@ -21,20 +21,27 @@
 
 const TAU = Math.PI * 2;
 
-/** Drift amplitude as a share of the mark's own radius. */
+/**
+ * Rates and amplitudes are set by what the eye reads, not by what a tool can
+ * measure. An earlier tuning drifted marks at 0.17 Hz: it passed a one-second
+ * changed-pixel gate and still left a third of consecutive frames bit-identical,
+ * which is a still picture with a number attached. A breath is roughly a
+ * two-second cycle, so that is where these sit.
+ */
 const LIFE_RADIUS_SHARE = 0.3;
 /** Floor in CSS pixels, so far-field marks still visibly move. */
-const LIFE_FLOOR_PX = 0.9;
+const LIFE_FLOOR_PX = 1.2;
 /** Chosen so the two axes never resynchronise into one visible pulse. */
-const LIFE_HZ_X = 0.17;
-const LIFE_HZ_Y = 0.26;
-const LIFE_HZ_GLOW = 0.13;
+const LIFE_HZ_X = 0.42;
+const LIFE_HZ_Y = 0.61;
+const LIFE_HZ_GLOW = 0.33;
+const LIFE_GLOW_DEPTH = 0.16;
 
 /** Camera creep during a hold, as a share of the visible span. */
-const CREEP_PAN_SHARE = 0.014;
-const CREEP_PUSH = 0.012;
-const CREEP_PAN_SECONDS = 26;
-const CREEP_PUSH_SECONDS = 41;
+const CREEP_PAN_SHARE = 0.02;
+const CREEP_PUSH = 0.02;
+const CREEP_PAN_SECONDS = 11;
+const CREEP_PUSH_SECONDS = 17;
 
 export function clamp01(value: number): number {
   return value < 0 ? 0 : value > 1 ? 1 : value;
@@ -97,7 +104,11 @@ export function markLife(
   return {
     dx: Math.sin(time * TAU * LIFE_HZ_X + hash(id, 1) * TAU) * amp,
     dy: Math.sin(time * TAU * LIFE_HZ_Y + hash(id, 2) * TAU) * amp * 0.72,
-    glow: 1 + Math.sin(time * TAU * LIFE_HZ_GLOW + hash(id, 3) * TAU) * 0.12 * amount,
+    glow:
+      1 +
+      Math.sin(time * TAU * LIFE_HZ_GLOW + hash(id, 3) * TAU) *
+        LIFE_GLOW_DEPTH *
+        amount,
   };
 }
 

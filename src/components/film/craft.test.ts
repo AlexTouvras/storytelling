@@ -107,17 +107,19 @@ describe("markLife", () => {
     expect(Math.abs(large.dx)).toBeLessThanOrEqual(20 * 0.3 + 1e-9);
   });
 
-  it("leaves no dead second, from any start time", () => {
-    // anidoodle's floor, applied to our marks: over every one-second window the
-    // field has to visibly move. Per-mark phase is what carries this through the
-    // moments when any single mark is at the top of its own arc.
+  it("moves within half a second, from any start time", () => {
+    // A one-second floor is too generous: a drift slow enough to pass it still
+    // repeats frames, and a repeated frame is a still picture. The window here
+    // is 15 frames, which is the window the rendered gate measures. Per-mark
+    // phase is what carries it through the moments when any single mark is at
+    // the top of its own arc.
     const ids = Array.from({ length: 240 }, (_, i) => i * 7 + 1);
     for (let start = 0; start < 60; start += 0.25) {
       let moved = 0;
       for (const id of ids) {
         const a = markLife(id, start, 3);
-        const b = markLife(id, start + 1, 3);
-        if (Math.hypot(b.dx - a.dx, b.dy - a.dy) > 0.5) moved++;
+        const b = markLife(id, start + 0.25, 3);
+        if (Math.hypot(b.dx - a.dx, b.dy - a.dy) > 0.25) moved++;
       }
       expect(moved / ids.length).toBeGreaterThan(0.5);
     }
@@ -133,9 +135,9 @@ describe("cameraCreep", () => {
   it("creeps, and stays inside a fraction of the span", () => {
     for (let t = 0; t < 120; t += 0.5) {
       const creep = cameraCreep(t, 1);
-      expect(Math.abs(creep.pan)).toBeLessThan(0.02);
+      expect(Math.abs(creep.pan)).toBeLessThan(0.025);
       expect(creep.span).toBeLessThanOrEqual(1);
-      expect(creep.span).toBeGreaterThan(0.98);
+      expect(creep.span).toBeGreaterThan(0.97);
     }
   });
 });

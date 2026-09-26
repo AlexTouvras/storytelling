@@ -96,26 +96,40 @@ take a live page down.
 ### 6. A gate is a measurement, not an opinion
 
 The one piece of their tooling that transfers directly is the metric in `engine/tools/motion.mjs`:
-decode frames and count the fraction of pixels that changed by more than 4/255. We cannot run it —
-we ship a live page, not a rendered file — so `e2e/dead-air.spec.ts` does the same measurement in
-the browser. It scrubs to the middle of every hold the cue table declares, stops, and reads the
-canvas twice a second apart. A film that freezes fails the suite.
+decode frames, downscale, and count the fraction of pixels that changed by more than 4/255. We
+cannot run it — we ship a live page, not a rendered file — so `e2e/dead-air.spec.ts` does the same
+measurement in the browser. It scrubs to the middle of every hold the cue table declares, stops,
+and samples thirty consecutive animation frames off the canvas. A film that freezes fails the
+suite, and under `prefers-reduced-motion` the same probe must return exactly zero.
 
-This also pins the other half: under `prefers-reduced-motion`, the same measurement must return
-exactly zero.
+**The first version of this gate was wrong, and it is worth saying how.** It compared two reads a
+second apart, and the first tuning of the craft layer sailed through it at 0.86% and 8.0%. Then a
+recording of a held beat was measured frame by frame: a third of consecutive frames were
+bit-identical and the worst half-second window changed 0.001% of pixels. A reviewer watching the
+clip could not see any motion at all, and was right. The drift was real, measurable, and far too
+slow for anyone to perceive — which is the exact trap anidoodle records against itself:
 
-Measured on headless Chromium, every seventh pixel, one-second window:
+> a creeping camera changes every pixel and satisfies the tool while the eye sees a still
 
-| Where | Before | After |
-|---|---|---|
-| When Rates Rise, beat 2 hold (38%) | 0.0% | 0.86% |
-| Where Should the Cut-Off Sit, beat 5 hold (78%) | 0.0% | 8.0% |
+A one-second window is a generous enough measurement to hide a still picture inside. The gate now
+measures per frame, and the binding rule is theirs and unambiguous: **no identical consecutive
+frames.** The mean per-frame floor is a backstop set by the sparsest frame either film holds on.
 
-The "before" column is not an estimate. Forcing `life: 0` in the two canvas hosts reproduces the
-old behaviour exactly, and the gate then reports zero changed pixels at every hold — the films
-really were frozen, not merely slow. anidoodle's `gate.mjs` carries a `--self-test` for the same
-reason: *a green checkmark is a claim until you re-run it.* The floor is set at 0.1%, an order of
-magnitude below the quieter of the two measurements.
+Retuning followed the gate. Mark drift moved from a six-second cycle to roughly two, amplitudes and
+the camera's creep periods came up with it, and the result was checked against a recording again
+rather than against the number.
+
+Measured on headless Chromium, 320×200 probe, thirty consecutive frames:
+
+| Where | Before | First tuning | Shipped |
+|---|---|---|---|
+| Rate film, beat 2 hold (38%) — one loan on screen | 0 | — | 0.31% per frame, 0 identical |
+| Cut-off film, beat 5 hold (78%) — full field | 0 | 38% of frames identical | 5.5% per frame, 0 identical |
+
+The "before" column is not an estimate. Forcing `life: 0` in the two canvas hosts reproduces the old
+behaviour exactly, and the gate then reports zero changed pixels at every hold — the films really
+were frozen, not merely slow. anidoodle's `gate.mjs` carries a `--self-test` for the same reason:
+*a green checkmark is a claim until you re-run it.*
 
 ## What we did not take
 
@@ -143,11 +157,16 @@ it is *a hold must stay alive*.
 
 ## Honest limits
 
-- The dead-air numbers in this document come from the cue-table checker and from the Playwright
-  gate's changed-pixel fractions, both re-run after the self-test above. Nobody has watched these
-  films move since the change.
-- The gate proves the canvas is not identical a second later. It cannot tell you the drift reads as
-  a settled book breathing rather than as jitter. That is a human call, and the amplitude constants
-  in `craft.ts` are the first thing to move if it reads wrong.
+- The dead-air numbers come from the cue-table checker and the Playwright gate, both re-run after
+  the self-test above.
+- The shipped tuning was judged from an 8-second recording of the cut-off film's beat-5 hold, at
+  native resolution, reviewed by a vision model against the specific question of whether the motion
+  is perceptible and whether it reads as breathing or as jitter. It came back perceptible and calm.
+  **No human has watched it on the live page**, and the previous tuning is a standing reminder that
+  a measurement is not a viewing. The amplitude and rate constants at the top of `craft.ts` are the
+  first thing to move if it reads wrong.
+- The rate film's beat-2 hold is a close-up with one loan and a rule on screen. It passes the hard
+  rule with no identical frames, but it is carried almost entirely by the camera, and it is the
+  frame most likely to still read as static to a person.
 - Frame cost was not measured. The per-mark work added is a handful of `sin` calls across ~2,400
   marks; it has not been profiled on a phone.
