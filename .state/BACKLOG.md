@@ -43,7 +43,6 @@
 - [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)
 - [ ] Optional: self-host `socioeconomic-data-mcp` for broader series
-- [ ] Landing reduced-motion end frame — own piece of work, deferred 2026-09-26. `FlagshipLanding` drops the scroll listener under reduced motion and pins the hero canvas on the flight's *first* frame, so that reader never sees the horizon it travels to. The films are unaffected (they step pose to pose and reach every beat). anidoodle's rule is that a scroll piece should show its finished picture; whether the product index hero should settle on the horizon is an editorial call. Context in `docs/ANIMATION_CRAFT.md`.
 - [ ] Tier B: WebGL backends for motifs that earn it
 
 ## Later
@@ -60,6 +59,8 @@
 - “AI-powered storytelling” as the headline
 - Polishing `rates-and-defaults` as the publish piece
 - Weekly topic discovery / auto-publish
+- Changing the landing hero's reduced-motion end frame (declined 2026-09-26 — it keeps the flight's opening frame; reasoning in `docs/ANIMATION_CRAFT.md`)
+- Profiling frame cost of the animation craft layer (declined 2026-09-26 — accepted unprofiled)
 - Modifying the Orbit repo from this project (until packaging)
 - Production deploy of this repo alone (this phase)
 

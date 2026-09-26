@@ -152,11 +152,16 @@ The films already satisfy this in substance. Under reduced motion they still tra
 pose to pose instead of interpolating, so the reader reaches every beat including the decision — they
 lose the tweening, not the story.
 
-The landing is the exception, and it is a real one. `FlagshipLanding` drops the scroll listener
-entirely under reduced motion, pins `progress` at 0 and removes the spacer blocks, so the hero canvas
-holds the *first* frame of the flight permanently. A reduced-motion reader never sees the horizon the
-flight is travelling towards. Left open for a decision rather than changed here, because the landing
-is the product index and what its hero settles on is an editorial call, not a rendering one.
+The landing is the exception. `FlagshipLanding` drops the scroll listener entirely under reduced
+motion, pins `progress` at 0 and removes the spacer blocks, so the hero canvas holds the *first*
+frame of the flight permanently. A reduced-motion reader never sees the horizon the flight is
+travelling towards.
+
+**Decided 2026-09-26: we keep the opening frame.** The landing is the product index, not a story, so
+there is no payoff being withheld — the stories themselves are a list of links directly below, and
+each one honours the rule on its own. What its hero settles on is an editorial call about the index,
+and the lanes read better as a static hero than the horizon does. Recorded here because it is a
+knowing departure from the doctrine above, not an oversight.
 
 **Holds are legitimate here.** Their films hold rarely. Ours hold a third of the time on purpose,
 because the reader is reading prose while the graphic waits. The rule we take is not *stop holding*,
@@ -173,5 +178,7 @@ it is *a hold must stay alive*.
 - The rate film's beat-2 hold is a close-up with one loan and a rule on screen. It passes the hard
   rule with no identical frames, but it is carried almost entirely by the camera, so it is the first
   frame to check after any change to `cameraCreep`.
-- Frame cost was not measured, on desktop or on a phone. The per-mark work added is a handful of
-  `sin` calls across ~2,400 marks.
+- Frame cost was never measured, on desktop or on a phone, and was accepted that way. The per-mark
+  work added is a handful of `sin` calls across ~2,400 marks. If the films ever feel heavy on a
+  low-end device, the rAF loops in `LoanField` / `AppField` and the per-mark `markLife` call are
+  where to look first.
