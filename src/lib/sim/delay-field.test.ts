@@ -6,6 +6,7 @@ import {
   fieldCarryOver,
   lateAt,
   marksOfRun,
+  RUNS_PER_LINE,
 } from "@/lib/sim/delay-field";
 
 const model = buildDelayField();
@@ -23,8 +24,11 @@ function carryByService(service: 0 | 1): number {
 
 describe("delay field", () => {
   it("stays inside the mark budget the frame cost was measured at", () => {
-    expect(model.marks.length).toBeGreaterThan(1500);
-    expect(model.marks.length).toBeLessThanOrEqual(2400);
+    // Act IV only lights one line's marks, so the field has to be dense enough
+    // that a single line still reads as a population. The ceiling is the one the
+    // frame-cost gate in `e2e/frame-cost.spec.ts` actually measured.
+    expect(model.marks.length).toBeGreaterThan(5000);
+    expect(model.marks.length).toBeLessThanOrEqual(7000);
   });
 
   it("draws one mark per stop of every run on every line in the pack", () => {
@@ -33,7 +37,7 @@ describe("delay field", () => {
       expect(line.stopCodes).toHaveLength(pack.lines[i].stops.length);
       expect(line.margin).toHaveLength(pack.lines[i].stops.length - 1);
       const onLine = model.marks.filter((mark) => mark.lineIndex === i);
-      expect(onLine).toHaveLength(16 * pack.lines[i].stops.length);
+      expect(onLine).toHaveLength(RUNS_PER_LINE * pack.lines[i].stops.length);
     }
   });
 
@@ -129,7 +133,7 @@ describe("delay field", () => {
   });
 
   it("is deterministic for a seed and different across seeds", () => {
-    const minutes = (seed: number) => sum(buildDelayField(16, seed).marks.map((m) => m.late));
+    const minutes = (seed: number) => sum(buildDelayField(RUNS_PER_LINE, seed).marks.map((m) => m.late));
     expect(minutes(23)).toBe(sum(model.marks.map((m) => m.late)));
     expect(minutes(24)).not.toBe(minutes(23));
   });

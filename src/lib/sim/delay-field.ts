@@ -42,7 +42,14 @@
 
 import pack from "../../../data/figures/where-should-the-recovery-time-sit.v1.json";
 
-export const RUNS_PER_LINE = 16;
+/**
+ * Runs drawn per line. Set by what Act IV has to show: once the camera is on one
+ * line, only that line's marks are lit, so sixteen runs left the accumulate beat
+ * looking like a scatter of a dozen points under a caption about 167,169 late
+ * arrivals. Forty-four fills the frame and still holds 60 Hz at four times CPU
+ * throttle — the frame-cost gate is the ceiling on this number.
+ */
+export const RUNS_PER_LINE = 44;
 export const DELAY_FIELD_SEED = 23;
 
 /**
