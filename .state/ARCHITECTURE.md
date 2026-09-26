@@ -41,6 +41,9 @@
 - Extract grammar from real stories; no speculative template farm
 - AI in production pipeline later — not the brand headline
 - Evidence: notebooks/MCP → freeze JSON → manifest display (never invent at render)
+- **Narration reads the pack, not the prose.** Story 3's copy (`src/components/film/recovery-copy.ts`) formats every figure out of the frozen JSON, so a re-freeze moves the sentences with the data. Typing a number into a paragraph is how a film ends up contradicting its own evidence pack — which is exactly the class of drift that produced the "78–84%" error.
+- **Interpolate the marks, snap the numbers.** A scrub moves continuously, but a counterfactual pack holds a handful of frozen variants. Marks may sit between two of them; a figure printed on screen snaps to the nearest frozen variant (`recoveryVariantIndex`). The film must never display a number it did not freeze.
+- **A sampled rule is not an optimiser.** Where a counterfactual applies one allocation rule at a few strengths, the strongest available phrase is "best of the frozen variants". Story 3's rule is non-monotone on 6 of 7 lines, so the last strength is usually *not* the best one, and a test forbids the word "optimal" in the narration.
 
 ## Dependencies
 
