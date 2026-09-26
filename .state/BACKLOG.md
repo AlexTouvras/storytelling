@@ -39,6 +39,10 @@
 - [x] Human scrub of the moving films — approved 2026-09-26 on the recorded clips ("it looks better")
 - [x] Push the craft pass to prod — `main` `7430497`, Orbit sync dispatched 2026-09-26
 - [x] Confirm the craft pass on the live Orbit page — validated online 2026-09-26
+- [x] Round D: re-score parked datasets for craft stress → story 3 candidate `digitraffic-tms-raw` (craft_sum 25), fallback `entsoe-europe-load` (24). `docs/DATASET_CATALOGUE.md`
+- [ ] **Human pick for story 3** — then verify the four Round D assumptions (raw TMS field list, station chain metadata, licence for derived aggregates, lag stability) before any Decision Spec
+- [ ] Frame-cost budget for the craft layer, desktop + phone — never measured (`docs/ANIMATION_CRAFT.md` honest limits); carry into story 3
+- [ ] Second rendered surface in one film, to test cue-table `rendered` bookkeeping beyond one canvas
 - [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
 - [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)

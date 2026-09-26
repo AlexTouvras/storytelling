@@ -12,7 +12,7 @@
 |------|------------------|-------|
 | Flagship | `docs/FLAGSHIP.md` | Product positioning |
 | Reference Story Spec | `docs/reference-story-spec.md` | Editorial + evidence |
-| Dataset catalogue | `docs/DATASET_CATALOGUE.md` | Scored shortlist for next story; pick locked: `home-credit-pd` |
+| Dataset catalogue | `docs/DATASET_CATALOGUE.md` | Scored shortlist; story 2 pick `home-credit-pd` (shipped). Round D re-scores parked rows for craft stress → story 3 candidate `digitraffic-tms-raw`, awaiting human pick |
 | Decision Spec (story 2) | `docs/decision-specs/home-credit-cutoff.md` | Cut-off policy story; **approved** 2026-09-25 |
 | Evidence pack (story 2) | `data/figures/where-should-the-cutoff-sit.v1.json` | Frozen from `11-credit-risk` gold; `npm run freeze:cutoff` |
 | Story Grammar | `docs/STORY_GRAMMAR.md` | Earned Layer 2 verbs + persistent objects |
@@ -93,6 +93,7 @@
 | 2026-09-25 | Mobile horizon spread + star pinpricks | Portrait elliptical warp (`warpUnit` ×2 on short axis + `warpAspectY`) keeps New Horizon from clustering on center or collapsing into a vertical band. Dust heads draw as additive core+halo pinpricks; galaxy/orb bodies scale down on narrow frames. Horizontal clip lives only on content below the sticky field (`overflow-x-clip` / local `overflow-hidden`) — never on sticky ancestors, or the canvas stops following the page. |
 | 2026-09-26 | Animation craft read from `anidoodle`, not vendored | Its motion doctrine is specific and paid-for; its styles, characters, music and render toolchain are not ours. We reimplemented five rules and wrote down the rest as declined, with reasons. `docs/ANIMATION_CRAFT.md`. |
 | 2026-09-26 | Holds must stay alive, and it is measured | The cue tables held 32% / 44% of the two films with a frozen canvas, endings included. A hold is legitimate here (the reader is reading prose) — a freeze is not. The gate self-tests: `life: 0` reproduces the freeze and reports 0 changed pixels. |
+| 2026-09-26 | Story topics are re-scored when a capability ships, not re-sought | Round D adds one dimension (**C**, craft stress: does motion carry the mechanism, or only stage it) to the existing scores rather than reopening the search. Tie-break is explicit — a third cross-section-under-a-moving-cut film would exercise the engine and teach us nothing. `docs/DATASET_CATALOGUE.md`. |
 | 2026-09-26 | Dead air is measured per frame, never over a window | A one-second window is wide enough to hide a still picture. The first tuning cleared it at 0.86% / 8.0% while a third of consecutive frames were bit-identical and nobody could see the motion. Binding rule is now **no identical consecutive frames**; the mean floor is only a backstop. Tuning is judged from a recording, not from the number. |
 | 2026-09-24 | Landing flight becomes craft rules, not a template | `docs/STORY_GRAMMAR.md` and the story-engine rule: same marks through a transition, one camera, neighbor-only thread, monotonic travel, unlabeled field. The vortex stays product-index chrome. |
 | 2026-09-24 | Entry holds on the chosen dot | The camera centers that dot and moves closer before the warp. The disc stays bounded, its center only partly dark, then the edge leaves the frame and the streaks start inside it. |

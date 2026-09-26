@@ -142,6 +142,88 @@ Tied runners at 21 (parked): `fema-nfip`, `entsoe-europe-load`, `acs-pums-housin
 
 ---
 
+## Round D — story 3, re-scored for craft stress (2026-09-26)
+
+Two stories have shipped and the animation craft pass (`docs/ANIMATION_CRAFT.md`) added a motion layer
+the catalogue never scored for. Round D reopens the parked shortlist for one question: **which of these
+datasets makes the new capabilities load-bearing rather than decorative?**
+
+No new candidates were sought. Prior `score_sum` stands; one dimension is added.
+
+### New dimension — C, craft stress
+
+| Code | Dimension | 1 = | 5 = |
+|------|-----------|-----|-----|
+| **C** | Craft stress | A still frame of the mechanism says the same thing as the film | The finding *is* an order or a propagation, so `arrival` / `leadLag` render meaning rather than staging |
+
+`craft_sum = score_sum + C` (max 30). Tie-break: prefer the candidate that is **not** a third
+threshold film. Stories 1 and 2 are both a cross-section changing state under a moving cut; a third
+would exercise the engine and teach us nothing new about it.
+
+### What the new layer has not been asked to do
+
+| Capability | Exercised so far | Untested |
+|---|---|---|
+| `leadLag` + `rankJitter` | Rank is a **distributional** rank — book's thin edge, best grade first. A staging device. | A rank anchored in **time or space**, where the lag itself is the evidence and a wrong lag is a wrong claim |
+| `arrival` | Population written on in rank order | An order that is the data's own making order (real arrival times, registration vintages) |
+| `markLife` / `cameraCreep` | Holds on a settled field, where stillness is merely dull | A subject where stillness is **false** — a frozen motorway is a wrong statement, not a dead beat |
+| `strokeWeight(base, zoom)` | ~6× push-in | A decade-wide zoom range (national network → one sensor) |
+| Cue-table `rendered` bookkeeping | One canvas per film; the DOM/chart channels caught as unrendered | Two genuinely rendered surfaces in one film |
+| Frame cost | **Not measured at all**, desktop or phone (`ANIMATION_CRAFT.md`, honest limits) | Any field materially larger than ~2,400 marks |
+
+### Re-score
+
+| id | prior | C | craft_sum | Why that C |
+|----|------:|--:|----------:|------------|
+| `digitraffic-tms-raw` | 20 | **5** | **25** | A queue forms at a bottleneck and travels *upstream against the flow*. That is `leadLag` with a physical lag, measurable between stations. Passages arrive in real time order (`arrival`). Free-flow traffic that stops when the reader stops is a false picture, not just dead air. Camera spans national network → one loop detector. |
+| `entsoe-europe-load` | 21 | 3 | 24 | Zones genuinely peak in sequence as a cold front crosses, so the lead/lag is real — but the object is a load **curve**. A curve film barely touches the mark layer and has no wide zoom. |
+| `fema-nfip` | 21 | 3 | 24 | Severity concentration is spatial but not a propagation anyone observed; animating one would be a claim the data cannot support. A map camera is a new problem worth solving later, and the US/flood-map framing is a brand and sensitivity cost. |
+| `sec-13f-ziplime` | 20 | 4 | 24 | Disclosure lag *is* a lead/lag: the knowable book trails the real one by a quarter. Genuinely new craft use. Held back by CUSIP licensing and by being a third markets piece. |
+| `acs-pums-housing` | 21 | 2 | 23 | A weighted cross-section flipping bands under a shock — structurally the same film as stories 1 and 2. Fails the tie-break on its own. |
+| `traficom-vehicles-fi` | 20 | 3 | 23 | Registration vintage is a real making order, so `arrival` means something. But a single register snapshot has no propagation, and the analytics stay descriptive (prior A3). |
+| `nyc-tlc-trips` | 19 | 4 | 23 | Real event stream, so the craft fit is good; over-told in viz culture and the weakest Nordic fit. |
+| `olist-logistics` | 20 | 3 | 23 | Lead time is temporal, but CC BY-NC-SA blocks the commercial Orbit framing. |
+| `ieee-cis-fraud` | 18 | 2 | 20 | Third threshold film, opaque features. |
+
+### Recommendation — `digitraffic-tms-raw`
+
+**Proposed question:** *When should the speed limit drop?* — the intervention is a timing and a
+location, not only a level, which inherits the cut-off grammar and adds the axis the first two films
+do not have.
+
+| Element | Draft (to be settled in a Decision Spec, not here) |
+|---|---|
+| Decision-maker | Road traffic management — a national operator deciding variable-speed-limit and ramp policy on one corridor |
+| Stake | A queue that forms is far more expensive than one prevented; act too early and the limit is ignored |
+| Mechanism object | Passage stream at a station chain → speed/headway drop at the bottleneck → the drop travelling upstream → the window in which an intervention still lands ahead of it |
+| Observed vs modeled | Observed passages and the measured propagation lag; modeled counterfactual of an earlier intervention, labeled as such |
+| Uncertainty | Loop-detector gaps, incident vs recurrent congestion, whether the same lag holds across days |
+
+**Scoped slice (keeps the ETL honest):** one corridor, roughly 10–20 consecutive TMS stations in one
+direction, a window of a few weeks containing at least one clear congestion onset plus a comparable
+free-flowing day. Aggregate to station-minute before anything is frozen; the engine never sees
+passages.
+
+**Verify before a Spec is written** — these are assumptions from the round C2 entry, not checked facts:
+
+1. The exact field list of the raw TMS history CSVs, and whether headway and per-vehicle speed are
+   present or have to be derived from timestamps.
+2. Station metadata: chain order and inter-station distances, which the propagation lag needs.
+3. Licence terms for redistributing derived aggregates under the Orbit publish framing.
+4. Whether the corridor's measured lag is stable enough across days to be presented as a mechanism
+   rather than an anecdote.
+
+If (1)–(4) do not hold, `entsoe-europe-load` is the fallback: lower craft ceiling, materially lower
+data risk, and the same Nordic systems lane.
+
+**Carry two engine items into whichever story wins**, because this round found them unmeasured rather
+than fine: a frame-cost budget on desktop and phone, and a second rendered surface to test the
+cue-table `rendered` bookkeeping. The landing reduced-motion end frame stays a separate piece of work.
+
+**Awaiting:** human pick. No Spec, corpus pull, or film work starts before it.
+
+---
+
 ## Candidates
 
 ### kind legend
@@ -707,7 +789,10 @@ Tied runners at 21 (parked): `fema-nfip`, `entsoe-europe-load`, `acs-pums-housin
 
 1. ~~Seed existing-repo batch~~ + ~~live/API batch~~ + ~~external online seed~~ + ~~deeper pass (FEMA/Traficom/Digitraffic/ACS)~~.
 2. ~~Human pick by highest score → `home-credit-pd` (22)~~.
-3. Decision Spec for `home-credit-pd` (no deep re-pull until Spec exists).
-4. Analysis notebook → freeze evidence → manifest → visuals.
+3. ~~Decision Spec for `home-credit-pd` (no deep re-pull until Spec exists)~~.
+4. ~~Analysis notebook → freeze evidence → manifest → visuals~~ — shipped as `where-should-the-cutoff-sit`.
+5. ~~Round D: re-score the parked shortlist for craft stress (story 3)~~ → recommends `digitraffic-tms-raw` (25).
+6. Human pick for story 3, then verify the four Round D assumptions, then a Decision Spec.
 
-Catalogue closed unless the picked story fails Spec or human review.
+Catalogue stays closed to new candidates. It reopens only to re-score parked rows when a shipped
+capability changes what a story can be — Round D is the pattern.
