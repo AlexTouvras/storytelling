@@ -964,8 +964,33 @@ sign-off. No corpus freeze or film work starts before that.
    propagation lag fails, so `digitraffic-tms-raw` falls to **23** and no candidate is clearly ahead.
 7. ~~Round E: one seed round for a propagation whose lag is recorded rather than inferred~~ →
    `rata-delay-propagation` (**28**), verified on ten weekdays before being recommended.
-8. Human pick for story 3, then a Decision Spec.
+8. ~~Human pick for story 3, then a Decision Spec~~ → `rata-delay-propagation`,
+   `docs/decision-specs/rail-recovery-time.md`.
+9. ~~Verify the story's structure, not just its dataset~~ — the human asked for a wide opening
+   narrowing to one lane, and whether the reader could pick a line. Measured, not assumed:
+   - **A line picker is buildable.** Seven routes clear 1,000+ late arrivals and 30+ usable days; six
+     fit a 60-day pack, all inside the ~720-day retention.
+   - **Lines within a service type do not separate.** Head-to-head on shared days is a coin flip
+     (Helsinki–Joensuu vs north main 7/16; Ring Rail vs coastal 6/11). The picker is for recognition,
+     not evidence, and the Spec now forbids captions implying a ranking.
+   - **Defining a line is the trap.** Origin/destination grouping starves every line; averaging stop
+     positions across shared endpoints invented a 38-station "Helsinki–Oulu" merging the Tampere and
+     Savonia routes into a path no train runs. Modal route signature is the definition that works.
+   - **A padding figure was wrong and is corrected.** The first pass filtered service category for
+     survival but not for padding, so freight inflated scheduled run times: `YV→KOK` read 13.0 min of
+     slack against 5.4 passenger-only. Corrected set is 380 legs, median 0.9 min, 41 negative.
+   - **The correction produced a better claim.** Long-distance holds 2.1 min median padding with 3% of
+     legs negative; commuter holds 0.2 min with 19% negative. Commuter delays survive at 90% and
+     long-distance at 71% — so the service that cannot shed a delay is the one given nowhere to shed
+     it. Outcome and timetable measured independently, agreeing.
+10. Human sign-off on Spec wording, then the 60-day pull and freeze.
 
 The catalogue reopens for two reasons only: to re-score parked rows when a shipped capability changes
 what a story can be (Round D), and to seed against a property a verification proved we were missing
 (Round E). Not to browse.
+
+**Verify the structure too.** Round D proved a dataset can pass on format and licence and still fail on
+the one property the story needs. Step 9 proved the same of a story's *shape*: "the reader picks a line"
+is a claim about sample size per line and about whether lines differ, and both are measurable before
+anything is built. A control the evidence cannot support is as much a defect as a figure it cannot
+support.
