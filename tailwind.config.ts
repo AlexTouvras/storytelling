@@ -20,9 +20,38 @@ const config: Config = {
           blue: "oklch(var(--accent-blue) / <alpha-value>)",
         },
         glass: "rgba(255,255,255,0.04)",
+        /**
+         * Exhibit-deck palette, taken off the published field cards: paper, ink,
+         * hairline rules, one steel blue, one teal signal, one warning rust.
+         * Used by the lecture register, where a light slide is the whole point.
+         */
+        paper: {
+          DEFAULT: "#eef1f5",
+          card: "#ffffff",
+        },
+        ink: {
+          DEFAULT: "#18212b",
+          soft: "#3a4654",
+          muted: "#6b7785",
+        },
+        rule: {
+          DEFAULT: "#dde3ea",
+          strong: "#b9c5d1",
+        },
+        steel: {
+          DEFAULT: "#245a7a",
+          deep: "#12354a",
+          wash: "#e8eef4",
+        },
+        signal: "#0f766e",
+        warn: {
+          DEFAULT: "#9a3412",
+          wash: "#f6e7de",
+        },
       },
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },

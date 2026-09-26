@@ -1,0 +1,418 @@
+{
+  "id": "agentic-ai-lecture",
+  "slug": "agentic-ai",
+  "title": "Agentic AI is a loop, not a menu",
+  "kicker": "Agentic systems briefing",
+  "dek": "Five layers, built one exhibit at a time, in the order you should actually reach for them.",
+  "audience": "Someone about to choose between RAG, an agent, and a protocol",
+  "visualId": "agentic-stack",
+  "card": {
+    "id": "agentic-ai",
+    "file": "data/field-cards/agentic-ai.v2026.36.json"
+  },
+  "trackVh": 1300,
+  "presentSeconds": 240,
+  "cues": [
+    {
+      "at": 0.0,
+      "beat": 0,
+      "spanY": 2.3,
+      "cy": 0.25,
+      "model": 0.35,
+      "corpus": 0,
+      "ground": 0,
+      "loop": 0,
+      "runner": 0,
+      "reach": 0,
+      "peers": 0,
+      "gate": 0,
+      "focus": 0,
+      "focusOn": 0,
+      "thin": 0
+    },
+    {
+      "at": 0.07,
+      "beat": 1,
+      "spanY": 2.6,
+      "cy": 0.4,
+      "model": 1,
+      "corpus": 0,
+      "ground": 0,
+      "loop": 0,
+      "runner": 0,
+      "reach": 0,
+      "peers": 0,
+      "gate": 0,
+      "focus": 0,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.11,
+      "beat": 1,
+      "spanY": 2.9,
+      "cy": 0.55,
+      "model": 1,
+      "corpus": 0,
+      "ground": 0,
+      "loop": 0,
+      "runner": 0,
+      "reach": 0,
+      "peers": 0,
+      "gate": 0,
+      "focus": 0,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.16,
+      "beat": 2,
+      "spanY": 3.0,
+      "cy": 0.6,
+      "model": 1,
+      "corpus": 1,
+      "ground": 0,
+      "loop": 0,
+      "runner": 0,
+      "reach": 0,
+      "peers": 0,
+      "gate": 0,
+      "focus": 1,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.23,
+      "beat": 2,
+      "spanY": 3.2,
+      "cy": 0.7,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 0,
+      "runner": 0,
+      "reach": 0,
+      "peers": 0,
+      "gate": 0,
+      "focus": 1,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.32,
+      "beat": 3,
+      "spanY": 5.15,
+      "cy": 1.68,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 1,
+      "runner": 1,
+      "reach": 0,
+      "peers": 0,
+      "gate": 0,
+      "focus": 2,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.43,
+      "beat": 4,
+      "spanY": 5.4,
+      "cy": 1.8,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 1,
+      "runner": 1,
+      "reach": 0,
+      "peers": 0,
+      "gate": 1,
+      "focus": 2,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.48,
+      "beat": 4,
+      "spanY": 5.6,
+      "cy": 1.9,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 1,
+      "runner": 1,
+      "reach": 0,
+      "peers": 0,
+      "gate": 1,
+      "focus": 2,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.54,
+      "beat": 5,
+      "spanY": 6.7,
+      "cy": 2.45,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 1,
+      "runner": 1,
+      "reach": 1,
+      "peers": 0,
+      "gate": 1,
+      "focus": 3,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.6,
+      "beat": 5,
+      "spanY": 6.9,
+      "cy": 2.55,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 1,
+      "runner": 1,
+      "reach": 1,
+      "peers": 0,
+      "gate": 1,
+      "focus": 3,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.66,
+      "beat": 6,
+      "spanY": 7.8,
+      "cy": 3.0,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 1,
+      "runner": 1,
+      "reach": 1,
+      "peers": 1,
+      "gate": 1,
+      "focus": 4,
+      "focusOn": 1,
+      "thin": 0
+    },
+    {
+      "at": 0.78,
+      "beat": 7,
+      "spanY": 7.8,
+      "cy": 3.0,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 1,
+      "runner": 1,
+      "reach": 1,
+      "peers": 1,
+      "gate": 1,
+      "focus": 4,
+      "focusOn": 0,
+      "thin": 0
+    },
+    {
+      "at": 0.89,
+      "beat": 8,
+      "spanY": 7.8,
+      "cy": 3.0,
+      "model": 1,
+      "corpus": 1,
+      "ground": 1,
+      "loop": 1,
+      "runner": 1,
+      "reach": 1,
+      "peers": 1,
+      "gate": 1,
+      "focus": 4,
+      "focusOn": 0,
+      "thin": 1
+    }
+  ],
+  "beats": [
+    {
+      "beat": 0,
+      "kicker": "The frame",
+      "title": "These are layers, not rivals — and they arrive in one order",
+      "paragraphs": [
+        "RAG, agents, MCP, and A2A are not competing products. They are layers, and each one exists because the layer below it cannot reach something.",
+        "Understand, find, act, orchestrate. That is the order they arrive in, and the order you should buy them in."
+      ],
+      "exhibit": "The five layers of the agentic stack",
+      "takeaway": "Buy the layer your problem needs, not the layer the pitch deck sells.",
+      "annotation": "Understand → find → act → orchestrate is also the buying order.",
+      "notes": [
+        "Open on the model alone. Nothing else on the exhibit yet.",
+        "The promise of the next four minutes: by the end you can name the thinnest layer that solves your problem.",
+        "Warn them now that most teams need fewer layers than the pitch deck suggests."
+      ],
+      "cardRefs": ["headline", "verbs", "lede"]
+    },
+    {
+      "beat": 1,
+      "kicker": "Layer 1 · LLM",
+      "title": "A model is language, and nothing else",
+      "paragraphs": [
+        "Prompted chat turns your words into more words. It has no library and no hands, so anything it does not already contain, it fills in.",
+        "Every layer after this one is added because language alone cannot reach something outside itself."
+      ],
+      "exhibit": "Layer 1 — a prompted model: words in, words out",
+      "takeaway": "If prompted chat already answers the question, that is the whole system.",
+      "annotation": "No library and no hands: anything outside the prompt gets filled in.",
+      "notes": [
+        "Point at the prompt going in and the answer coming out. That is the entire layer.",
+        "Memory check line one: LLM equals language.",
+        "Nobody is wrong to stop here. Plenty of useful work is prompted chat."
+      ],
+      "cardRefs": ["layers[0]", "behavior[2]"]
+    },
+    {
+      "beat": 2,
+      "kicker": "Layer 2 · RAG",
+      "title": "Give it a library before you give it hands",
+      "paragraphs": [
+        "Answers that ignore your documents, go stale, or invent policy are a knowledge problem. The fix is retrieval: find the passage, answer from it, cite it.",
+        "An internal policy bot quoting the current refund SOP needs a library, not autonomy."
+      ],
+      "exhibit": "Layer 2 — retrieval grounds the answer in your own documents",
+      "takeaway": "Most things pitched as an agent are a retrieval problem.",
+      "annotation": "Ask how entities link rather than what a passage says, and you want GraphRAG.",
+      "notes": [
+        "Documents are placed in reading order, then the retrieve-and-cite path is drawn back up into the answer.",
+        "Memory check line two: RAG equals library.",
+        "First anti-pattern: reaching for an agent to do pure question and answer.",
+        "If the question is about how entities link rather than what a passage says, that is where GraphRAG comes in."
+      ],
+      "cardRefs": ["layers[1]", "decisions[0]", "antiPatterns[0]"]
+    },
+    {
+      "beat": 3,
+      "kicker": "Layer 3 · Agent",
+      "title": "The loop is what makes it an agent",
+      "paragraphs": [
+        "Plan, act, observe, stop. A model sitting in a fixed pipeline is a workflow no matter how many prompts it has; it becomes an agent when it chooses the next step and decides when to quit.",
+        "Earn this layer with work that branches and retries — a month-end expense pack, not a question."
+      ],
+      "exhibit": "Layer 3 — the control loop: plan, act, observe, stop",
+      "takeaway": "If the path is fixed, you have a workflow, and a workflow is cheaper.",
+      "annotation": "Code owns the order in a workflow; the model owns the order in an agent.",
+      "notes": [
+        "Trace the cycle once with a finger while the token runs it.",
+        "The distinction to leave them with: code owns the order in a workflow, the model owns the order in an agent.",
+        "Calling a fixed pipeline an agent is on the anti-pattern list."
+      ],
+      "cardRefs": ["layers[2]", "decisions[3]", "decisions[4]", "antiPatterns[4]"]
+    },
+    {
+      "beat": 4,
+      "kicker": "Always on · Gates",
+      "title": "If you can’t stop it, you don’t ship it",
+      "paragraphs": [
+        "A loop that spends money or writes to production runs behind caps: max steps, max euros and tokens, and a tool allowlist.",
+        "Where the write is irreversible, the loop pauses and waits for a human."
+      ],
+      "exhibit": "Always on — the human gate and the caps around the loop",
+      "takeaway": "Caps and a human Approve are the price of letting a loop touch money.",
+      "annotation": "A refund over €50 pauses here, and step caps stop a runaway.",
+      "notes": [
+        "The token reaches the bar and waits. Let the pause sit for a second; the pause is the point.",
+        "Caps first, Approve second. The caps are what stop a runaway; Approve is what keeps you accountable.",
+        "This beat is the one delivery people remember. Do not rush it."
+      ],
+      "cardRefs": ["killSwitch", "decisions[7]", "alwaysOn[0]", "alwaysOn[4]"]
+    },
+    {
+      "beat": 5,
+      "kicker": "Layer 4 · MCP",
+      "title": "Tools are reach, not knowledge",
+      "paragraphs": [
+        "A retrieval index cannot tell you today’s stock level. Live reads and writes are a tools problem: the loop calls the system and gets the current answer.",
+        "The protocol earns its place when the same tools must serve several apps."
+      ],
+      "exhibit": "Layer 4 — one tool contract, four live systems",
+      "takeaway": "RAG and MCP are not alternatives: one is the library, the other the hands.",
+      "annotation": "One service calling two APIs is a function call, not a protocol.",
+      "notes": [
+        "The trunk leaves the cycle, the bus fans out, and answers come back up the drops. Reach, not memory.",
+        "Memory check line three: MCP equals hands.",
+        "Kill the either-or question early — RAG and MCP are not alternatives."
+      ],
+      "cardRefs": ["layers[3]", "decisions[1]", "decisions[2]", "antiPatterns[1]"]
+    },
+    {
+      "beat": 6,
+      "kicker": "Layer 5 · A2A",
+      "title": "Peers only when the boundary is real",
+      "paragraphs": [
+        "Two agents owned by different teams or vendors, each keeping its own tools, need a way to hand work across. That is what A2A is for.",
+        "Inside one codebase it is a function call with ceremony. Premature swarms are on the anti-pattern list."
+      ],
+      "exhibit": "Layer 5 — a handoff across an ownership boundary",
+      "takeaway": "A2A is for agents that different teams or vendors own; anything less is premature.",
+      "annotation": "Support hands a refund packet to finance-ops; each side keeps its own tools.",
+      "notes": [
+        "The dashed rule is an ownership boundary, not a network hop.",
+        "Support hands a refund packet to finance-ops across two tenants. Each side keeps its own MCP tools.",
+        "If the two agents have one owner, you do not have a boundary."
+      ],
+      "cardRefs": ["layers[4]", "decisions[9]", "antiPatterns[3]"]
+    },
+    {
+      "beat": 7,
+      "kicker": "The ladder",
+      "title": "Climb it in order, and stop early",
+      "paragraphs": [
+        "Six rungs, and the card publishes them in order. Each one is added only when the rung below it cannot reach the job.",
+        "The exhibit beside this list is every layer at once — which is what the top rung costs, and why the card says to earn it."
+      ],
+      "exhibit": "The assembled stack, all five layers at once",
+      "takeaway": "The top rung says “earn this”, and most teams never need to.",
+      "annotation": "Default order: chat, retrieval, one agent with tools, a gate, many, then A2A.",
+      "listRef": "ladder",
+      "notes": [
+        "Six rungs. Read them out; the order is the argument.",
+        "The exhibit has no highlight now on purpose — this is the whole stack, and the whole stack is the expensive answer.",
+        "Ask the room which rung they are on, and which rung they were sold."
+      ],
+      "cardRefs": ["ladder", "buildOrder"]
+    },
+    {
+      "beat": 8,
+      "kicker": "The decision",
+      "title": "Start at the thinnest layer that solves the job",
+      "paragraphs": [
+        "Find the row that matches the real problem and take the layer it names — nothing above it. The card below has eleven of those rows.",
+        "Behaviour sits across all of it: rules are standing orders, skills are runbooks. LLM is language, RAG is the library, MCP is the hands."
+      ],
+      "exhibit": "What most teams actually need, with the rest faded back",
+      "takeaway": "Name the thinnest layer that solves your job, and buy nothing above it.",
+      "annotation": "Rules are standing orders; skills are runbooks. Both sit across every layer.",
+      "notes": [
+        "The peer row fades back. What is left is the honest architecture for most teams.",
+        "Hand them the card as the reference and keep this deck as the briefing.",
+        "Last line: a rule that belongs in a skill is still a mistake, even when the stack is right."
+      ],
+      "cardRefs": [
+        "lede",
+        "behavior[0]",
+        "behavior[1]",
+        "behavior[2]",
+        "antiPatterns[7]"
+      ]
+    }
+  ],
+  "closing": {
+    "kicker": "After the briefing",
+    "title": "The deck briefs; the card decides",
+    "paragraphs": [
+      "This is the same material as the published field card, paced for a first meeting with it. Nothing here is asserted that the card does not already say — each section names the rows it teaches, and the build fails if one of those rows disappears.",
+      "The card stays the thing you keep open during a design review. It is reprinted below, from the same frozen source this deck reads."
+    ]
+  }
+}

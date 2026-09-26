@@ -17,6 +17,11 @@
 | Evidence pack (story 2) | `data/figures/where-should-the-cutoff-sit.v1.json` | Frozen from `11-credit-risk` gold; `npm run freeze:cutoff` |
 | Story Grammar | `docs/STORY_GRAMMAR.md` | Earned Layer 2 verbs + persistent objects |
 | Animation craft | `docs/ANIMATION_CRAFT.md` | Motion rules read from `alexgreensh/anidoodle`, the hold audit, and what we declined |
+| Field card lecture | `docs/FIELD_CARD_LECTURE.md` | Feasibility verdict for the teaching register + the two departures it took |
+| Frozen field card | `data/field-cards/agentic-ai.v2026.36.json` | Hand-extraction of the published card at a named commit; an evidence pack by another name |
+| Lecture manifest | `src/lectures/manifests/agentic-ai.json` | Cue table + beat copy + presenter notes + `cardRefs` |
+| Lecture schemas | `src/lectures/schemas/lecture.ts` · `fieldCard.ts` | Zod; `cardRefs` resolved against the frozen card |
+| Lecture runtime | `src/components/lecture/*` · `/lab/lectures/agentic-ai` | Scroll driver **or** clock driver (podium) over one cue table |
 | StoryManifest | `src/stories/schemas/manifest.ts` | Zod; optional hero + role |
 | Visual allowlist | `src/stories/schemas/visualAllowlist.ts` | Per-visual states |
 | Evidence Pack v2 | `data/figures/when-rates-rise.v2.json` | Frozen modeled + observed |
@@ -36,6 +41,8 @@
 - **Continuous spine:** `TransmissionSpine` + `BufferMarkField` — acts change zoom/filter, not metaphor
 - **Directed film:** one canvas, scroll-scrubbed camera, loan dots from `buildField`. This is the reference story people open. The essay manifest stays on the engine and is not linked from the landing or the film.
 - **No dead air:** a scrubbed film is a pure function of scroll, so it freezes exactly when the reader is reading. Held beats creep the camera and keep the marks living; `e2e/dead-air.spec.ts` measures it in changed pixels rather than asserting it.
+- **Two drivers, one film:** progress is a number, so scroll and a clock are interchangeable sources of it. The lecture podium is the same cue table paced by `presentSeconds`, with speaker notes in the manifest beside the reader copy.
+- **A lecture cannot outrun its card:** each beat declares `cardRefs` into the frozen field card; `validate:lectures` and the loader fail on a row the card no longer publishes.
 - Extract grammar from real stories; no speculative template farm
 - AI in production pipeline later — not the brand headline
 - Evidence: notebooks/MCP → freeze JSON → manifest display (never invent at render)
@@ -94,5 +101,8 @@
 | 2026-09-26 | Animation craft read from `anidoodle`, not vendored | Its motion doctrine is specific and paid-for; its styles, characters, music and render toolchain are not ours. We reimplemented five rules and wrote down the rest as declined, with reasons. `docs/ANIMATION_CRAFT.md`. |
 | 2026-09-26 | Holds must stay alive, and it is measured | The cue tables held 32% / 44% of the two films with a frozen canvas, endings included. A hold is legitimate here (the reader is reading prose) — a freeze is not. The gate self-tests: `life: 0` reproduces the freeze and reports 0 changed pixels. |
 | 2026-09-26 | Dead air is measured per frame, never over a window | A one-second window is wide enough to hide a still picture. The first tuning cleared it at 0.86% / 8.0% while a third of consecutive frames were bit-identical and nobody could see the motion. Binding rule is now **no identical consecutive frames**; the mean floor is only a backstop. Tuning is judged from a recording, not from the number. |
+| 2026-09-26 | Field card lecture is feasible; kept unlisted | The engine carried a teaching register with no change to `craft.ts` or `cue-table.ts`. What was new is the board and the copy. The card stays the source of truth through `cardRefs`, and stays reprinted below the briefing. Publishing is a human call, so the route is `/lab` + noindex. `docs/FIELD_CARD_LECTURE.md`. |
+| 2026-09-26 | The lecture board is labelled, on purpose | Rule 6 protects a metaphor from being captioned. A field card is a named taxonomy, so its labels *are* the content. Canvas stays `aria-hidden`; labels are in the DOM and in the live region. |
+| 2026-09-26 | The camera may overrule the cue table horizontally | A vertical-span cue table crops on a phone. `requiredHalfWidth(frame)` pulls the camera back until the beat's own objects fit. The rejected alternative — squeezing world x — turned the control loop into an ellipse on every push-in. |
 | 2026-09-24 | Landing flight becomes craft rules, not a template | `docs/STORY_GRAMMAR.md` and the story-engine rule: same marks through a transition, one camera, neighbor-only thread, monotonic travel, unlabeled field. The vortex stays product-index chrome. |
 | 2026-09-24 | Entry holds on the chosen dot | The camera centers that dot and moves closer before the warp. The disc stays bounded, its center only partly dark, then the edge leaves the frame and the streaks start inside it. |

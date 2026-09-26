@@ -1,0 +1,143 @@
+{
+  "id": "agentic-ai",
+  "card": "Agentic AI Field Card",
+  "eyebrow": "Field card · Agentic systems",
+  "headline": "Agentic AI is a loop, not a menu",
+  "verbs": "Understand → find → act → orchestrate",
+  "lede": "RAG, agents, MCP, and A2A are layers. Skills and rules shape behavior. Most teams need fewer layers than the pitch deck suggests; start at the thinnest layer that solves the job.",
+  "version": "v2026.36",
+  "reviewed": "4 Sep 2026",
+  "source": {
+    "repo": "AlexTouvras/agentic-ai-field-card",
+    "file": "index.html",
+    "commit": "432f2aa272eaf6d994c2d69afacc30ca430f515a",
+    "live": "https://alextouvras.github.io/agentic-ai-field-card/",
+    "extractedAt": "2026-09-26",
+    "method": "hand-extracted from the published card; text is the card's text"
+  },
+  "layers": [
+    { "code": "LLM", "job": "Language — prompted chat" },
+    { "code": "RAG", "job": "Knowledge — ground answers in your docs" },
+    { "code": "AGENT", "job": "Control loop — plan, act, observe, stop" },
+    { "code": "MCP", "job": "Tools — standard reach into systems" },
+    { "code": "A2A", "job": "Peers — agents coordinating across boundaries" }
+  ],
+  "decisions": [
+    {
+      "problem": "Answers ignore our docs, go stale, or invent policy",
+      "use": "RAG",
+      "href": "https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview",
+      "example": "Internal policy bot cites the latest refund SOP; use GraphRAG when the question is about how entities link"
+    },
+    {
+      "problem": "Need live reads or writes against systems — not a stale index",
+      "use": "MCP",
+      "href": "https://modelcontextprotocol.io/",
+      "example": "Stock check hits ERP now; same agent opens a Jira bug with logs after a failed deploy"
+    },
+    {
+      "problem": "Only 1–2 APIs inside one app; no reuse yet",
+      "use": "Direct tools",
+      "href": "https://platform.openai.com/docs/guides/function-calling",
+      "example": "One Flask service calling Stripe + SendGrid; move to MCP when those same tools must serve multiple apps"
+    },
+    {
+      "problem": "Fixed path with a model in one or two slots",
+      "use": "Workflow",
+      "href": "https://www.anthropic.com/engineering/building-effective-agents",
+      "example": "Invoice PDF → extract fields → validate → post to ledger; model fills gaps, code owns order"
+    },
+    {
+      "problem": "Multi-step work that branches, retries, and must stop cleanly",
+      "use": "Agent",
+      "href": "https://www.anthropic.com/engineering/building-effective-agents",
+      "example": "Month-end expense pack: pull receipts, match policy via RAG, flag outliers, wait for Approve"
+    },
+    {
+      "problem": "Same standing orders across chats",
+      "use": "Rules",
+      "href": "https://cursor.com/docs/rules",
+      "example": "“Never push main; always cite sources; Finnish UI copy stays formal” in every session"
+    },
+    {
+      "problem": "Named playbook with steps and a verify gate",
+      "use": "Skill",
+      "href": "https://cursor.com/docs/skills",
+      "example": "“Author a Power BI page” skill: open model, place visuals, validate PBIR, screenshot check"
+    },
+    {
+      "problem": "Money, prod, or irreversible writes in the path",
+      "use": "Human gate",
+      "href": "https://learn.microsoft.com/en-us/agent-framework/workflows/human-in-the-loop",
+      "example": "Refund > €50 pauses for Approve; step and spend caps stop a runaway loop"
+    },
+    {
+      "problem": "Tone/format still wrong after prompts + RAG",
+      "use": "Fine-tune",
+      "href": "https://platform.openai.com/docs/guides/fine-tuning",
+      "example": "Bank chat must stick to a fixed compliance template; keep changing facts in retrieval, not weights"
+    },
+    {
+      "problem": "Specialist agents owned by different teams or vendors",
+      "use": "A2A",
+      "href": "https://a2a-protocol.org/",
+      "example": "Support agent hands a refund packet to Finance-ops across two tenants; each agent keeps its own MCP tools"
+    },
+    {
+      "problem": "Don’t know if the system still works after a change",
+      "use": "Evals",
+      "href": "https://platform.openai.com/docs/guides/evals",
+      "example": "20 golden tickets; block ship if pass rate drops; inspect the tool path when a case fails"
+    }
+  ],
+  "buildOrder": "Default build order: prompted chat → RAG → one agent with tools/MCP → stateful workflow + human gate → multi-agent inside one framework → A2A only when ownership boundaries are real.",
+  "frameworks": [
+    { "name": "LangGraph", "fit": "Stateful, auditable, HITL, durable checkpoints", "href": "https://langchain-ai.github.io/langgraph/" },
+    { "name": "CrewAI", "fit": "Fastest role-based prototype", "href": "https://docs.crewai.com/" },
+    { "name": "LlamaIndex", "fit": "RAG / data-first agents", "href": "https://docs.llamaindex.ai/" },
+    { "name": "MS Agent Fw", "fit": "Azure / .NET enterprise path", "href": "https://learn.microsoft.com/en-us/agent-framework/overview/" },
+    { "name": "OpenAI / Claude SDKs", "fit": "Handoffs or Anthropic-native loops", "href": "https://openai.github.io/openai-agents-python/" },
+    { "name": "Pydantic AI", "fit": "Schema-first typed Python", "href": "https://ai.pydantic.dev/" },
+    { "name": "Google ADK", "fit": "Google / Vertex agent path", "href": "https://google.github.io/adk-docs/" }
+  ],
+  "behavior": [
+    {
+      "title": "Rules · standing orders",
+      "body": "Always on or path-scoped. Safety, voice, repo law. Keep short. Cursor: .cursor/rules, AGENTS.md."
+    },
+    {
+      "title": "Skills · runbooks",
+      "body": "Load when the task matches. Multi-step + verify. Cursor: SKILL.md. Don’t wrap one API call as a skill."
+    },
+    {
+      "title": "Memory check",
+      "body": "LLM = language. RAG = library. MCP = hands. Rules = standing orders. Skills = runbooks."
+    }
+  ],
+  "ladder": [
+    "LLM / prompted chat",
+    "RAG assistant with citations",
+    "Single agent + tools / MCP",
+    "Stateful workflow + human Approve",
+    "Multi-agent inside one framework",
+    "Cross-org A2A (earn this)"
+  ],
+  "killSwitch": "Max steps, max €/tokens, tool allowlist. If you can’t stop it, you don’t ship it.",
+  "antiPatterns": [
+    "Agent for pure Q&A (start with RAG)",
+    "Treating MCP and RAG as either/or",
+    "Fine-tuning for facts that change weekly",
+    "Premature multi-agent / A2A swarms",
+    "Calling a fixed pipeline an “agent”",
+    "Unbounded autonomy where money or prod moves",
+    "Tools without schemas, budgets, or kill switches",
+    "Always-on rules that belong in a skill"
+  ],
+  "alwaysOn": [
+    { "label": "Security", "body": "Tool allowlist, spend and step caps" },
+    { "label": "Governance", "body": "Who owns policy and the audit trail" },
+    { "label": "Observability", "body": "Traces and the tool path when a case fails" },
+    { "label": "Evals", "body": "Golden tickets before ship" },
+    { "label": "Human Approve", "body": "Money, prod, irreversible writes" }
+  ]
+}
