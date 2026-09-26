@@ -38,7 +38,7 @@
 - [x] Animation craft pass from `anidoodle`: hold audit, craft layer, cue-table checker, dead-air gate
 - [x] Human scrub of the moving films — approved 2026-09-26 on the recorded clips ("it looks better")
 - [ ] Confirm the same on the live page (clips are re-encoded; live has strictly more motion)
-- [ ] Decide the reduced-motion question: finished picture vs opening frame (`docs/ANIMATION_CRAFT.md`)
+- [ ] Decide: should the landing hero settle on the horizon under reduced motion instead of holding the flight's opening frame? (films already pass; `docs/ANIMATION_CRAFT.md`)
 - [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
 - [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)

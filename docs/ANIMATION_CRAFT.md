@@ -146,10 +146,17 @@ were frozen, not merely slow. anidoodle's `gate.mjs` carries a `--self-test` for
 ## Where we deliberately differ
 
 **Reduced motion.** anidoodle says a scroll piece under reduced motion *shows its finished picture*:
-a reader who cannot have the motion should still get the payoff, not the setup. We do the opposite
-in two places — the landing holds its opening frame, and the films snap to the nearest pose. Theirs
-is the better argument and this is left open for human review, because changing it changes what a
-reduced-motion reader is told the story concludes.
+a reader who cannot have the motion should still get the payoff, not the setup.
+
+The films already satisfy this in substance. Under reduced motion they still track scroll, snapping
+pose to pose instead of interpolating, so the reader reaches every beat including the decision — they
+lose the tweening, not the story.
+
+The landing is the exception, and it is a real one. `FlagshipLanding` drops the scroll listener
+entirely under reduced motion, pins `progress` at 0 and removes the spacer blocks, so the hero canvas
+holds the *first* frame of the flight permanently. A reduced-motion reader never sees the horizon the
+flight is travelling towards. Left open for a decision rather than changed here, because the landing
+is the product index and what its hero settles on is an editorial call, not a rendering one.
 
 **Holds are legitimate here.** Their films hold rarely. Ours hold a third of the time on purpose,
 because the reader is reading prose while the graphic waits. The rule we take is not *stop holding*,
