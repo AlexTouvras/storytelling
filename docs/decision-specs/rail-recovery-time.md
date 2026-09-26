@@ -538,6 +538,22 @@ honesty is part of the point.
 Split commuter from long-distance: 89% against 72%, commuter higher on 359 of 363 days. Same marks, two
 decays. This is the beat that stops the reader thinking "trains are trains".
 
+> **Implementation correction (2026-09-26), for review.** "Same marks, two decays" cannot be drawn as
+> written, and the first build of it was wrong. By Act V the camera has been on one line since Act II,
+> and a line is one service — so there are no two populations among the marks to divide. The code split
+> them anyway, which displaced the whole visible field instead of separating it, and lifted the on-time
+> trains clear of the baseline where they read as minutes late.
+>
+> The split now happens where its evidence is: the line's decay curve dissolves into the two service
+> curves, which is also the honest scale, because 89% and 72% are network-wide figures and never were
+> countable off one line's marks. It dissolves back for Act VII, since Act VIII promises the curve
+> refits to the reader's pick and Acts IX and X quote that line's own numbers.
+>
+> This respects the locked rule that the film narrows once and does not widen again — the alternative
+> would have been to bring the other lines back for one beat. Flagged rather than taken silently: the
+> beat still stops the reader thinking trains are trains, but it does it with two curves, not two
+> clouds of marks.
+
 ### VI — A year of it
 The shortest beat in the film. One image: twelve months, the monthly share of arrivals running late
 against the monthly carry-over.
@@ -751,5 +767,8 @@ false statement, not merely a dull one. If the film ever draws a second canvas, 
 - [x] Act briefs rewritten against the margin finding, and Act X carries the commuter turn as a second decision
 - [x] Seasonality given its own beat (Act VI), shortest in the film, no interaction
 - [x] Beat list confirmed — ten acts, no new `visualId`
-- [ ] Narration and visual states drafted against the confirmed beats
-- [ ] Explicit non-goals respected (no speaking for the operator, no plan cosplay)
+- [x] Narration and visual states drafted against the confirmed beats — 21 poses over 11 beats, every figure formatted out of the frozen pack
+- [x] Explicit non-goals respected (no speaking for the operator, no plan cosplay)
+- [x] Film built and reviewed beat by beat from screenshots — `RecoveryFilm`, the arrival-mark field, the route and the manifest; gated by e2e beats, dead air, frame cost and axe on desktop and a phone viewport
+- [ ] **Act V rendering correction reviewed** — the service split moved from the marks to the decay curve (see the note under Act V). The picture changed; the claim did not
+- [ ] Published — the slug is deliberately absent from `LISTED_SLUGS`, so the landing page does not link it yet
