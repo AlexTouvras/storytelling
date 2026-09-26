@@ -175,7 +175,7 @@ would exercise the engine and teach us nothing new about it.
 
 | id | prior | C | craft_sum | Why that C |
 |----|------:|--:|----------:|------------|
-| `digitraffic-tms-raw` | 20 | **5** | **25** | A queue forms at a bottleneck and travels *upstream against the flow*. That is `leadLag` with a physical lag, measurable between stations. Passages arrive in real time order (`arrival`). Free-flow traffic that stops when the reader stops is a false picture, not just dead air. Camera spans national network → one loop detector. |
+| ~~`digitraffic-tms-raw`~~ | 20 | ~~**5**~~ → **3** | ~~25~~ → **23** | Picked for a queue travelling upstream at a measurable speed. **Measured, and it does not hold** — see the verification below. `arrival` and `markLife` still earn their keep; `leadLag` does not. |
 | `entsoe-europe-load` | 21 | 3 | 24 | Zones genuinely peak in sequence as a cold front crosses, so the lead/lag is real — but the object is a load **curve**. A curve film barely touches the mark layer and has no wide zoom. |
 | `fema-nfip` | 21 | 3 | 24 | Severity concentration is spatial but not a propagation anyone observed; animating one would be a claim the data cannot support. A map camera is a new problem worth solving later, and the US/flood-map framing is a brand and sensitivity cost. |
 | `sec-13f-ziplime` | 20 | 4 | 24 | Disclosure lag *is* a lead/lag: the knowable book trails the real one by a quarter. Genuinely new craft use. Held back by CUSIP licensing and by being a third markets piece. |
@@ -220,7 +220,66 @@ data risk, and the same Nordic systems lane.
 than fine: a frame-cost budget on desktop and phone, and a second rendered surface to test the
 cue-table `rendered` bookkeeping. The landing reduced-motion end frame stays a separate piece of work.
 
-**Awaiting:** human pick. No Spec, corpus pull, or film work starts before it.
+### Verification of the four assumptions (2026-09-26)
+
+Checked against the live API and 70 days-of-station of real passage data before committing. Scripts
+were throwaway; what matters is the result.
+
+**1. Raw format — passes, better than assumed.** `/api/tms/v1/history/raw/lamraw_{tms}_{yy}_{ddd}.csv`
+returns one semicolon-delimited row per vehicle passage, 16 columns, no header: station, date parts to
+1/100 s, length, lane, direction, vehicle class, **speed**, faulty flag, ms-since-midnight, **headway
+in ms**, and a queue flag. Speed and headway are recorded, not derived. About 0.05% of rows carry the
+faulty flag. Ring I files run 1–6 MB per station-day; 10 stations × 7 days downloaded in 11 seconds.
+
+> The queue flag is dead. Across roughly 3 million passages in 70 files it is `0` in every single row.
+> Congestion has to be derived from speed. Anything built on that column would have been built on air.
+
+**2. Station metadata — passes.** All 518 stations (503 `GATHERING`) carry a `roadAddress` with road
+number, section, distance from section start, carriageway and side, plus coordinates. Zero live
+stations are missing it, so chain order and spacing are exact. **Ring I (road 101)** is the corridor:
+10 consecutive detectors, Keilaniemi → Vartiokylä, gaps 1.03–3.84 km, median 2.27 km.
+
+**3. Licence — passes.** Fintraffic open data is CC BY 4.0, explicitly including commercial use with
+attribution. Requests need a `Digitraffic-User` header and `Accept-Encoding: gzip`.
+
+**4. Propagation lag — FAILS, and this is the finding.** The claim that made this the top craft pick
+was that a queue travels upstream at a measurable speed. It does not survive the data.
+
+- Congestion itself is emphatic and repeatable. Kannelmäki direction 2 drops below 75% of its
+  overnight speed between **07:31 and 07:45 on all seven weekdays** measured. Malmi direction 1 does
+  the same in the afternoon, **15:07–15:37 on all seven**, bottoming at 37% of the night reference.
+  Onset *timing* is one of the most stable signals you could ask for. Severity is far more variable.
+- The **front is not**. Taking the bottleneck and its two upstream neighbours, the onset order is
+  upstream-correct on **3 of 7 weekdays** at the best threshold, and the implied front speed ranges
+  **2.8–45 km/h** — the textbook ~15–20 km/h appears without being reproducible. Loosening the
+  threshold destroys the ordering entirely (0 of 7 at 85%).
+- Ring I has **several independent bottlenecks**, not one wave: Kannelmäki, Malmi, Pukinmäki and
+  Länsi-Pakila each trigger on their own schedule, and Malmi's afternoon onset precedes Kannelmäki's.
+- Lane-level lead/lag at a single detector was tried as a finer-grained substitute. The sign flips
+  day to day (+4, +1, −19, 0, −11, +1, −12 min). Also not a mechanism.
+- The cause is resolution, and it is not fixable by choosing better. 2.3 km detector spacing against a
+  ~15 km/h front is roughly a 10-minute quantum, and no denser chain exists in the network — the
+  sub-100 m station pairs on road 4 near Oulu are co-located duplicates, not a dense corridor.
+
+Also found: **detector coverage gaps are per-direction and invisible in the station list.** Laajalahti
+records ~3,900 passages/day in direction 2 against ~21,000 in direction 1. A corridor has to be
+validated direction by direction.
+
+**Consequence for the score.** `arrival` still lands on a true order, `markLife` is still semantically
+required, and the zoom range is still the widest we have. But `leadLag` goes back to staging a
+distribution rather than carrying evidence, which was the whole basis for **C 5**. Honest revision:
+**C 3, craft_sum 23** — no longer ahead of the field.
+
+**Lesson for the method.** Round D scored a craft dimension on an unmeasured mechanism, and that is
+the same error as scoring analytics depth from a README. A C above 3 now requires the propagation or
+the order to have been measured first, not argued for.
+
+**Where the dataset still stands.** Access, licence, format and metadata are excellent, and there is a
+real decision in it — *how early do you act, when the onset is this predictable and the depth is not?*
+That is a defensible story with observed evidence and a counterfactual. It is simply not the
+craft-stress test it was picked for.
+
+**Awaiting:** human pick, with the revised score. No Spec, corpus pull, or film work starts before it.
 
 ---
 
@@ -791,8 +850,10 @@ cue-table `rendered` bookkeeping. The landing reduced-motion end frame stays a s
 2. ~~Human pick by highest score → `home-credit-pd` (22)~~.
 3. ~~Decision Spec for `home-credit-pd` (no deep re-pull until Spec exists)~~.
 4. ~~Analysis notebook → freeze evidence → manifest → visuals~~ — shipped as `where-should-the-cutoff-sit`.
-5. ~~Round D: re-score the parked shortlist for craft stress (story 3)~~ → recommends `digitraffic-tms-raw` (25).
-6. Human pick for story 3, then verify the four Round D assumptions, then a Decision Spec.
+5. ~~Round D: re-score the parked shortlist for craft stress (story 3)~~ → recommended `digitraffic-tms-raw` (25).
+6. ~~Verify the Round D assumptions before committing~~ → format, metadata and licence pass; the
+   propagation lag fails, so `digitraffic-tms-raw` falls to **23** and no candidate is clearly ahead.
+7. Human pick for story 3 on the revised scores, then a Decision Spec.
 
 Catalogue stays closed to new candidates. It reopens only to re-score parked rows when a shipped
 capability changes what a story can be — Round D is the pattern.

@@ -40,9 +40,11 @@
 - [x] Push the craft pass to prod — `main` `7430497`, Orbit sync dispatched 2026-09-26
 - [x] Confirm the craft pass on the live Orbit page — validated online 2026-09-26
 - [x] Round D: re-score parked datasets for craft stress → story 3 candidate `digitraffic-tms-raw` (craft_sum 25), fallback `entsoe-europe-load` (24). `docs/DATASET_CATALOGUE.md`
-- [ ] **Human pick for story 3** — then verify the four Round D assumptions (raw TMS field list, station chain metadata, licence for derived aggregates, lag stability) before any Decision Spec
-- [ ] Frame-cost budget for the craft layer, desktop + phone — never measured (`docs/ANIMATION_CRAFT.md` honest limits); carry into story 3
-- [ ] Second rendered surface in one film, to test cue-table `rendered` bookkeeping beyond one canvas
+- [x] Verify the Round D assumptions against the live Digitraffic API + 70 station-days of passages — format, metadata and CC BY 4.0 licence pass; **the upstream propagation lag fails** (3/7 weekdays, front speed 2.8–45 km/h; 2.3 km detector spacing cannot resolve a ~15 km/h front). C drops 5 → 3, craft_sum 23. Queue flag is `0` in every row; congestion must come from speed.
+- [ ] **Human pick for story 3** on the revised scores — no candidate is clearly ahead; `digitraffic-tms-raw` is still a good decision story, just not the craft test it was picked for
+- [x] Frame-cost budget for the craft layer, desktop + phone — measured in `e2e/frame-cost.spec.ts`. Unthrottled both films hold 60 Hz; at 4× CPU throttle the craft layer costs one frame interval (cut-off 60→30 Hz, rate 30→20 Hz). The added arithmetic is only ~0.4 ms/frame; the rest is that a held frame is now genuinely new and must be composited.
+- [ ] Reduce held-frame work on small screens (DPR cap / mark count / deliberate 30 Hz) — scoped by the numbers in `docs/ANIMATION_CRAFT.md`, measurement already in place to check it
+- [x] Cue-table `rendered` bookkeeping beyond one canvas — the union of two surfaces' channels hides a frozen surface; holds are per-surface. Pinned by a test; both films are single-canvas so nothing to fix today.
 - [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
 - [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)
