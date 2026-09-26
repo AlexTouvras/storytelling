@@ -36,7 +36,8 @@
 - [x] Human scrub / gate — push to prod for Orbit storytelling-sync
 - [ ] Confirm live Orbit `/stories` shows cut-off film
 - [x] Animation craft pass from `anidoodle`: hold audit, craft layer, cue-table checker, dead-air gate
-- [ ] Human scrub of the moving films (drift amplitude; does the drawn rule read as made?)
+- [x] Human scrub of the moving films — approved 2026-09-26 on the recorded clips ("it looks better")
+- [ ] Confirm the same on the live page (clips are re-encoded; live has strictly more motion)
 - [ ] Decide the reduced-motion question: finished picture vs opening frame (`docs/ANIMATION_CRAFT.md`)
 - [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
 - [ ] Weekly decision stories — after pipeline + human gate exist
