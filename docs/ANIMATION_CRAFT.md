@@ -166,14 +166,12 @@ it is *a hold must stay alive*.
 
 - The dead-air numbers come from the cue-table checker and the Playwright gate, both re-run after
   the self-test above.
-- The shipped tuning was judged from an 8-second recording of the cut-off film's beat-5 hold, at
-  native resolution, reviewed by a vision model against the specific question of whether the motion
-  is perceptible and whether it reads as breathing or as jitter. It came back perceptible and calm.
-  **No human has watched it on the live page**, and the previous tuning is a standing reminder that
-  a measurement is not a viewing. The amplitude and rate constants at the top of `craft.ts` are the
-  first thing to move if it reads wrong.
+- The tuning was judged first from native-resolution recordings, then signed off by a person, then
+  validated on the live page (2026-09-26). The first tuning is the standing reminder that a
+  measurement is not a viewing: it passed its gate and could not be seen. The amplitude and rate
+  constants at the top of `craft.ts` are the first thing to move if a future change reads wrong.
 - The rate film's beat-2 hold is a close-up with one loan and a rule on screen. It passes the hard
-  rule with no identical frames, but it is carried almost entirely by the camera, and it is the
-  frame most likely to still read as static to a person.
-- Frame cost was not measured. The per-mark work added is a handful of `sin` calls across ~2,400
-  marks; it has not been profiled on a phone.
+  rule with no identical frames, but it is carried almost entirely by the camera, so it is the first
+  frame to check after any change to `cameraCreep`.
+- Frame cost was not measured, on desktop or on a phone. The per-mark work added is a handful of
+  `sin` calls across ~2,400 marks.

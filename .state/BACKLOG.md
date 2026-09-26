@@ -38,7 +38,7 @@
 - [x] Animation craft pass from `anidoodle`: hold audit, craft layer, cue-table checker, dead-air gate
 - [x] Human scrub of the moving films — approved 2026-09-26 on the recorded clips ("it looks better")
 - [x] Push the craft pass to prod — `main` `7430497`, Orbit sync dispatched 2026-09-26
-- [ ] Confirm the craft pass on the live Orbit page (clips are re-encoded; live has strictly more motion)
+- [x] Confirm the craft pass on the live Orbit page — validated online 2026-09-26
 - [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
 - [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)
