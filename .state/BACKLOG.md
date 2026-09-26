@@ -39,6 +39,9 @@
 - [x] Human scrub of the moving films — approved 2026-09-26 on the recorded clips ("it looks better")
 - [x] Push the craft pass to prod — `main` `7430497`, Orbit sync dispatched 2026-09-26
 - [x] Confirm the craft pass on the live Orbit page — validated online 2026-09-26
+- [x] Field card lecture feasibility: Agentic AI card as a paced briefing + podium driver (`/lab/lectures/agentic-ai`)
+- [ ] Human call: does the four-minute briefing earn its place beside the forty-second card? (decides whether this leaves `/lab`)
+- [ ] If yes: second lecture (Technology Delivery is the next most film-shaped card) before generalising any teaching channels
 - [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
 - [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)
@@ -56,6 +59,9 @@
 
 - Branding as “scrollytelling side feature”
 - Five templates designed before a second real story
+- A lecture template, a teaching `visualId`, or generalised “teaching channels” on one example
+- Editing the field card repos from here (the frozen JSON is read from a published commit)
+- Publishing the lecture (unlisted + noindex until the human call above)
 - “AI-powered storytelling” as the headline
 - Polishing `rates-and-defaults` as the publish piece
 - Weekly topic discovery / auto-publish

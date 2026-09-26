@@ -108,34 +108,63 @@ type View = {
   w: number;
   h: number;
   cy: number;
-  spanY: number;
   scale: number;
-  /** Horizontal squeeze, 1 on frames wide enough to take the stack. */
-  xk: number;
+  /** Where the ladder rail sits, in screen x. */
+  railX: number;
   zoom: number;
 };
 
-/** Half the world width the stack needs, including the peer ring. */
-const HALF_WORLD = 2.45;
+/**
+ * How much world width the beat's own objects need, either side of centre. The
+ * camera pulls back until this fits, so a narrow screen gets a wider shot rather
+ * than a cropped one. This is the whole answer to portrait here: the cue table
+ * asks for a vertical span, and the frame is allowed to overrule it.
+ */
+export function requiredHalfWidth(frame: LectureFrame): number {
+  let need = 1.2;
+  if (frame.corpus > 0.05) need = Math.max(need, 1.78);
+  if (frame.loop > 0.05) need = Math.max(need, 1.3);
+  if (frame.reach > 0.05) need = Math.max(need, 1.96);
+  if (frame.peers > 0.05) need = Math.max(need, 2.45);
+  return need;
+}
 
 function makeView(frame: LectureFrame, motion: Motion, w: number, h: number): View {
   const creep = cameraCreep(motion.time, frame.hold, motion.life);
   const spanY = frame.spanY * creep.span;
   const cy = frame.cy + frame.spanY * creep.pan;
-  const scale = (h * STAGE_HEIGHT) / spanY;
-  // Fixed for the viewport, not for the frame: a squeeze that changed with the
-  // camera would turn the ring into an ellipse every time it pushed in.
-  const widest = (h * STAGE_HEIGHT) / WIDEST_SPAN;
-  const xk = Math.min(1, (w * 0.46) / (HALF_WORLD * widest));
-  return { w, h, cy, spanY, scale, xk, zoom: WIDEST_SPAN / spanY };
+
+  // Portrait keeps less of the frame for the board: the same copy runs to three
+  // or four lines, so it takes a taller block at the bottom.
+  const portrait = w < 820;
+  const stageH = portrait ? STAGE_HEIGHT - 0.1 : STAGE_HEIGHT;
+  const stageC = portrait ? STAGE_CENTER - 0.05 : STAGE_CENTER;
+
+  // The ladder rail owns a gutter on the right once it is drawn, so the board
+  // has to fit inside what is left of the frame rather than under it.
+  const gutter = frame.ladder > 0.05 ? 38 : 0;
+  const scale = Math.min(
+    (h * stageH) / spanY,
+    Math.max(40, w * 0.46 - gutter) / requiredHalfWidth(frame),
+  );
+  const widest = (h * stageH) / WIDEST_SPAN;
+
+  return {
+    w,
+    h: h * stageC,
+    cy,
+    scale,
+    railX: w * (portrait ? 0.94 : 0.93),
+    zoom: scale / widest,
+  };
 }
 
 function px(v: View, wx: number): number {
-  return v.w * 0.5 + wx * v.scale * v.xk;
+  return v.w * 0.5 + wx * v.scale;
 }
 
 function py(v: View, wy: number): number {
-  return v.h * STAGE_CENTER + (wy - v.cy) * v.scale;
+  return v.h + (wy - v.cy) * v.scale;
 }
 
 function mono(ctx: CanvasRenderingContext2D, size: number, weight = 500): void {
@@ -221,7 +250,7 @@ function bands(frame: LectureFrame) {
 
 function drawBands(ctx: CanvasRenderingContext2D, v: View, frame: LectureFrame): void {
   const left = v.w * 0.05;
-  const right = v.w * 0.88;
+  const right = v.railX - 28;
 
   for (const band of bands(frame)) {
     if (band.on < 0.02) continue;
@@ -268,7 +297,7 @@ function drawCore(
     const life = markLife(400 + i, motion.time, 3, motion.life);
     const x = px(v, wx);
     const y = cy + life.dy;
-    const long = 0.05 * v.scale * v.xk;
+    const long = 0.05 * v.scale;
     ctx.strokeStyle = rgba(wx < 0 ? MIST : CYAN, 0.5 * a * fade * life.glow);
     ctx.lineWidth = strokeWeight(1.4, v.zoom);
     ctx.beginPath();
@@ -282,12 +311,12 @@ function drawCore(
   glow.addColorStop(1, rgba(CYAN, 0));
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.ellipse(cx, cy, r * 3.4 * v.xk, r * 3.4, 0, 0, TAU);
+  ctx.arc(cx, cy, r * 3.4, 0, TAU);
   ctx.fill();
 
   ctx.fillStyle = rgba(CYAN, 0.16 * a);
   ctx.beginPath();
-  ctx.ellipse(cx, cy, r * v.xk, r, 0, 0, TAU);
+  ctx.arc(cx, cy, r, 0, TAU);
   ctx.fill();
   ctx.strokeStyle = rgba(CYAN, 0.8 * a);
   ctx.lineWidth = strokeWeight(1.6, v.zoom);
@@ -313,7 +342,7 @@ function drawCorpus(
   motion: Motion,
 ): void {
   if (frame.corpus < 0.02) return;
-  const dw = 0.075 * v.scale * v.xk;
+  const dw = 0.075 * v.scale;
   const dh = 0.11 * v.scale;
 
   for (let i = 0; i < DOC_COLS * DOC_ROWS; i++) {
@@ -394,14 +423,14 @@ function drawLoop(
   if (frame.loop < 0.02) return;
   const cx = px(v, 0);
   const cy = py(v, BAND.agent);
-  const rx = LOOP_R * v.scale * v.xk;
-  const ry = LOOP_R * v.scale;
+  const rr = LOOP_R * v.scale;
+
   const start = -Math.PI / 2;
 
   ctx.strokeStyle = rgba(CYAN, 0.42);
   ctx.lineWidth = strokeWeight(1.8, v.zoom);
   ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, start, start + frame.loop * TAU);
+  ctx.arc(cx, cy, rr, start, start + frame.loop * TAU);
   ctx.stroke();
 
   for (const station of STATIONS) {
@@ -442,10 +471,14 @@ function drawLoop(
     ctx.fillStyle = rgba(AMBER, 0.8 * frame.gate);
     ctx.fillText("APPROVE", tx, ty);
 
+    // Spelled out where there is room; on a phone the caps are named in the
+    // beat copy, so the board only has to say that there are some.
     mono(ctx, 9, 500);
     ctx.textAlign = "left";
     ctx.fillStyle = rgba(AMBER, 0.45 * frame.gate);
-    ctx.fillText("STEP · SPEND · TOOL CAPS", tx, ty + 15);
+    const caps = "STEP · SPEND · TOOL CAPS";
+    const room = tx + ctx.measureText(caps).width < v.railX - 20;
+    ctx.fillText(room ? caps : "CAPS", tx, ty + 15);
   }
 
   if (frame.runner > 0.02) {
@@ -482,7 +515,7 @@ function drawReach(
 ): void {
   if (frame.reach < 0.02) return;
   const from: [number, number] = ringPoint(v, REACH_U, LOOP_R);
-  const bw = 0.62 * v.scale * v.xk;
+  const bw = 0.62 * v.scale;
   const bh = 0.3 * v.scale;
 
   for (let i = 0; i < SYSTEMS.length; i++) {
@@ -546,7 +579,7 @@ function drawPeers(
   ctx.strokeStyle = rgba(VIOLET, 0.35 * a);
   ctx.lineWidth = strokeWeight(1.2, v.zoom);
   ctx.beginPath();
-  ctx.moveTo(bx, py(v, BAND.mcp - 0.55));
+  ctx.moveTo(bx, py(v, BAND.mcp - 0.86));
   ctx.lineTo(bx, py(v, BAND.a2a + 1.05));
   ctx.stroke();
   ctx.restore();
@@ -555,16 +588,16 @@ function drawPeers(
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.fillStyle = rgba(VIOLET, 0.45 * a);
-  ctx.fillText("another owner", bx + 8, py(v, BAND.mcp - 0.45));
+  ctx.fillText("another owner", bx + 8, py(v, BAND.mcp - 0.78));
 
   const pcx = px(v, PEER_X);
   const pcy = py(v, BAND.a2a);
-  const prx = 0.42 * v.scale * v.xk;
-  const pry = 0.42 * v.scale;
+  const pr = 0.42 * v.scale;
+
   ctx.strokeStyle = rgba(VIOLET, 0.55 * a);
   ctx.lineWidth = strokeWeight(1.6, v.zoom);
   ctx.beginPath();
-  ctx.ellipse(pcx, pcy, prx, pry, 0, 0, TAU);
+  ctx.arc(pcx, pcy, pr, 0, TAU);
   ctx.stroke();
 
   for (let i = 0; i < 3; i++) {
@@ -573,8 +606,8 @@ function drawPeers(
     ctx.fillStyle = rgba(VIOLET, 0.8 * a);
     ctx.beginPath();
     ctx.arc(
-      pcx + Math.cos(ang) * prx,
-      pcy + Math.sin(ang) * pry,
+      pcx + Math.cos(ang) * pr,
+      pcy + Math.sin(ang) * pr,
       strokeWeight(2.6, v.zoom),
       0,
       TAU,
@@ -584,7 +617,7 @@ function drawPeers(
 
   // Its own tools, on its own side of the line.
   for (let i = 0; i < 2; i++) {
-    const tw = 0.34 * v.scale * v.xk;
+    const tw = 0.34 * v.scale;
     const th = 0.19 * v.scale;
     const tx = px(v, PEER_X - 0.28 + i * 0.56) - tw / 2;
     const ty = py(v, BAND.a2a + 0.78) - th / 2;
@@ -617,7 +650,7 @@ function drawLadder(
 ): void {
   if (frame.ladder < 0.02) return;
   const rungs = 6;
-  const x = v.w * 0.93;
+  const x = v.railX;
   const top = py(v, LADDER_TOP);
   const bottom = py(v, LADDER_BOTTOM);
   const drawn = smoothstep(frame.ladder / 0.55);
@@ -695,7 +728,6 @@ export const STACK_GEOMETRY = {
   BAND,
   LOOP_R,
   GATE_U,
-  HALF_WORLD,
   WIDEST_SPAN,
   docCount: DOC_COLS * DOC_ROWS,
   hash,

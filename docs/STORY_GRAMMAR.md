@@ -69,6 +69,23 @@ Rejected and not to be retried: a 2D scale around a point, a tube or orbit camer
 5. **The cue table is checked at load,** against the channels the canvas actually reads — a channel that never reaches pixels cannot rescue a still frame.
 6. **Dead air is measured, not asserted.** The gate scrubs to every declared hold and counts changed pixels; reduced motion must measure exactly zero.
 
+## Teaching register (one example, not yet grammar)
+
+`docs/FIELD_CARD_LECTURE.md` records a feasibility prototype: the Agentic AI field card as a paced
+briefing at `/lab/lectures/agentic-ai`. Two findings belong here because they are about the engine
+rather than about that card.
+
+1. **A scrubbed film and a live talk are the same artifact with a different driver.** Progress is a
+   number; scroll is one source of it and a clock is another. The cue table's `at` values are already
+   a running order, so a presenter mode is a `requestAnimationFrame` loop and a notes field — not a
+   second implementation.
+2. **A teaching board is labelled, and that is not a violation of rule 6.** The unlabelled-picture
+   rule protects a metaphor. When the subject *is* a named taxonomy, the labels are the content. The
+   canvas stays `aria-hidden` and the labels are also in the DOM.
+
+One example is not a template. Do not add a teaching `visualId`, a lecture template, or a generalised
+set of "teaching channels" until a second lecture has earned them.
+
 ## Next story rule
 
 Before adding a new visualId, ask: can an existing grammar object + stage config express the beat? Only register a new visual when the metaphor cannot share the spine/field. A new shot still gets its own decision spec; it inherits the craft rules above and does not inherit the landing’s metaphor.
