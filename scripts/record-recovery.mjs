@@ -1,3 +1,18 @@
+/**
+ * Record the delay film scrubbing end to end, for review rather than assertion.
+ *
+ * `shoot-recovery.mjs` puts a still on disk per beat, which is how the drawing bugs
+ * were found. Stills cannot show the things that only exist in time: whether a
+ * transition dissolves or pops, whether a declared hold is alive, whether the
+ * camera drifts or drags. This scrubs at roughly reading pace, dwells on each of
+ * the three declared holds, and operates the picker.
+ *
+ * Watching this is how the 1280x720 collision between the margin strip and the
+ * narration was found, after a dozen passing gates and fifteen screenshots shot
+ * tall enough to miss it.
+ *
+ * Usage: node scripts/record-recovery.mjs [outDir]  (writes a .webm)
+ */
 import { chromium } from "@playwright/test";
 
 const OUT = process.argv[2] ?? "/tmp/film-video";
