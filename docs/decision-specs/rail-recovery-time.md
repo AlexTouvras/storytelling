@@ -2,8 +2,9 @@
 
 > Third Interactive Decision Storytelling piece (Orbit flagship).
 > Catalogue pick: `rata-delay-propagation` (Round E, `craft_sum` 28 — the catalogue's only *measured* craft score).
-> **Status:** draft. Scope, counterfactual method, Claim and picker captions signed off; Question /
-> Takeaway / limitations wording still open. Evidence pack not yet frozen.
+> **Status:** draft. Scope, counterfactual method, Claim, picker captions and the ten-act arc signed off;
+> Question / Takeaway / limitations wording still open. **Evidence pack frozen on a full year**
+> (2025-09-26 → 2026-09-25).
 > **Slug (proposed):** `where-should-the-recovery-time-sit`
 > **Corpus:** Fintraffic Digitraffic Railway, `/api/v1/trains/{date}` (CC BY 4.0, no authentication, ~720 days retained).
 
@@ -20,32 +21,29 @@ and the motion rules in `docs/ANIMATION_CRAFT.md`.
 | **Decision-maker** | Timetable planning at the infrastructure authority, allocating a fixed budget of recovery margin across a line |
 | **Stake** | Padding buys punctuality and costs journey time and capacity — and it is paid on every train, every day of the timetable period |
 | **QUESTION** | Where should the recovery time sit? |
-| **CLAIM** | A delay is not an event, it is a thing that travels. Where the padding sits decides whether it dies in two stops or survives eight — and long-distance trains are given room to recover while commuter trains are given almost none |
+| **CLAIM** | A delay dies only where the timetable leaves room for it to die. **Margin decides survival** — and today margin is handed out by service type, so long-distance trains get room to recover and commuter trains get almost none |
 | **MECHANISM** | Train is late at a stop → the next leg's scheduled run time either exceeds what the leg actually takes or it does not → the delay is absorbed or handed on → the same test repeats at every stop to the end of the run |
 | **VISUAL OBJECT** | One field of arrival marks (a mark = one train at one stop), positioned by place in the run against minutes late. The film opens on the whole network, then settles onto **one line** the reader can change. The same marks carry the decay curve and the padding profile |
 | **EVIDENCE** | Observed scheduled and actual times at every stop; calculated carry-over, decay curve and per-leg padding; a clearly-labelled modelled counterfactual for re-allocated padding |
 | **COUNTERPOINT** | The carry-over is not a constant. It rises when the network is stressed, so padding sized on a quiet day is padding sized for the wrong day |
 | **UNCERTAINTY** | Cause attribution covers only ~1% of rows; sample thins beyond ~4 stops; the technical minimum run time is a percentile proxy, not an engineering fact. Individual **lines within one service type do not reliably differ** — the separation is between service types |
-| **TAKEAWAY** | Size the margin from where delay actually survives, not evenly along the line — and separate commuter from long-distance, because the same delay behaves differently on each and only one of them is given room to recover |
+| **TAKEAWAY** | Size the margin from where delay actually survives, not evenly along the line. On long-distance that is free — the minutes already exist and only need moving. On commuter it is not: there is too little margin for rearranging it to help much, so the real question there is whether to buy any |
 
-> ### Proposed claim upgrade — needs sign-off
+> ### How the Claim got here
 >
-> The approved Claim above is a statement about *who got the margin*. The frozen year established
-> something stronger and more useful: **recovery margin predicts delay survival directly**, within each
-> service type separately (Spearman −0.86 across the seven lines, −0.79 across 119 legs, −0.66
-> commuter-only, −0.69 long-distance-only) and in all three timetable periods the year contains. Legs
-> with negative margin carry a delay across at **97%**; legs with 4+ minutes of margin carry it at
-> **49%**.
+> The first Claim was "the current budget is demonstrably in the wrong places" — rhetoric the data could
+> not carry. The second was a statement about *who got the margin*, which was measured and true but
+> described a symptom.
 >
-> That matters because a timetable planner controls margin directly and does not control service type.
-> The proposed wording keeps the approved observation and adds the mechanism behind it:
+> The frozen year established the mechanism behind the symptom: **recovery margin predicts delay survival
+> directly**, within each service type separately (Spearman −0.86 across the seven lines, −0.79 across 119
+> legs, −0.66 commuter-only, −0.69 long-distance-only) and in all three timetable periods the year
+> contains. Legs with negative margin carry a delay across at **97%**; legs with 4+ minutes of margin
+> carry it at **49%**.
 >
-> *"A delay dies only where the timetable leaves room for it to die. Margin decides survival — and
-> today margin is handed out by service type, so long-distance trains get room to recover and commuter
-> trains get almost none."*
->
-> Recommended, because the current Claim describes a symptom the data now explains. Not adopted without
-> a decision, since it is a strictly stronger statement than the one signed off.
+> That is what earned the current wording, **signed off 2026-09-26**. It matters because a planner
+> controls margin directly and does not control service type, so the claim now names a lever rather than a
+> grievance.
 
 **Epistemic rule.** Teaching beats may follow one illustrative train. Any figure that looks like a
 network fact carries `observed` | `calculated` | `illustrative` | `hypothetical`. We are reading a
@@ -421,19 +419,25 @@ Wide, then one lane, then the reader's lane. The film narrows once and does not 
 | **III — It carries** | TRANSFORM | The delay reaches the next stop before the train recovers | `transform` | Same marks; the delay is handed along the run |
 | **IV — Every late train** | ACCUMULATE | One run becomes a decay curve | `accumulate` | Marks fill; the survival curve emerges *from* them |
 | **V — Two services** | SPLIT | The same delay behaves differently on commuter and long-distance | `split` | One field divides; two decays, same marks |
-| **VI — Where the slack is** | COMPARE | Padding per leg against where delay survives — and who got the margin | `compare` + `trace` | Padding profile along the line; the negative legs |
-| **VII — Your line** | FILTER | Change the line and see whether your line behaves differently | `filter` | Line picker; the same profile and curve re-fit |
-| **VIII — Move the budget** | FILTER | Re-allocate the same minutes and replay | `filter` | Scrubbed budget; the decay curve responds |
-| **IX — What it costs** | SYNTHESIS | Punctuality bought, journey time paid | `highlight` | Decision card + limitations |
+| **VI — A year of it** | WIDEN | Volume is a season; the mechanism is not — and winter is worst at both | `compare` | Twelve months against the same curve; a seasonal band |
+| **VII — Where the slack is** | COMPARE | Margin per leg against where delay survives, and the mechanism behind it | `compare` + `trace` | Padding profile along the line; the negative legs |
+| **VIII — Your line** | FILTER | Change the line and see whether your line behaves differently | `filter` | Line picker; the same profile and curve re-fit |
+| **IX — Move the budget** | FILTER | Re-allocate the same minutes and replay | `filter` | Scrubbed budget; the decay curve responds |
+| **X — What it costs** | SYNTHESIS | What the move buys, and the decision it does not settle | `highlight` | Decision card + limitations |
 
 **Atmosphere:** an intro/outro motif only if it earns the mood. No new page architecture.
 Directed-film path (one scrubbed shot plus an operable sleeve), consistent with stories 1 and 2.
 
 **Next-story rule check.** No new `visualId` is proposed. The persistent mark field plus a
-frontier-style chart already express every beat: Act VI's padding profile and Act IV's decay curve are
-both the cut-off film's chart role, and Acts I–V are the mark field under a moving camera. The Act VII
-line picker is a `filter` over the same marks, not a new surface. Register a new visual only if
-implementation proves that false.
+frontier-style chart already express every beat: Act VII's margin profile and Act IV's decay curve are
+both the cut-off film's chart role, and Acts I–V are the mark field under a moving camera. The Act VIII
+line picker is a `filter` over the same marks, not a new surface, and Act VI's seasonal band is the same
+chart with a band instead of a line. Register a new visual only if implementation proves that false.
+
+**On length.** Ten acts is more than the film wants to carry at equal weight, so Act VI is the shortest
+in the film — one image, two sentences, no interaction. It exists because the year found the most
+counterintuitive thing in the pack, not because the structure needed another chapter. If it cannot be
+made to land in one screen, it goes back to being the counterpoint line on Act X's decision card.
 
 **Craft note on the opening narrowing.** Act I is the one shot where the camera travels a long way, and
 it is exactly the case `cameraCreep` and `strokeWeight` were written for: the marks must be the same
@@ -475,7 +479,32 @@ honesty is part of the point.
 Split commuter from long-distance: 89% against 72%, commuter higher on 359 of 363 days. Same marks, two
 decays. This is the beat that stops the reader thinking "trains are trains".
 
-### VI — Where the slack is
+### VI — A year of it
+The shortest beat in the film. One image: twelve months, the monthly share of arrivals running late
+against the monthly carry-over.
+
+The lateness volume swings from **2.7% to 7.2%** by month and **0.4% to 15.4%** by day. The carry-over
+line barely moves — **75% to 85%, every month of the year**. Volume is weather and engineering works;
+survival is the timetable.
+
+Then the turn that earns the beat: carry-over is **highest in January and February (85%)**. Winter
+delivers more delays *and* stickier ones, at the same time. So a margin budget sized on a median day is
+undersized exactly when it is needed most — which is the counterpoint the decision frame promises, and it
+is better shown here than asserted later.
+
+**Say whose winter it is.** Split by service type the rise is not symmetric: commuter carry-over peaks
+cleanly in Jan–Feb (**93% / 92%** against a 84% July floor), while long-distance peaks in **February
+(76%) and April (77%)** and sits near its own average in January. So the aggregate winter peak is mostly
+a commuter effect, and the beat must say so rather than letting the reader generalise it to the network.
+That is not a weakening — it points at the same lever, because commuter is the service with no margin to
+spend when the weather takes some.
+
+No interaction. Do not let the reader scrub the year; they are being told something, not asked to explore
+it. And do not imply a cause for the winter rise — the pack cannot say why, only that it happens. In
+particular do not call it weather: the pack has no weather data, and the April long-distance peak is a
+standing reminder that something else is also moving.
+
+### VII — Where the slack is
 Padding per leg along the line, against where delay actually survives — then the split that closes the
 argument: long-distance holds a median 2.27 minutes of margin with 4% of legs negative, commuter holds
 0.24 minutes with 20% negative. The service that cannot shed a delay is the service that was given
@@ -488,7 +517,7 @@ minutes or more, and the same relationship inside each service type and in all t
 State the percentile-floor caveat on screen in this beat, and state its answer with it — negative legs
 beat their schedule on 0% of runs, so the finding does not rest on the percentile.
 
-### VII — Your line
+### VIII — Your line
 The reader changes the line. The padding profile and the decay curve re-fit to it, from the same frozen
 pack.
 
@@ -501,14 +530,14 @@ like the point being made rather than the interface failing.
 
 Do not rank lines. Where two genuinely do sit apart, put the day count on screen beside the claim.
 
-### VIII — Move the budget
+### IX — Move the budget
 Scrub a re-allocation of the *same total* minutes toward the legs where delay survives, and replay the
 observed delays through it: the focus line goes 75% → 56% at the next stop with journey time untouched.
 Badge the whole beat `modelled`. Travel increases then stops; no rewind. Note for the scrub's easing:
 most of the gain lands by quarter strength, so the curve should visibly respond early rather than
 rewarding only the end of the drag.
 
-### IX — What it costs, and the decision it does not settle
+### X — What it costs, and the decision it does not settle
 Two turns, not one.
 
 First, for long-distance the question is answered: move the minutes you already have and delay survival
@@ -542,6 +571,7 @@ built by `scripts/freeze-rail-recovery.py` from the 6.5 GB day cache pulled by
 | Mechanism holds every period | −0.85 / −0.79 / −0.79 across three timetable periods | calculated | That it would hold under a timetable unlike these three |
 | Survival by margin band | 97% at negative margin → 49% at 4+ min | calculated | A monotonic step-by-step relationship |
 | Seasonality of the mechanism | carry-over 75–85% every month, highest in Jan–Feb | observed | A cause for the winter rise |
+| Whose winter it is | commuter peaks Jan–Feb (93% / 92%); long-distance peaks Feb and **April** (76% / 77%) | observed | That the winter rise is a network-wide effect, or that weather is the driver |
 | Seasonality of the volume | monthly late share 2.7–7.2%; daily 0.4–15.4% | observed | A punctuality target or its breach |
 | Timetable is re-cut in-year | 18.8% of legs moved on 2025-12-14 against a 1.3% weekly baseline | observed | Which re-cut was deliberate policy |
 | Padding per leg | median 0.9 min, range −1.4 to +23.1, 425 legs, current period | calculated | An engineering minimum run time |
@@ -583,6 +613,7 @@ observed delays, not an operational plan.
 | It carries | `transform` | `leadLag` with a recorded lag; rank is position in the run |
 | Every late train | `accumulate` | Same marks; the curve emerges from them |
 | Two services | `split` | One population divides; do not introduce a second one |
+| A year of it | `compare` | One image, no interaction; the band is the day-to-day range, not a confidence interval |
 | Where the slack is | `compare` + `trace` | Two profiles maximum |
 | Your line | `filter` | Marks re-position, never re-fade; the picker must not look like a page change |
 | Move the budget | `filter` | Travel increases then stops; ease the stop |
@@ -611,12 +642,14 @@ false statement, not merely a dull one. If the film ever draws a second canvas, 
 ## Definition of done (this Spec)
 
 - [x] Claim approved — "long-distance trains are given room to recover; commuter trains are given almost none"
-- [ ] **Decide the proposed claim upgrade** (margin, not service type) — the pack now supports the stronger statement
+- [x] **Claim upgraded to the margin statement** (signed off 2026-09-26) — a planner controls margin, not service type
 - [ ] Human approves Question / Takeaway / limitations wording
 - [x] Line or lines chosen for v1 — network-wide opening, north main line as the focus lane, all seven lines selectable
 - [x] Counterfactual method agreed — re-allocate the same total minutes in proportion to measured survival, whole beat badged `modelled`
 - [x] Picker captions agreed — recognition control, no ranking; revised so it also teaches that alike lines have alike margin
 - [x] Evidence pack frozen with kind tags — **365 days**, 185 KB, every block tagged, margin scoped to the current timetable period
-- [x] Act briefs rewritten against the margin finding, and Act IX carries the commuter turn as a second decision
-- [ ] Beat list confirmed after the claim decision, then narration and visual states
+- [x] Act briefs rewritten against the margin finding, and Act X carries the commuter turn as a second decision
+- [x] Seasonality given its own beat (Act VI), shortest in the film, no interaction
+- [x] Beat list confirmed — ten acts, no new `visualId`
+- [ ] Narration and visual states drafted against the confirmed beats
 - [ ] Explicit non-goals respected (no speaking for the operator, no plan cosplay)
