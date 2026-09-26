@@ -56,6 +56,12 @@
 - [x] **Found the real mechanism while recomputing:** leg margin predicts survival at ρ −0.96 across lines, −0.85 across 68 legs, −0.78/−0.75 within each service type. 99% carry at negative margin → 48% at 4+ min. Service type is just how margin is distributed
 - [x] Counterfactual frozen at five strengths per line, journey time conserved exactly — focus line 77% → 50% at +1; commuter lines only 93% → 86% because there is nothing to move, which reframes their decision as whether to *buy* margin
 - [x] Revise the "lines never separate" finding — on 60 days 2 of 9 pairs do separate, and separation tracks margin gap. Recorded as a revision in the open
+- [x] **Re-freeze on a full year** (human asked: is there seasonality?) — 365 days, 2025-09-26 → 2026-09-25, 6.5 GB pulled, 395,094 runs, 185 KB pack. Answer: **volume is seasonal, the mechanism is not.** Monthly late share 2.7–7.2% (daily 0.4–15.4%) while carry-over stays 75–85% every month; highest in Jan–Feb, so winter makes more delays *and* stickier ones
+- [x] Scope margin to timetable periods — the year contains an annual re-cut (18.8% of legs moved on 2025-12-14 against a 1.3% weekly baseline). Three periods detected; margin uses the current one. Pooling had diluted long-distance ρ from −0.69 to −0.48
+- [x] Fix the measurement unit to (leg, service type) — Helsinki–Pasila is run by both categories at different scheduled times. Also made the counterfactual self-consistent (zero-strength replay now reproduces measured carry-over exactly)
+- [x] Make the freeze stream — a year of raw JSON exceeds this pod's RAM; day-level reduction plus a second file pass for the replay
+- [x] Add per-period robustness for the mechanism — holds in all three periods and both categories (−0.85 / −0.79 / −0.79), across two annual re-cuts
+- [x] Commuter framing corrected — redistribution *does* help commuter lines (4–10 pts), but their floor (78–84%) stays worse than long-distance today (75–77%). Human chose to make that the closing turn rather than a footnote
 - [ ] **Human decision: adopt the proposed claim upgrade?** (margin, not service type) — strictly stronger than the signed-off claim, so not taken unilaterally
 - [ ] Human approves Question / Takeaway / limitations wording
 - [ ] Rewrite Act VI and VIII briefs against the margin finding, then narration and visual states

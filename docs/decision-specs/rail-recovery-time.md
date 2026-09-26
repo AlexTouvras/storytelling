@@ -30,11 +30,12 @@ and the motion rules in `docs/ANIMATION_CRAFT.md`.
 
 > ### Proposed claim upgrade — needs sign-off
 >
-> The approved Claim above is a statement about *who got the margin*. Freezing the 60-day pack
-> established something stronger and more useful: **recovery margin predicts delay survival directly**,
-> and it does so within each service type separately (Spearman −0.96 across the seven lines, −0.85
-> across 68 legs, −0.78 commuter-only, −0.75 long-distance-only). Legs with negative margin carry a
-> delay across at **99%**; legs with 4+ minutes of margin carry it at **48%**.
+> The approved Claim above is a statement about *who got the margin*. The frozen year established
+> something stronger and more useful: **recovery margin predicts delay survival directly**, within each
+> service type separately (Spearman −0.86 across the seven lines, −0.79 across 119 legs, −0.66
+> commuter-only, −0.69 long-distance-only) and in all three timetable periods the year contains. Legs
+> with negative margin carry a delay across at **97%**; legs with 4+ minutes of margin carry it at
+> **49%**.
 >
 > That matters because a timetable planner controls margin directly and does not control service type.
 > The proposed wording keeps the approved observation and adds the mechanism behind it:
@@ -78,12 +79,13 @@ reason the pick was verified before this Spec was written.
 | Licence | CC BY 4.0 (Fintraffic open data), commercial use permitted with attribution |
 | Working grain | `ARRIVAL` rows at commercial stops on non-cancelled trains, with `differenceInMinutes` present |
 | Late threshold | **5 minutes** — one threshold throughout; sensitivity to 3 and 10 minutes shown, not hidden |
-| Windows | **60 days** for the frozen pack — set by the line picker, not by the headline figures. Verification ran on 10 consecutive weekdays (2026-09-14 → 09-25) plus a 14-day spread across a year; every selectable line needs ~30–51 days to carry its own decay curve and an honest day-to-day band |
+| Windows | **365 days** for the frozen pack, 2025-09-26 → 2026-09-25. Survival, seasonality and day bands use the whole year; **margin uses the current timetable period only** (2026-06-26 → 2026-09-25, 92 days), because the timetable is re-cut during the year and pooling it describes no operated schedule |
 | Segmentation | **Commuter and long-distance are separated everywhere.** Not optional — see evidence |
 | Line definition | A line is a **modal route signature**: the actual ordered stop sequence operated between two endpoints, with expresses absorbed into the longest signature they are a subsequence of. Never an average of stop positions — see the trap below |
-| Padding per leg | Median scheduled leg run time (next stop's scheduled arrival − this stop's scheduled departure) minus the **5th percentile of observed run times**, on **passenger services only**. Legs need 60+ observations. Reported beside a percentile-free check: the share of runs that beat the scheduled time |
+| Padding per leg | Median scheduled leg run time (next stop's scheduled arrival − this stop's scheduled departure) minus the **5th percentile of observed run times**, on **passenger services only**, within **one timetable period**, and per **service type** — Helsinki–Pasila is run by both commuter and long-distance trains at different scheduled times, so the unit is (from, to, category). Legs need 60+ observations. Reported beside a percentile-free check: the share of runs that beat the scheduled time |
 | Counterfactual | Re-allocate the same total padding minutes across legs in proportion to measured survival, then replay observed delays through the new schedule. **Modelled, and labelled as such on screen** |
 | Excluded | Cargo, shunting, locomotive, on-track machines and test drives — no passenger decision attached, **and including them corrupts padding** (see below) |
+| Engine cost | The pack is 185 KB. It holds 425 legs, seven lines with their own curves and legs, a year of per-day baseline, twelve months of seasonality and five counterfactual strengths per line — no raw runs, and nothing the engine has to recompute |
 
 Freeze path: pull → aggregate → `data/figures/where-should-the-recovery-time-sit.v1.json`. The engine
 never queries the API at render time.
@@ -93,95 +95,148 @@ never queries the API at render time.
 ## What the frozen pack measures
 
 Figures below are **from the frozen pack** — `data/figures/where-should-the-recovery-time-sit.v1.json`,
-built by `scripts/freeze-rail-recovery.py` over 60 consecutive days (2026-07-28 → 2026-09-25), 65,373
-passenger runs, 839,038 timetable rows. Seasonality figures come from the separate 24-day spread across
-a year used during verification, and are marked as such.
+built by `scripts/freeze-rail-recovery.py` over **a full year**, 2025-09-26 → 2026-09-25: 395,094
+passenger runs, 5,272,722 timetable rows.
 
 ### Coverage
 
 | | |
 |---|---|
-| Timetable rows (60 days, passenger) | **839,038** across 65,373 runs |
-| Rows with an actual time | **90.8%** |
-| Rows with delay minutes | **92.2%** |
+| Timetable rows (365 days, passenger) | **5,272,722** across 395,094 runs |
+| Rows with an actual time | **91.3%** |
+| Rows with delay minutes | **92.5%** |
 | Rows carrying a cause | **~1%** |
-| Runs by category | Commuter 53,169 · Long-distance 12,204 |
+
+### The timetable is re-cut during the year, so padding is period-scoped
+
+A year cannot be pooled. Comparing each day with the same weekday a week earlier, an ordinary week moves
+**1.3%** of legs by half a minute or more — but **2025-12-14 moves 18.8%**, the annual re-cut, and
+2026-06-06 moves 13.8%. A single median scheduled run time across twelve months describes no timetable
+that was ever operated, and a leg's margin can shift by up to 8.5 minutes across a boundary.
+
+The pack therefore detects periods (threshold = max(10%, 3× the weekly baseline)) and scopes every
+padding figure inside one:
+
+| Period | days |
+|---|--:|
+| 2025-09-26 → 2025-12-30 | 96 |
+| 2025-12-31 → 2026-06-25 | 177 |
+| **2026-06-26 → 2026-09-25** (padding period) | **92** |
+
+Survival, seasonality and the day bands use the whole year; margin uses the current period, because a
+planner acts on the timetable in force.
 
 ### A delay carries
 
 Share of 5+ minute late arrivals still 5+ minutes late N stops later, with the day-to-day band across
-60 days:
+365 days:
 
-| stops on | +1 | +2 | +3 | +4 | +6 |
-|---|--:|--:|--:|--:|--:|
-| median | **81%** | 72% | 66% | 62% | 56% |
-| band across 60 days | 67–90% | 54–86% | 46–84% | 42–82% | 33–83% |
-| late events | 31,419 | 26,931 | 22,310 | 18,329 | 11,865 |
+| stops on | +1 | +2 | +3 | +4 |
+|---|--:|--:|--:|--:|
+| median | **81%** | 72% | 67% | 63% |
+| band across 365 days | 56–94% | 37–90% | 23–88% | 16–87% |
 
-Always a majority at the next stop and never below 67% on any day. *(Seasonality, from the 24-day
-year-spread: the median sits at 77% with the same 65–90% band, so the shape is not an artefact of a
-late-summer window.)*
+Always a majority at the next stop. The band is far wider than a 60-day window suggested (67–90%),
+which is the honest cost of a year: single quiet or wrecked days reach further in both directions.
 
 ### Commuter and long-distance are different services
 
 Carry-over to the next stop:
 
-| | median | band across 60 days |
+| | median | band across 365 days |
 |---|--:|---|
-| Commuter | **87%** | 77–95% |
-| Long-distance | **72%** | 60–82% |
+| Commuter | **89%** | 69–97% |
+| Long-distance | **72%** | 47–94% |
 
-Commuter is higher on **60 of 60 days** — measured into the pack as `category_head_to_head`, not
-asserted. Over four stops the gap widens from 87% vs 72% to 76% vs 41%. A film that pooled them would
-be averaging two different mechanisms.
+Commuter is higher on **359 of 363 comparable days** — measured into the pack as
+`category_head_to_head`, not asserted. Over four stops the gap widens from 89% vs 72% to 80% vs 41%. A
+film that pooled them would be averaging two different mechanisms.
+
+### Seasonality: the volume swings, the mechanism does not
+
+This is what the year bought, and it settles the question directly.
+
+| month | arrivals 5+ late | carry-over at +1 | commuter | long-distance |
+|---|--:|--:|--:|--:|
+| 2025-10 | 3.2% | 82% | 90% | 72% |
+| 2025-11 | 3.1% | 81% | 88% | 70% |
+| 2025-12 | 2.7% | 81% | 91% | 71% |
+| 2026-01 | 4.2% | **85%** | 93% | 72% |
+| 2026-02 | 4.4% | **85%** | 92% | 76% |
+| 2026-03 | 2.8% | 78% | 88% | 70% |
+| 2026-04 | 2.8% | 79% | 85% | 77% |
+| 2026-05 | 4.0% | 81% | 89% | 72% |
+| 2026-06 | **7.2%** | 82% | 87% | 73% |
+| 2026-07 | 6.1% | **75%** | 84% | 70% |
+| 2026-08 | 5.2% | 81% | 88% | 72% |
+| 2026-09 | 3.7% | 80% | 88% | 72% |
+
+**Lateness volume swings by a factor of 2.7 across months (2.7% → 7.2%) and by a factor of 40 across
+individual days (0.4% → 15.4%). Carry-over stays inside 75–85% all year.** How many trains run late is
+seasonal; what happens to a delay once it exists is close to a constant of the timetable.
+
+Two details worth a beat. Carry-over is *highest* in January and February (85%), so winter both makes
+more delays and makes them stickier. And the busiest months for lateness are June and July — summer
+engineering works, not weather — with July showing the year's lowest carry-over, because a thinner
+summer timetable leaves more room to recover.
 
 ### The mechanism is margin, not service type
 
 The strongest finding in the pack, and the reason the claim upgrade above is proposed. Delay survival
-across a leg falls as that leg's recovery margin rises:
+across a leg falls as that leg's recovery margin rises. Margin and survival are read from the **same
+timetable period**, since comparing a leg's padding under one timetable against its delays under another
+would measure nothing:
 
 | padding on the leg | legs | delay carries across | late events |
 |---|--:|--:|--:|
-| negative | 9 | **99%** | 1,401 |
-| 0 – 0.5 min | 21 | 96% | 6,013 |
-| 0.5 – 1 min | 10 | 71% | 2,372 |
-| 1 – 2 min | 11 | 81% | 5,629 |
-| 2 – 4 min | 8 | 69% | 1,594 |
-| 4+ min | 9 | **48%** | 1,324 |
+| negative | 12 | **97%** | 2,366 |
+| 0 – 0.5 min | 39 | 93% | 10,543 |
+| 0.5 – 1 min | 16 | 74% | 3,863 |
+| 1 – 2 min | 19 | 82% | 8,203 |
+| 2 – 4 min | 19 | 70% | 4,688 |
+| 4+ min | 14 | **49%** | 2,557 |
 
 | Rank correlation of margin against survival | |
 |---|--:|
-| Across the seven lines | **−0.96** |
-| Across 68 legs with 100+ late arrivals | **−0.85** |
-| Commuter legs only | **−0.78** |
-| Long-distance legs only | **−0.75** |
+| Across the seven lines | **−0.86** |
+| Across 119 legs with 100+ late arrivals | **−0.79** |
+| Commuter legs only | **−0.66** |
+| Long-distance legs only | **−0.69** |
 
 It holds *within* each service type, so the category split is not doing the work — service type is
 merely how margin happens to be distributed today. Read the correlation and the end points: the trend is
 strong but not monotonic bucket to bucket, and the pack says so in `mechanism.note`.
 
-### The baseline moves more than the mechanism
+**And it holds in every timetable period,** which is the check that matters most. A relationship
+appearing in only one period would be a property of one timetable rather than of margin:
 
-The share of arrivals 5+ minutes late has a median of **4.4%** and ranges **1.9%–11.4%** across the 60
-days. How *many* trains run late swings nearly sixfold; what happens to a delay once it exists is
-comparatively stable. Worth a beat on its own — and the days with the most lateness also have the
-highest carry-over, which is the counterpoint above.
+| period | legs | all | commuter | long-distance |
+|---|--:|--:|--:|--:|
+| 2025-09-26 → 2025-12-30 | 409 | −0.85 | −0.87 | −0.59 |
+| 2025-12-31 → 2026-06-25 | 434 | −0.79 | −0.78 | −0.50 |
+| 2026-06-26 → 2026-09-25 | 425 | −0.79 | −0.66 | −0.69 |
 
-### Padding is derivable, and 52 legs have none
+Negative in all three periods and both service types, across two annual re-cuts.
 
-Over **403 passenger legs** with 60+ observations in the frozen 60-day pack, median scheduled run time
-minus the 5th-percentile observed run time:
+### Padding is derivable, and 47 legs have none
+
+Over **425 passenger legs** with 60+ observations in the current timetable period, median scheduled run
+time minus the 5th-percentile observed run time:
 
 | | |
 |---|---|
 | Median padding | **0.9 min** |
-| Range | **−2.3 to +15.3 min** |
-| Legs with *negative* padding | **52** (13%) |
-| Negative legs that beat their schedule on most runs | **0 of 52** |
+| Range | **−1.4 to +23.1 min** |
+| Legs with *negative* padding | **47** (11%) |
+| Negative legs that beat their schedule on most runs | **0 of 47** |
 
-`HL→TPE` is scheduled at 49 minutes against a 33.5-minute floor and beats its schedule on 88% of runs.
-`JK→SAU` is scheduled at 5.3 minutes against a 6.1-minute floor and was not early once in 992 runs —
-timetabled to be late. That contrast is the decision in one image.
+`HL→TPE` is scheduled at 49 minutes against a 33.7-minute floor and beats its schedule on 88% of 223
+runs. `JK→SAU` is scheduled at 6.1 minutes against a 7.5-minute floor and was not early once in **3,652
+runs** — timetabled to be late. That contrast is the decision in one image.
+
+The +23.1 min top of the range is `KV→HNN`, a 60-minute Kouvola–Henna leg operated as a commuter service
+with only 66 observations. Real, but a thin outlier on a leg unlike the rest of the commuter network;
+quote the median and the named legs, not the maximum.
 
 > **Correction.** An earlier pass reported 273 legs, median 0.5 min, range −2.4 to +13.3. That pass
 > filtered service category when measuring delay survival but *not* when measuring padding, so cargo,
@@ -192,50 +247,58 @@ timetabled to be late. That contrast is the decision in one image.
 
 ### The margin is not spread evenly — it is spread by service type
 
-Same 403 legs, split:
+Same 425 legs, split:
 
 | | legs | median padding | range | negative |
 |---|--:|--:|--:|--:|
-| **Long-distance** | 226 | **2.2 min** | −1.4 to +15.3 | **9 (4%)** |
-| **Commuter** | 177 | **0.2 min** | −2.3 to +2.1 | **43 (24%)** |
+| **Long-distance** | 233 | **2.27 min** | −1.3 to +15.3 | **9 (4%)** |
+| **Commuter** | 192 | **0.24 min** | −1.4 to +23.1 | **38 (20%)** |
 
-Long-distance trains get roughly twelve times the recovery margin and are almost never timetabled below
-their realistic floor. Commuter trains get almost none, and a quarter of their legs are scheduled faster
+Long-distance trains get roughly nine times the recovery margin and are almost never timetabled below
+their realistic floor. Commuter trains get almost none, and a fifth of their legs are scheduled faster
 than the leg has ever actually run.
 
-**This closes the mechanism.** Commuter delays survive at 87% and long-distance at 72% — and the
+**This closes the mechanism.** Commuter delays survive at 89% and long-distance at 72% — and the
 schedule gives commuter trains nowhere to recover. Two independent measurements, one on outcomes and one
 on the timetable, point the same way, and the margin-versus-survival correlation above explains *why*.
 That is the story's spine, and the reason the claim moved from "the budget is in the wrong places" to
 something the data can carry.
 
-### Moving the margin works — but only where there is margin to move
+### Moving the margin works, and where it stops working is the second decision
 
 The counterfactual is frozen in the pack at five strengths per line. It redistributes each line's total
 padding toward the legs where delay survives, **conserving that line's total scheduled run time exactly**
 (the pack records `journey_time_change_min` as 0.00 for every variant), then replays the observed delay
 deltas through the new schedule.
 
-On the focus line, carry-over at the next stop falls from **77% to 50%** at full strength — 21 legs made
-tighter, 34 made slacker, largest single shift 11.4 minutes, and not one minute of journey time bought.
+On the focus line, carry-over at the next stop falls from **75% to 56%** at full strength — 22 legs made
+tighter, 37 made slacker, largest single shift 11.9 minutes, and not one minute of journey time bought.
+Most of the gain arrives by quarter strength (75% → 66%), which is worth knowing for the scrub: the beat
+should not need to be dragged to the end to show its point.
 
 Per line, at full strength:
 
-| Line | carry at +1, now → redistributed |
-|---|---|
-| Helsinki–Oulu | 79% → **47%** |
-| Helsinki–Rovaniemi north main | 77% → **50%** |
-| Helsinki–Joensuu | 80% → 61% |
-| Helsinki–Siuntio coastal | 89% → 79% |
-| Ring Rail loop | 93% → 86% |
-| Helsinki–Riihimäki trunk | 91% → 86% |
-| Helsinki–Tampere | 83% → 80% |
+| Line | Service | carry at +1, now → redistributed | gain |
+|---|---|---|--:|
+| Helsinki–Rovaniemi north main | Long-distance | 75% → **56%** | 19 pts |
+| Helsinki–Oulu | Long-distance | 75% → **56%** | 19 pts |
+| Helsinki–Joensuu | Long-distance | 77% → 65% | 12 pts |
+| Ring Rail loop | Commuter | 94% → 84% | 10 pts |
+| Helsinki–Siuntio coastal | Commuter | 89% → 79% | 10 pts |
+| Helsinki–Riihimäki trunk | Commuter | 89% → 82% | 7 pts |
+| Helsinki–Tampere | Commuter | 82% → 78% | 4 pts |
 
-**This is the decision frame, and it is sharper than the Spec first assumed.** Long-distance lines can
-halve delay survival by moving minutes they already have. Commuter lines cannot: they have almost nothing
-to move, so redistribution buys them a handful of points. For commuter services the question is therefore
-not *where* the recovery time should sit but *whether to buy any at all* — which does cost journey time,
-and which this counterfactual deliberately does not model.
+**The decision frame, stated precisely.** Redistribution helps every line, and roughly twice as much on
+long-distance as on commuter. But the number that matters is not the gain, it is the floor:
+
+> Even optimally redistributed, every commuter line still carries a delay to the next stop **78–84%** of
+> the time — worse than long-distance lines manage **today**, at 75–77%.
+
+So redistribution answers the long-distance question and cannot answer the commuter one. Commuter lines
+do not have enough margin for rearranging it to close the gap. That is a *second* decision, and the film
+should carry it as such: for commuter services the question becomes whether to **buy** margin, which
+costs journey time on every train every day, and which this counterfactual deliberately does not model.
+Saying so is more useful than implying one lever fixes both.
 
 The replay holds each train's running behaviour fixed. Taking slack off a leg cannot make that leg
 generate fresh delay in this arithmetic, though it would in the world. The pack states that in
@@ -276,55 +339,46 @@ Asked and measured, because "start wide, then focus on one lane" only works if e
 clears the sample bar on its own. Bar: 1,000+ late arrivals at the next stop, and 30+ days carrying
 20+ late arrivals so the day band is honest.
 
-All seven lines clear it in the frozen 60-day pack, comfortably — the thinnest carries 2,731 late
-arrivals at the next stop, the fattest 9,200. Ordered by carry-over, and set against their margin:
+All seven lines clear it comfortably in the frozen year. Ordered by carry-over, and set against their
+margin in the current timetable period:
 
 | Line | Service | stops | legs | carry at +1 | band | median padding | negative legs |
 |------|---------|--:|--:|--:|---|--:|--:|
-| Ring Rail loop | Commuter | 26 | 48 | 93% | 77–99% | 0.13 min | 11 |
-| Helsinki–Riihimäki trunk | Commuter | 21 | 40 | 91% | 74–98% | 0.07 min | 12 |
-| Helsinki–Siuntio coastal | Commuter | 19 | 40 | 87% | 75–98% | 0.31 min | 6 |
-| Helsinki–Tampere | Commuter | 19 | 36 | 82% | 67–94% | 0.55 min | 5 |
-| Helsinki–Joensuu | Long-distance | 13 | 29 | 76% | 62–93% | 2.18 min | 1 |
-| **Helsinki–Rovaniemi north main** | Long-distance | 24 | 56 | 74% | 56–87% | 2.55 min | 1 |
-| Helsinki–Oulu | Long-distance | 22 | 44 | 73% | 52–89% | 2.71 min | 0 |
+| Ring Rail loop | Commuter | 26 | 48 | 93% | 67–100% | 0.13 min | 10 |
+| Helsinki–Siuntio coastal | Commuter | 19 | 40 | 90% | 67–100% | 0.31 min | 6 |
+| Helsinki–Riihimäki trunk | Commuter | 21 | 40 | 89% | 63–99% | 0.09 min | 8 |
+| Helsinki–Tampere | Commuter | 19 | 36 | 82% | 56–100% | 0.58 min | 2 |
+| Helsinki–Joensuu | Long-distance | 13 | 29 | 78% | 54–96% | 2.15 min | 0 |
+| Helsinki–Oulu | Long-distance | 22 | 44 | 77% | 44–93% | 2.67 min | 0 |
+| **Helsinki–Rovaniemi north main** | Long-distance | 24 | 59 | 74% | 43–97% | 2.52 min | 1 |
 
-**That table is the story.** The lines fall in almost exact margin order, across both service types —
-which is where the −0.96 correlation comes from. The north main line is the focus lane: most legs (56),
-a full 24-stop run, and the widest margin spread to show.
+**That table is the story.** The lines fall in near-exact margin order across both service types, which
+is where the −0.86 correlation comes from. The north main line is the focus lane: most legs (59), a full
+24-stop run, and the widest margin spread to show.
 
-**Lines separate when their margin differs, and not otherwise.** On 60 days, 2 of 9 same-category pairs
-separate robustly and 7 do not:
+**Lines separate when their margin differs, and not otherwise.** The pairs that separate are the ones
+with the biggest margin gap; the pairs that do not are the ones with similar margin. Nothing here is
+about line identity, which is why the picker must not be captioned as a ranking.
 
-| | | |
-|---|---|---|
-| Helsinki–Riihimäki vs Helsinki–Tampere | 57 of 60 days | **separates** |
-| Helsinki–Tampere vs Ring Rail | 2 of 59 days | **separates** |
-| Helsinki–Joensuu vs Helsinki–Oulu | 42 of 57 | no |
-| Helsinki–Oulu vs north main | 32 of 58 | no |
-| Ring Rail vs coastal | 12 of 59 | no |
-| …four more | | no |
+> **Revision, twice over.** The 24-day verification read this as "lines never separate — head-to-head is
+> a coin flip". On 60 days two pairs separated and the unifying explanation appeared: separation tracks
+> margin. On the full year the correlation is steadier but slightly weaker (−0.86 against −0.96), because
+> a year includes days no 60-day window contains. Both revisions are the same lesson — a sample that
+> fits a conclusion is not a sample that tests it — and both are in the open rather than quietly
+> restated.
 
-The pairs that separate are the ones with the biggest margin gap (0.07 vs 0.55 min; 0.55 vs 0.13). The
-pairs that do not are the ones with similar margin. Nothing here is about line identity.
-
-> **Revision.** The 24-day verification read this as "lines do not separate at all — head-to-head is a
-> coin flip". On 60 days two pairs do separate, and the unifying explanation appeared: separation tracks
-> margin. The earlier reading was the same finding seen through too small a sample, which is exactly why
-> the Spec required recomputation on the pack before shipping.
-
-**Design consequence.** The picker stays a recognition control, but it now has something true to teach:
+**Design consequence.** The picker stays a recognition control, but it has something true to teach:
 lines that look alike have alike margin, and the one that stands out stands out because its timetable is
 different. Never rank lines by quality. Where a pair separates, put the day count on screen.
 
 ### The Ring is the mechanism's limiting case
 
 The Ring Rail Line returns to where it started, so a delay can come round — and it does. Highest
-carry-over of any line (93%), lowest margin (0.13 min median, 11 negative legs), and redistribution
-barely helps it (93% → 86% even at full strength) because there is nothing to redistribute. Not a
-curiosity after all: it is what the bottom of the margin scale looks like. Still not the opening, since
-a loop asks the reader to hold a harder mental model than a line, but it belongs in the picker and it
-earns a mention beside the counterfactual's limits.
+carry-over of any line (93%), lowest margin (0.13 min median, 10 negative legs), and even at full
+redistribution it still carries a delay 84% of the time, worse than any long-distance line manages today.
+Not a curiosity after all: it is what the bottom of the margin scale looks like, and the clearest case of
+the second decision. Still not the opening, since a loop asks the reader to hold a harder mental model
+than a line, but it belongs in the picker and beside the counterfactual's limits.
 
 ### Legs behave consistently
 
@@ -339,15 +393,16 @@ all ten weekdays: `KEM→OL` adds a mean +6.0 min (range +2.8 to +12.3), `KV→L
 | Lens | What the reader should feel |
 |------|-----------------------------|
 | **Threshold** | 5 minutes is a choice. At 3 the carry-over rises, at 10 it falls; the *shape* of the decay is what survives the choice |
-| **Stress scenario** | On the worst days carry-over reaches 90%. Padding sized on a median day is undersized exactly when it matters |
+| **Stress scenario** | On the worst days carry-over reaches 94%, and it is highest in January and February. Margin sized on a median day is undersized exactly when it matters |
+| **Season** | Volume is seasonal and the mechanism is not: monthly late share swings 2.7–7.2% while carry-over stays inside 75–85% all year. Winter makes both more delays and stickier ones |
 | **Segment scenario** | Move the same minutes within commuter vs within long-distance — the two need different profiles, not one line |
-| **Budget counterfactual** | Re-allocate the same total minutes toward the legs where delay survives: the focus line goes 77% → 50% with journey time untouched |
-| **The limit of redistribution** | Commuter lines gain only a handful of points because they have nothing to move. For them the honest question is whether to *buy* margin, which costs journey time and is not modelled here |
+| **Budget counterfactual** | Re-allocate the same total minutes toward the legs where delay survives: the focus line goes 75% → 56% with journey time untouched, most of it by quarter strength |
+| **The limit of redistribution** | Optimally redistributed, commuter lines still carry 78–84% — worse than long-distance manages today. For them the honest question is whether to *buy* margin, which costs journey time and is not modelled here |
 | **Thin attribution** | Only 1% of rows carry a cause. We can say a delay survived a leg; we mostly cannot say why. The story must not imply we can |
 | **Percentile floor** | The "technical minimum" is a 5th percentile of observed runs, not an engineering figure. Resampling shows it stable from n=40 upward and 4% of legs flip sign between windows, so the limit is interpretive rather than statistical — a leg with no slack is not necessarily a leg that *should* have slack |
 | **Line identity** | Lines separate only when their margin differs. The picker is for recognition; any beat implying line A is worse than line B needs the day count on screen |
 | **Association, not experiment** | Margin predicting survival is measured across legs, not manipulated. Legs with more margin may differ in other ways — length, track, traffic — and nothing here rules that out |
-| **Season** | The pack is 60 late-summer and early-autumn days. Winter evidence comes from the separate year-spread sample, and the two must not be quoted as one |
+| **Timetable period** | Margin describes the timetable in force (2026-06-26 → 2026-09-25). The timetable is re-cut roughly annually and a leg's margin can move by minutes across a boundary, so no margin figure is a permanent fact about a leg |
 | **What we do not claim** | That Fintraffic or VR endorse this; that the counterfactual is implementable; that capacity, rolling-stock or crew constraints are modelled; that one line generalises to the network |
 
 ---
@@ -393,8 +448,9 @@ through it, the film has lost the claim that the network and the line are the sa
 ### Open
 Headline: **WHERE SHOULD THE RECOVERY TIME SIT?**
 Sub: A delay is not an event. It is a thing that travels, and the timetable decides how far.
-Hero: every arrival on one day — 70,440 marks — dim and unlabelled. Wide on purpose: the reader should
-feel the volume before meeting a single train.
+Hero: a day's arrivals, dim and unlabelled. Wide on purpose: the reader should feel the volume before
+meeting a single train. The pack holds a year, so the opening can also state the scale honestly —
+5.3 million arrivals, 395,094 runs.
 
 ### I — Settle on a line
 The camera narrows from the network onto the north main line, Helsinki to Rovaniemi, 24 stops in order.
@@ -410,19 +466,24 @@ than staging: the lag is the recorded difference between two logged times, and t
 the direction of travel. Label the figure `observed`.
 
 ### IV — Every late train
-Accumulate to every 5+ minute late arrival in the window. The survival curve emerges from the same
-marks — 77% at the next stop, 57% four stops on, medians across 24 days. Show the day-to-day range as
-a band, not a single line.
+Accumulate to every 5+ minute late arrival in the year. The survival curve emerges from the same marks —
+81% at the next stop, 63% four stops on. Show the day-to-day range as a band, not a single line, and let
+it be as wide as it is (56–94% at the next stop): a year of days is wider than a tidy window and the
+honesty is part of the point.
 
 ### V — Two services
-Split commuter from long-distance. 24 of 24 days, no overlap. Same marks, two decays. This is the beat
-that stops the reader thinking "trains are trains".
+Split commuter from long-distance: 89% against 72%, commuter higher on 359 of 363 days. Same marks, two
+decays. This is the beat that stops the reader thinking "trains are trains".
 
 ### VI — Where the slack is
 Padding per leg along the line, against where delay actually survives — then the split that closes the
-argument: long-distance holds a median 2.1 minutes of margin with 3% of legs negative, commuter holds
-0.2 minutes with 19% negative. The service that cannot shed a delay is the service that was given
-nowhere to shed it. `JK→SAU` is the image: 992 runs, not one of them early.
+argument: long-distance holds a median 2.27 minutes of margin with 4% of legs negative, commuter holds
+0.24 minutes with 20% negative. The service that cannot shed a delay is the service that was given
+nowhere to shed it. `JK→SAU` is the image: **3,652 runs, not one of them early.**
+
+This is also where the margin-versus-survival relationship belongs, because it is what turns the split
+from a coincidence into a mechanism — 97% carry-over on legs with no margin, 49% on legs with four
+minutes or more, and the same relationship inside each service type and in all three timetable periods.
 
 State the percentile-floor caveat on screen in this beat, and state its answer with it — negative legs
 beat their schedule on 0% of runs, so the finding does not rest on the percentile.
@@ -442,49 +503,66 @@ Do not rank lines. Where two genuinely do sit apart, put the day count on screen
 
 ### VIII — Move the budget
 Scrub a re-allocation of the *same total* minutes toward the legs where delay survives, and replay the
-observed delays through it. Badge the whole beat `modelled`. Travel increases then stops; no rewind.
+observed delays through it: the focus line goes 75% → 56% at the next stop with journey time untouched.
+Badge the whole beat `modelled`. Travel increases then stops; no rewind. Note for the scrub's easing:
+most of the gain lands by quarter strength, so the curve should visibly respond early rather than
+rewarding only the end of the drag.
 
-### IX — What it costs
-Decision card: where the margin should sit, what punctuality it buys, what journey time it costs, and
-what we could not see (cause attribution at 1%, the percentile floor, one country, no capacity or crew
-model). Limitations panel required.
+### IX — What it costs, and the decision it does not settle
+Two turns, not one.
+
+First, for long-distance the question is answered: move the minutes you already have and delay survival
+falls by roughly 19 points for free.
+
+Then the turn. Redistribute commuter margin optimally and those lines **still** carry a delay 78–84% of
+the time — worse than long-distance lines manage today. There is not enough margin on a commuter line for
+rearranging it to close the gap, so the reader is left with a second, harder decision: buy margin, which
+costs journey time on every train every day, or accept that a commuter delay mostly does not die. The
+film should not pretend one lever settles both, and it must not price the second one — that needs
+capacity, rolling-stock and crew assumptions this evidence cannot supply.
+
+Decision card: where the margin should sit, what that buys, what it leaves unsolved, and what we could
+not see (cause attribution at 1%, the percentile floor, one timetable period for margin, one country, no
+capacity or crew model). Limitations panel required.
 
 ---
 
 ## Evidence pack
 
-**Status:** **frozen.** `data/figures/where-should-the-recovery-time-sit.v1.json` (160 KB), built by
-`scripts/freeze-rail-recovery.py` from the day cache pulled by `scripts/fetch-rail-days.py`. Window
-2026-07-28 → 2026-09-25 (60 days). Every block carries a `kind`.
+**Status:** **frozen on a full year.** `data/figures/where-should-the-recovery-time-sit.v1.json` (185 KB),
+built by `scripts/freeze-rail-recovery.py` from the 6.5 GB day cache pulled by
+`scripts/fetch-rail-days.py`. Window 2025-09-26 → 2026-09-25 (365 days). Every block carries a `kind`.
 
 | Claim | Figure | Kind | Does *not* show |
 |-------|--------|------|-----------------|
-| Delay carries to the next stop | 81% median, 67–90% across 60 days | observed | That the cause is known |
-| Decay over four stops | 81% → 72% → 66% → 62% (medians) | observed | Anything beyond ~4 stops reliably; samples thin |
-| Commuter vs long-distance | 87% vs 72%, commuter higher 60/60 days | observed | Why the services differ |
-| **Margin predicts survival** | **ρ = −0.96 across lines, −0.85 across legs, −0.78 / −0.75 within category** | calculated | Causation; it is an association across legs, not an experiment |
-| Survival by margin band | 99% at negative margin → 48% at 4+ min | calculated | A monotonic step-by-step relationship |
-| Lateness baseline | median 4.4%, range 1.9–11.4% of arrivals | observed | A punctuality target or its breach |
-| Padding per leg | median 0.9 min, range −2.3 to +15.3, 403 passenger legs | calculated | An engineering minimum run time |
-| Legs with negative padding | 52 (13%) | calculated | That those legs are anyone's mistake |
-| Padding by service type | long-distance 2.2 min / 4% negative vs commuter 0.2 min / 24% | calculated | Why the timetable was built that way |
-| Negative legs never run early | 0 of 52 beat schedule on most runs | observed | That the schedule is infeasible, only that it has no slack |
+| Delay carries to the next stop | 81% median, 56–94% across 365 days | observed | That the cause is known |
+| Decay over four stops | 81% → 72% → 67% → 63% (medians) | observed | Anything beyond ~4 stops reliably; samples thin |
+| Commuter vs long-distance | 89% vs 72%, commuter higher on 359 of 363 days | observed | Why the services differ |
+| **Margin predicts survival** | **ρ = −0.86 across lines, −0.79 across legs, −0.66 / −0.69 within category** | calculated | Causation; it is an association across legs, not an experiment |
+| Mechanism holds every period | −0.85 / −0.79 / −0.79 across three timetable periods | calculated | That it would hold under a timetable unlike these three |
+| Survival by margin band | 97% at negative margin → 49% at 4+ min | calculated | A monotonic step-by-step relationship |
+| Seasonality of the mechanism | carry-over 75–85% every month, highest in Jan–Feb | observed | A cause for the winter rise |
+| Seasonality of the volume | monthly late share 2.7–7.2%; daily 0.4–15.4% | observed | A punctuality target or its breach |
+| Timetable is re-cut in-year | 18.8% of legs moved on 2025-12-14 against a 1.3% weekly baseline | observed | Which re-cut was deliberate policy |
+| Padding per leg | median 0.9 min, range −1.4 to +23.1, 425 legs, current period | calculated | An engineering minimum run time |
+| Legs with negative padding | 47 (11%) | calculated | That those legs are anyone's mistake |
+| Padding by service type | long-distance 2.27 min / 4% negative vs commuter 0.24 min / 20% | calculated | Why the timetable was built that way |
+| Negative legs never run early | 0 of 47 beat schedule on most runs; `JK→SAU` 0 of 3,652 | observed | That the schedule is infeasible, only that it has no slack |
 | Percentile-floor stability | 4% of 265 legs flip sign between windows; floor flat from n=40 | calculated | That the floor is an engineering minimum |
-| Lines a reader can select | 7, each with 2,731–9,200 late arrivals at +1 | calculated | That those lines differ in quality |
-| Line-vs-line separation | 2 of 9 same-category pairs separate; both are the biggest margin gaps | observed | A ranking of lines |
-| Ring Rail as limiting case | highest carry (93%), lowest margin (0.13 min), least to gain | observed | That every loop behaves this way |
-| Re-allocated budget | focus line 77% → 50% at +1, journey time conserved exactly | **modelled** | A plan, a proposal, or feasibility |
-| Commuter has no margin to move | 93% → 86% at full strength | **modelled** | That commuter cannot be improved — only that redistribution will not do it |
+| Lines a reader can select | 7, each with its own year-long curve | calculated | That those lines differ in quality |
+| Line-vs-line separation | pairs separate only where margin differs | observed | A ranking of lines |
+| Ring Rail as limiting case | highest carry (93%), lowest margin (0.13 min) | observed | That every loop behaves this way |
+| Re-allocated budget | focus line 75% → 56% at +1, journey time conserved exactly | **modelled** | A plan, a proposal, or feasibility |
+| **Redistribution's floor** | every commuter line still carries 78–84% when optimally redistributed — worse than long-distance today | **modelled** | That commuter cannot be improved, only that moving margin will not do it |
 | Cause attribution | ~1% of rows | observed | A breakdown of causes |
 
 **Sources**
 
 1. Fintraffic Digitraffic Railway `/api/v1/trains/{date}` — CC BY 4.0, attribution on Context
 2. Station metadata `/api/v1/metadata/stations` (563 stations, 215 with passenger traffic)
-3. Pack window 2026-07-28 → 2026-09-25 (60 consecutive days). Verification windows retained for
-   seasonality only: 2026-09-14 → 09-25 (10 weekdays) and a 14-day spread 2025-10-14 → 2026-09-08.
-   The pack window is late summer into early autumn, so **it is not a winter sample** — the seasonality
-   band is what speaks to winter, and the film must not present the pack band as a year-round figure
+3. Pack window 2025-09-26 → 2026-09-25, **365 consecutive days** — a full annual cycle, so the film can
+   speak about winter from the pack itself rather than from a side sample. Margin is scoped to the
+   current timetable period within it (2026-06-26 → 2026-09-25)
 
 **Limitations (must appear in story)**
 
@@ -508,7 +586,7 @@ observed delays, not an operational plan.
 | Where the slack is | `compare` + `trace` | Two profiles maximum |
 | Your line | `filter` | Marks re-position, never re-fade; the picker must not look like a page change |
 | Move the budget | `filter` | Travel increases then stops; ease the stop |
-| What it costs | `highlight` | Decision card |
+| What it costs | `highlight` | Decision card; the commuter turn needs its own held beat, not a footnote |
 
 Every held beat declares itself in the cue table and gets camera creep plus per-mark life. A film
 about things that move must not freeze while the reader reads — and here a frozen frame would be a
@@ -538,6 +616,7 @@ false statement, not merely a dull one. If the film ever draws a second canvas, 
 - [x] Line or lines chosen for v1 — network-wide opening, north main line as the focus lane, all seven lines selectable
 - [x] Counterfactual method agreed — re-allocate the same total minutes in proportion to measured survival, whole beat badged `modelled`
 - [x] Picker captions agreed — recognition control, no ranking; revised so it also teaches that alike lines have alike margin
-- [x] Evidence pack frozen with kind tags — 60 days, 160 KB, every block tagged
-- [ ] Beat list stable enough to draft narration and visual states — Act VI and VIII briefs need rewriting against the margin finding
+- [x] Evidence pack frozen with kind tags — **365 days**, 185 KB, every block tagged, margin scoped to the current timetable period
+- [x] Act briefs rewritten against the margin finding, and Act IX carries the commuter turn as a second decision
+- [ ] Beat list confirmed after the claim decision, then narration and visual states
 - [ ] Explicit non-goals respected (no speaking for the operator, no plan cosplay)
