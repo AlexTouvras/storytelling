@@ -310,7 +310,9 @@ const POSES: Pose[] = [
     cx: 0.74,
     focusY: 0.38,
     season: 0.1,
-    picker: 0,
+    // The picker is the whole of Act VIII, so it has to be up when the beat
+    // starts rather than arriving over it.
+    picker: 1,
     decide: 0,
   },
   {

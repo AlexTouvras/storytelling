@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { RATE_HOLDS } from "../src/components/film/frame";
 import { CUTOFF_HOLDS } from "../src/components/film/cutoff-frame";
+import { RECOVERY_HOLDS } from "../src/components/film/recovery-frame";
 
 /**
  * What the craft layer costs per frame.
@@ -94,6 +95,12 @@ const FILMS = [
     path: "/stories/where-should-the-cutoff-sit/film",
     track: "cutoff-film",
     hold: CUTOFF_HOLDS[CUTOFF_HOLDS.length - 1],
+  },
+  {
+    name: "why-dont-delays-die",
+    path: "/stories/where-should-the-recovery-time-sit/film",
+    track: "recovery-film",
+    hold: RECOVERY_HOLDS[RECOVERY_HOLDS.length - 1],
   },
 ];
 
