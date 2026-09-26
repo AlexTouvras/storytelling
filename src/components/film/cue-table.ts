@@ -23,7 +23,13 @@ export type Hold = {
 };
 
 export type CueTableOptions<T extends Cue> = {
-  /** Channels the canvas reads. A hold is a span where all of these are equal. */
+  /**
+   * Channels the canvas reads. A hold is a span where all of these are equal.
+   *
+   * One surface per call. Handing in the union of two canvases' channels reports
+   * no hold whenever *either* moves, which hides a frozen surface behind a moving
+   * one — the same mistake as counting a DOM-only channel as motion.
+   */
   rendered: ReadonlyArray<Exclude<keyof T & string, "at" | "beat">>;
   /** Channels allowed to be NaN because the renderer resolves them per frame. */
   tracked?: ReadonlyArray<keyof T & string>;

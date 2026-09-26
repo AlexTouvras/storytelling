@@ -173,5 +173,44 @@ it is *a hold must stay alive*.
 - The rate film's beat-2 hold is a close-up with one loan and a rule on screen. It passes the hard
   rule with no identical frames, but it is carried almost entirely by the camera, so it is the first
   frame to check after any change to `cameraCreep`.
-- Frame cost was not measured, on desktop or on a phone. The per-mark work added is a handful of
-  `sin` calls across ~2,400 marks.
+
+## What a live frame costs (measured 2026-09-26)
+
+Frame cost shipped as an admitted unknown. `e2e/frame-cost.spec.ts` now measures it at the densest
+hold of each film, with and without the craft layer — reduced motion sets `life: 0`, which
+short-circuits `markLife` and `cameraCreep` while the host still repaints the same marks, so it is a
+clean A/B. CPU throttling at 4× stands in for a mid-range phone.
+
+| | unthrottled p50 | 4× throttled p50 | 4× throttled p95 |
+|---|---|---|---|
+| Rate film, closing hold, craft **off** | 16.7 ms | 33.3 ms | 50.0 ms |
+| Rate film, closing hold, craft **on** | 16.7 ms | 50.0 ms | 50.1 ms |
+| Cut-off film, closing hold, craft **off** | 16.7 ms | 16.7 ms | 33.4 ms |
+| Cut-off film, closing hold, craft **on** | 16.7 ms | 33.3 ms | 33.5 ms |
+
+Unthrottled, both films hold a locked 60 Hz with the craft layer on, and no frame is dropped. On a
+throttled CPU the craft layer costs one frame interval: the cut-off film goes from 60 Hz to 30 Hz,
+and the rate film from 30 Hz to 20 Hz.
+
+**The added arithmetic is not where it goes.** Priced on its own — 2,400 marks, the five `craft.ts`
+calls per mark — the layer adds about **0.4 ms per frame**, a fraction of the ~4 ms of unthrottled
+headroom the A/B implies. Roughly three quarters of that 0.4 ms is `hash()` recomputing constants:
+a mark's drift phases never change, so precomputing them per mark removes the cost with a bit-identical
+result. Worth doing, and it will not move the table above.
+
+The rest is the feature working. A held beat used to produce the same bitmap every frame, and a
+browser can skip compositing an unchanged canvas. Every held frame is now genuinely new, so every
+held frame is composited — at a phone's device pixel ratio that is the bill. Keeping a hold alive
+cannot be free. What can be reduced is the work per frame on small screens (device pixel ratio cap,
+mark count on narrow frames) or the rate at which the craft layer updates, which a deliberate 30 Hz
+would make steadier than an erratic 45. None of that is done here; it is a scoped piece of work with
+a measurement to check it against.
+
+### The one-canvas assumption, found while measuring
+
+`rendered` has only ever described a single canvas, because that is all either film draws — the
+cut-off film's frontier chart is SVG. A film with two canvases would naturally hand in the union of
+their channels, and that reports no hold whenever *either* surface moves, hiding a frozen surface
+behind a moving one. That is precisely the trap the `rendered` list exists to prevent. Holds are
+per-surface: ask once per canvas. Pinned by a test in `cue-table.test.ts` so it is not rediscovered
+the hard way.
