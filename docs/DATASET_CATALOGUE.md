@@ -142,6 +142,257 @@ Tied runners at 21 (parked): `fema-nfip`, `entsoe-europe-load`, `acs-pums-housin
 
 ---
 
+## Round D — story 3, re-scored for craft stress (2026-09-26)
+
+Two stories have shipped and the animation craft pass (`docs/ANIMATION_CRAFT.md`) added a motion layer
+the catalogue never scored for. Round D reopens the parked shortlist for one question: **which of these
+datasets makes the new capabilities load-bearing rather than decorative?**
+
+No new candidates were sought. Prior `score_sum` stands; one dimension is added.
+
+### New dimension — C, craft stress
+
+| Code | Dimension | 1 = | 5 = |
+|------|-----------|-----|-----|
+| **C** | Craft stress | A still frame of the mechanism says the same thing as the film | The finding *is* an order or a propagation, so `arrival` / `leadLag` render meaning rather than staging |
+
+`craft_sum = score_sum + C` (max 30). Tie-break: prefer the candidate that is **not** a third
+threshold film. Stories 1 and 2 are both a cross-section changing state under a moving cut; a third
+would exercise the engine and teach us nothing new about it.
+
+### What the new layer has not been asked to do
+
+| Capability | Exercised so far | Untested |
+|---|---|---|
+| `leadLag` + `rankJitter` | Rank is a **distributional** rank — book's thin edge, best grade first. A staging device. | A rank anchored in **time or space**, where the lag itself is the evidence and a wrong lag is a wrong claim |
+| `arrival` | Population written on in rank order | An order that is the data's own making order (real arrival times, registration vintages) |
+| `markLife` / `cameraCreep` | Holds on a settled field, where stillness is merely dull | A subject where stillness is **false** — a frozen motorway is a wrong statement, not a dead beat |
+| `strokeWeight(base, zoom)` | ~6× push-in | A decade-wide zoom range (national network → one sensor) |
+| Cue-table `rendered` bookkeeping | One canvas per film; the DOM/chart channels caught as unrendered | Two genuinely rendered surfaces in one film |
+| Frame cost | **Not measured at all**, desktop or phone (`ANIMATION_CRAFT.md`, honest limits) | Any field materially larger than ~2,400 marks |
+
+### Re-score
+
+| id | prior | C | craft_sum | Why that C |
+|----|------:|--:|----------:|------------|
+| ~~`digitraffic-tms-raw`~~ | 20 | ~~**5**~~ → **3** | ~~25~~ → **23** | Picked for a queue travelling upstream at a measurable speed. **Measured, and it does not hold** — see the verification below. `arrival` and `markLife` still earn their keep; `leadLag` does not. |
+| `entsoe-europe-load` | 21 | 3 | 24 | Zones genuinely peak in sequence as a cold front crosses, so the lead/lag is real — but the object is a load **curve**. A curve film barely touches the mark layer and has no wide zoom. |
+| `fema-nfip` | 21 | 3 | 24 | Severity concentration is spatial but not a propagation anyone observed; animating one would be a claim the data cannot support. A map camera is a new problem worth solving later, and the US/flood-map framing is a brand and sensitivity cost. |
+| `sec-13f-ziplime` | 20 | 4 | 24 | Disclosure lag *is* a lead/lag: the knowable book trails the real one by a quarter. Genuinely new craft use. Held back by CUSIP licensing and by being a third markets piece. |
+| `acs-pums-housing` | 21 | 2 | 23 | A weighted cross-section flipping bands under a shock — structurally the same film as stories 1 and 2. Fails the tie-break on its own. |
+| `traficom-vehicles-fi` | 20 | 3 | 23 | Registration vintage is a real making order, so `arrival` means something. But a single register snapshot has no propagation, and the analytics stay descriptive (prior A3). |
+| `nyc-tlc-trips` | 19 | 4 | 23 | Real event stream, so the craft fit is good; over-told in viz culture and the weakest Nordic fit. |
+| `olist-logistics` | 20 | 3 | 23 | Lead time is temporal, but CC BY-NC-SA blocks the commercial Orbit framing. |
+| `ieee-cis-fraud` | 18 | 2 | 20 | Third threshold film, opaque features. |
+
+### Recommendation — `digitraffic-tms-raw`
+
+**Proposed question:** *When should the speed limit drop?* — the intervention is a timing and a
+location, not only a level, which inherits the cut-off grammar and adds the axis the first two films
+do not have.
+
+| Element | Draft (to be settled in a Decision Spec, not here) |
+|---|---|
+| Decision-maker | Road traffic management — a national operator deciding variable-speed-limit and ramp policy on one corridor |
+| Stake | A queue that forms is far more expensive than one prevented; act too early and the limit is ignored |
+| Mechanism object | Passage stream at a station chain → speed/headway drop at the bottleneck → the drop travelling upstream → the window in which an intervention still lands ahead of it |
+| Observed vs modeled | Observed passages and the measured propagation lag; modeled counterfactual of an earlier intervention, labeled as such |
+| Uncertainty | Loop-detector gaps, incident vs recurrent congestion, whether the same lag holds across days |
+
+**Scoped slice (keeps the ETL honest):** one corridor, roughly 10–20 consecutive TMS stations in one
+direction, a window of a few weeks containing at least one clear congestion onset plus a comparable
+free-flowing day. Aggregate to station-minute before anything is frozen; the engine never sees
+passages.
+
+**Verify before a Spec is written** — these are assumptions from the round C2 entry, not checked facts:
+
+1. The exact field list of the raw TMS history CSVs, and whether headway and per-vehicle speed are
+   present or have to be derived from timestamps.
+2. Station metadata: chain order and inter-station distances, which the propagation lag needs.
+3. Licence terms for redistributing derived aggregates under the Orbit publish framing.
+4. Whether the corridor's measured lag is stable enough across days to be presented as a mechanism
+   rather than an anecdote.
+
+If (1)–(4) do not hold, `entsoe-europe-load` is the fallback: lower craft ceiling, materially lower
+data risk, and the same Nordic systems lane.
+
+**Carry two engine items into whichever story wins**, because this round found them unmeasured rather
+than fine: a frame-cost budget on desktop and phone, and a second rendered surface to test the
+cue-table `rendered` bookkeeping. The landing reduced-motion end frame stays a separate piece of work.
+
+### Verification of the four assumptions (2026-09-26)
+
+Checked against the live API and 70 days-of-station of real passage data before committing. Scripts
+were throwaway; what matters is the result.
+
+**1. Raw format — passes, better than assumed.** `/api/tms/v1/history/raw/lamraw_{tms}_{yy}_{ddd}.csv`
+returns one semicolon-delimited row per vehicle passage, 16 columns, no header: station, date parts to
+1/100 s, length, lane, direction, vehicle class, **speed**, faulty flag, ms-since-midnight, **headway
+in ms**, and a queue flag. Speed and headway are recorded, not derived. About 0.05% of rows carry the
+faulty flag. Ring I files run 1–6 MB per station-day; 10 stations × 7 days downloaded in 11 seconds.
+
+> The queue flag is dead. Across roughly 3 million passages in 70 files it is `0` in every single row.
+> Congestion has to be derived from speed. Anything built on that column would have been built on air.
+
+**2. Station metadata — passes.** All 518 stations (503 `GATHERING`) carry a `roadAddress` with road
+number, section, distance from section start, carriageway and side, plus coordinates. Zero live
+stations are missing it, so chain order and spacing are exact. **Ring I (road 101)** is the corridor:
+10 consecutive detectors, Keilaniemi → Vartiokylä, gaps 1.03–3.84 km, median 2.27 km.
+
+**3. Licence — passes.** Fintraffic open data is CC BY 4.0, explicitly including commercial use with
+attribution. Requests need a `Digitraffic-User` header and `Accept-Encoding: gzip`.
+
+**4. Propagation lag — FAILS, and this is the finding.** The claim that made this the top craft pick
+was that a queue travels upstream at a measurable speed. It does not survive the data.
+
+- Congestion itself is emphatic and repeatable. Kannelmäki direction 2 drops below 75% of its
+  overnight speed between **07:31 and 07:45 on all seven weekdays** measured. Malmi direction 1 does
+  the same in the afternoon, **15:07–15:37 on all seven**, bottoming at 37% of the night reference.
+  Onset *timing* is one of the most stable signals you could ask for. Severity is far more variable.
+- The **front is not**. Taking the bottleneck and its two upstream neighbours, the onset order is
+  upstream-correct on **3 of 7 weekdays** at the best threshold, and the implied front speed ranges
+  **2.8–45 km/h** — the textbook ~15–20 km/h appears without being reproducible. Loosening the
+  threshold destroys the ordering entirely (0 of 7 at 85%).
+- Ring I has **several independent bottlenecks**, not one wave: Kannelmäki, Malmi, Pukinmäki and
+  Länsi-Pakila each trigger on their own schedule, and Malmi's afternoon onset precedes Kannelmäki's.
+- Lane-level lead/lag at a single detector was tried as a finer-grained substitute. The sign flips
+  day to day (+4, +1, −19, 0, −11, +1, −12 min). Also not a mechanism.
+- The cause is resolution, and it is not fixable by choosing better. 2.3 km detector spacing against a
+  ~15 km/h front is roughly a 10-minute quantum, and no denser chain exists in the network — the
+  sub-100 m station pairs on road 4 near Oulu are co-located duplicates, not a dense corridor.
+
+Also found: **detector coverage gaps are per-direction and invisible in the station list.** Laajalahti
+records ~3,900 passages/day in direction 2 against ~21,000 in direction 1. A corridor has to be
+validated direction by direction.
+
+**Consequence for the score.** `arrival` still lands on a true order, `markLife` is still semantically
+required, and the zoom range is still the widest we have. But `leadLag` goes back to staging a
+distribution rather than carrying evidence, which was the whole basis for **C 5**. Honest revision:
+**C 3, craft_sum 23** — no longer ahead of the field.
+
+**Lesson for the method.** Round D scored a craft dimension on an unmeasured mechanism, and that is
+the same error as scoring analytics depth from a README. A C above 3 now requires the propagation or
+the order to have been measured first, not argued for.
+
+**Where the dataset still stands.** Access, licence, format and metadata are excellent, and there is a
+real decision in it — *how early do you act, when the onset is this predictable and the depth is not?*
+That is a defensible story with observed evidence and a counterfactual. It is simply not the
+craft-stress test it was picked for.
+
+---
+
+## Round E — one seed round for a measurable propagation (2026-09-26)
+
+Round D's verification did not just fail a candidate, it named the property worth searching for: a
+propagation whose **lag is recorded per event rather than inferred from a coarsely sampled field**.
+The traffic front failed because 2.3 km detector spacing against a ~15 km/h wave is a ten-minute
+quantum. Anything where the lag is a logged fact, or a rule, cannot fail that way.
+
+Searched on that basis only. Three candidates were examined properly; the rest are recorded as
+rejected so the round does not reopen later on a whim.
+
+| id | source | scale | why it answers Round D |
+|----|--------|-------|------------------------|
+| `rata-delay-propagation` | [Digitraffic Railway](https://www.digitraffic.fi/en/railway-traffic/) `/api/v1/trains/{date}` | ~1,800 trains × ~70k timetable rows per day, ~720 days retained (~50M station events) | Every station event carries its own scheduled and actual time. The lag is not estimated. |
+| `usgs-flood-routing` | [USGS Water Data](https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous) continuous values | 15-minute gauge series, thousands of gauges, decades | A flood wave takes hours to travel between gauges sampled every 15 minutes — a ~20:1 resolution ratio, against traffic's ~1:1. |
+| `bts-rotation-delay` | [BTS Reporting Carrier On-Time](https://www.transtats.bts.gov/tables.asp?QO_VQ=EFD) via PREZIP | ~600k flights/month, 1987–present | Delay travels through an aircraft's day via tail number, and `LateAircraftDelay` is an attributed field. |
+
+Rejected without scoring: seismic arrival times (propagation is perfect, but the decision is sensor
+network design, not a portfolio decision anyone here can own); wastewater-to-clinical lead (clinical
+authority we should not claim); air-quality plume transport (monitor spacing repeats the traffic
+mistake).
+
+### Scores, with C
+
+| id | D | V | A | X | E | score_sum | C | craft_sum |
+|----|--:|--:|--:|--:|--:|----------:|--:|----------:|
+| `rata-delay-propagation` | 5 | 5 | 4 | 5 | 4 | **23** | **5 (measured)** | **28** |
+| `usgs-flood-routing` | 4 | 5 | 4 | 4 | 3 | 20 | 5 (unverified) | 25 |
+| `bts-rotation-delay` | 4 | 4 | 4 | 4 | 3 | 19 | 4 | 23 |
+
+`C` for the rail candidate is the only **measured** craft score in the catalogue. Round D's lesson is
+applied to its own successor: it was verified before being recommended, not after.
+
+### Verification of `rata-delay-propagation` (2026-09-26)
+
+Ten weekdays pulled from the live API (2026-09-14 → 09-25, 205 MB of JSON, ~20 MB per day, no
+authentication, CC BY 4.0, ~720 days retained).
+
+**Coverage.** Of 70,440 timetable rows on a single day, **92.9%** carry an actual time and **96.1%**
+carry delay minutes. Categories are Commuter (1,044 trains), Cargo (222), Long-distance (213) and
+shunting/other. Delay *causes* are attached to only **1.0%** of rows — attribution is for significant
+delays only, and the story must not lean on it as though it were complete.
+
+**Delay carries, and the carry rate is stable.** A train that arrives 5+ minutes late is still 5+
+minutes late at its next stop on **73.6%–83.6% of days** (median 76.9%), every day of the ten.
+
+**The decay is a curve, and it holds its shape.** Share of a 5+ minute delay still 5+ minutes late,
+by stops downstream, across the ten days:
+
+| stops on | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| range across days | 76–84% | 64–76% | 55–69% | 49–64% | 43–63% | 38–63% | 35–66% | 26–60% |
+| day-to-day spread | 8.2% | 11.9% | 13.5% | 14.9% | 20.5% | 24.9% | 30.7% | 33.9% |
+
+Tight and monotone for the first four stops, widening as the samples thin. **This is the thing the
+traffic front was supposed to be**: an ordering with a measured decay, where the decay rate is the
+finding rather than a staging device.
+
+**Individual legs behave consistently.** Taking late trains only and legs with 40+ observations,
+**10 of 12** legs examined keep the same sign on all ten days. `KEM→OL` adds a mean **+6.0 min**
+(range +2.8 to +12.3); `KV→LH` absorbs **−4.8 min** (range −5.7 to −4.2); `OL→YV` absorbs **−8.1 min**.
+The two that flip both sit within a rounding of zero, which is the honest result rather than a problem.
+
+**Proposed question:** *Where should the recovery time sit?* — kept as the *decision*; the film is titled
+*Why don't delays die?* (`docs/decision-specs/rail-recovery-time.md`). A timetable has a finite budget of padding
+minutes. Spend it on the wrong legs and a delay survives eight stops; spend it on the right ones and
+the same delay is gone in two. That is a budgeted allocation across a network — the cut-off story's
+frontier logic in a wholly different domain — with a mechanism the camera can follow along one run.
+
+| Element | Draft (a Decision Spec settles it, not this) |
+|---|---|
+| Decision-maker | Timetable planning at the infrastructure authority, allocating recovery margin across a line |
+| Stake | Padding buys punctuality and costs journey time and capacity; both are paid every day of the timetable period |
+| Mechanism object | One run's stops in order → delay at each → the schedule's padding absorbing or failing to absorb it → the legs where the budget is misplaced |
+| Observed vs modeled | Observed delays and the measured decay; modeled counterfactual of re-allocated padding, labeled as such |
+| Uncertainty | Thin cause attribution (1% of rows), sample thinning beyond ~4 stops, commuter vs long-distance differences, one 10-weekday window |
+
+**The three open questions, now answered (2026-09-26).** All three were checked before the Spec was
+written, on 24 days spanning October 2025 → September 2026 including three consecutive January days.
+
+1. **Commuter and long-distance must be separated.** Carry-over to the next stop is 73–97% for
+   commuter and 57–77% for long-distance, and commuter is higher on **24 of 24 days** with no overlap
+   in the medians. Over six stops the gap widens from 87% vs 71% to 64% vs 35%. Pooling them would
+   average two different mechanisms.
+2. **Padding per leg is derivable.** Scheduled leg run time minus the 5th percentile of observed run
+   times gives a padding figure on 273 legs with 60+ observations: median 0.5 min, range −2.4 to
+   +13.3, and **43 legs are negative** — scheduled faster than the leg has realistically ever run.
+   `YV→KOK` holds 13.3 minutes of slack on a 45-minute leg while `JK→SAU` is scheduled at 5.3 against
+   a 7.7-minute floor. The floor is a percentile proxy, not an engineering fact, and the Spec says so.
+3. **The carry-over survives a year, including winter.** Next-stop carry-over is 65–90% across the 24
+   days (median 77%) and never below 65%. The September window's 74–84% was not luck. Two things
+   emerged: the *lateness baseline* swings much more than the mechanism (2.1%–5.9% of arrivals), and
+   carry-over is highest on the days with the most lateness — so padding sized on a median day is
+   undersized exactly when it matters. That is now the story's counterpoint.
+
+**Decision Spec (draft):** [`docs/decision-specs/rail-recovery-time.md`](./decision-specs/rail-recovery-time.md)
+
+### Where this leaves the field
+
+| id | craft_sum | standing |
+|----|----------:|----------|
+| `rata-delay-propagation` | **28** | **Picked for story 3** (human, 2026-09-26). Only measured C in the catalogue |
+| `usgs-flood-routing` | 25 | Shortlist. Strong mechanism, US-centric, 3-year request cap, unverified |
+| `digitraffic-tms-raw` | 23 | Still a good decision story (onset timing), not a craft test |
+| `bts-rotation-delay` | 23 | Park. Over-told domain |
+| `entsoe-europe-load` | 24 | Park. Curve rather than field |
+
+**Picked (human, 2026-09-26):** `rata-delay-propagation`. Catalogue closed again; Decision Spec is
+[`docs/decision-specs/rail-recovery-time.md`](./decision-specs/rail-recovery-time.md), awaiting
+sign-off. No corpus freeze or film work starts before that.
+
+---
+
 ## Candidates
 
 ### kind legend
@@ -707,7 +958,40 @@ Tied runners at 21 (parked): `fema-nfip`, `entsoe-europe-load`, `acs-pums-housin
 
 1. ~~Seed existing-repo batch~~ + ~~live/API batch~~ + ~~external online seed~~ + ~~deeper pass (FEMA/Traficom/Digitraffic/ACS)~~.
 2. ~~Human pick by highest score → `home-credit-pd` (22)~~.
-3. Decision Spec for `home-credit-pd` (no deep re-pull until Spec exists).
-4. Analysis notebook → freeze evidence → manifest → visuals.
+3. ~~Decision Spec for `home-credit-pd` (no deep re-pull until Spec exists)~~.
+4. ~~Analysis notebook → freeze evidence → manifest → visuals~~ — shipped as `where-should-the-cutoff-sit`.
+5. ~~Round D: re-score the parked shortlist for craft stress (story 3)~~ → recommended `digitraffic-tms-raw` (25).
+6. ~~Verify the Round D assumptions before committing~~ → format, metadata and licence pass; the
+   propagation lag fails, so `digitraffic-tms-raw` falls to **23** and no candidate is clearly ahead.
+7. ~~Round E: one seed round for a propagation whose lag is recorded rather than inferred~~ →
+   `rata-delay-propagation` (**28**), verified on ten weekdays before being recommended.
+8. ~~Human pick for story 3, then a Decision Spec~~ → `rata-delay-propagation`,
+   `docs/decision-specs/rail-recovery-time.md`.
+9. ~~Verify the story's structure, not just its dataset~~ — the human asked for a wide opening
+   narrowing to one lane, and whether the reader could pick a line. Measured, not assumed:
+   - **A line picker is buildable.** Seven routes clear 1,000+ late arrivals and 30+ usable days; six
+     fit a 60-day pack, all inside the ~720-day retention.
+   - **Lines within a service type do not separate.** Head-to-head on shared days is a coin flip
+     (Helsinki–Joensuu vs north main 7/16; Ring Rail vs coastal 6/11). The picker is for recognition,
+     not evidence, and the Spec now forbids captions implying a ranking.
+   - **Defining a line is the trap.** Origin/destination grouping starves every line; averaging stop
+     positions across shared endpoints invented a 38-station "Helsinki–Oulu" merging the Tampere and
+     Savonia routes into a path no train runs. Modal route signature is the definition that works.
+   - **A padding figure was wrong and is corrected.** The first pass filtered service category for
+     survival but not for padding, so freight inflated scheduled run times: `YV→KOK` read 13.0 min of
+     slack against 5.4 passenger-only. Corrected set is 380 legs, median 0.9 min, 41 negative.
+   - **The correction produced a better claim.** Long-distance holds 2.1 min median padding with 3% of
+     legs negative; commuter holds 0.2 min with 19% negative. Commuter delays survive at 90% and
+     long-distance at 71% — so the service that cannot shed a delay is the one given nowhere to shed
+     it. Outcome and timetable measured independently, agreeing.
+10. Human sign-off on Spec wording, then the 60-day pull and freeze.
 
-Catalogue closed unless the picked story fails Spec or human review.
+The catalogue reopens for two reasons only: to re-score parked rows when a shipped capability changes
+what a story can be (Round D), and to seed against a property a verification proved we were missing
+(Round E). Not to browse.
+
+**Verify the structure too.** Round D proved a dataset can pass on format and licence and still fail on
+the one property the story needs. Step 9 proved the same of a story's *shape*: "the reader picks a line"
+is a claim about sample size per line and about whether lines differ, and both are measurable before
+anything is built. A control the evidence cannot support is as much a defect as a figure it cannot
+support.

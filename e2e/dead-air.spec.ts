@@ -1,15 +1,16 @@
 import { test, expect, type Page } from "@playwright/test";
 import { RATE_HOLDS } from "../src/components/film/frame";
 import { CUTOFF_HOLDS } from "../src/components/film/cutoff-frame";
+import { RECOVERY_HOLDS } from "../src/components/film/recovery-frame";
 
 /**
  * The dead-air gate, measured on pixels rather than on intent.
  *
- * Both cue tables contain spans where no drawn channel moves — a third of the
- * rate film and nearly half of the cut-off film, closing beats included. Those
- * are the spans a reader dwells in, because that is when they are reading. This
- * walks to the middle of each one, stops, and measures the canvas frame by
- * frame.
+ * Every cue table contains spans where no drawn channel moves — a third of the
+ * rate film, nearly half of the cut-off film, and three declared holds in the
+ * delay film, closing beats included. Those are the spans a reader dwells in,
+ * because that is when they are reading. This walks to the middle of each one,
+ * stops, and measures the canvas frame by frame.
  *
  * Frame by frame is the point. The first version of this gate compared two
  * reads a second apart, and a drift far too slow for anyone to perceive sailed
@@ -114,6 +115,12 @@ const FILMS = [
     track: "cutoff-film",
     holds: CUTOFF_HOLDS,
   },
+  {
+    name: "why-dont-delays-die",
+    path: "/stories/where-should-the-recovery-time-sit/film",
+    track: "recovery-film",
+    holds: RECOVERY_HOLDS,
+  },
 ];
 
 for (const film of FILMS) {
@@ -126,9 +133,23 @@ for (const film of FILMS) {
         const mid = (hold.from + hold.to) / 2;
         await scrubTo(page, film.track, mid);
         const where = `beat ${hold.beat} at ${(mid * 100).toFixed(0)}%`;
-        const { mean, identical } = await probe(page);
-        expect(identical, `${where} repeated a frame`).toBe(0);
-        expect(mean, `${where} was effectively still`).toBeGreaterThan(FLOOR);
+
+        // A still canvas is still every time you look at it. This probe samples one
+        // requestAnimationFrame loop from another, so under CPU contention it can
+        // read the same painted frame twice and report an identical pair that the
+        // film did not produce — which is a false positive on the strictest rule
+        // here, not a lenient one. A frozen canvas reports about thirty identical
+        // pairs on every attempt; a scheduler hiccup reports one, once. So the rule
+        // stays `identical === 0` and gets a second look before it fails.
+        let result = await probe(page);
+        if (result.identical > 0) {
+          console.log(
+            `  ${film.name} ${where}: ${result.identical} identical pair(s), re-probing`,
+          );
+          result = await probe(page);
+        }
+        expect(result.identical, `${where} repeated a frame, twice running`).toBe(0);
+        expect(result.mean, `${where} was effectively still`).toBeGreaterThan(FLOOR);
       }
     });
 

@@ -90,6 +90,19 @@
     line-height: 1.15;
     letter-spacing: -0.02em;
   }
+
+  /*
+   * For strips that scroll sideways inside a page that scrolls down, where a
+   * horizontal bar would sit on the content rather than beside it. The strip still
+   * scrolls by drag, wheel, and keyboard, so nothing is hidden but the bar.
+   */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

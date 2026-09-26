@@ -178,7 +178,98 @@ it is *a hold must stay alive*.
 - The rate film's beat-2 hold is a close-up with one loan and a rule on screen. It passes the hard
   rule with no identical frames, but it is carried almost entirely by the camera, so it is the first
   frame to check after any change to `cameraCreep`.
-- Frame cost was never measured, on desktop or on a phone, and was accepted that way. The per-mark
-  work added is a handful of `sin` calls across ~2,400 marks. If the films ever feel heavy on a
-  low-end device, the rAF loops in `LoanField` / `AppField` and the per-mark `markLife` call are
-  where to look first.
+- Frame cost was accepted unmeasured when the craft layer shipped, and that was recorded as a
+  decision rather than an oversight. It was overtaken the same day by the third film, which could not
+  ship without the measurement — the table below is what the gate reports. The pointer that decision
+  left behind was wrong in an instructive way: it named the rAF loops and the per-mark `markLife`
+  call, and the cost turned out to be per-call canvas overhead instead of the arithmetic.
+
+## What a live frame costs (measured 2026-09-26)
+
+Frame cost shipped as an admitted unknown. `e2e/frame-cost.spec.ts` now measures the frames each film
+declares, with and without the craft layer — reduced motion sets `life: 0`, which
+short-circuits `markLife` and `cameraCreep` while the host still repaints the same marks, so it is a
+clean A/B. CPU throttling at 4× stands in for a mid-range phone.
+
+| | unthrottled p50 | 4× throttled p50 | 4× throttled p95 |
+|---|---|---|---|
+| Rate film, closing hold, craft **off** | 16.7 ms | 33.3 ms | 50.0 ms |
+| Rate film, closing hold, craft **on** | 16.7 ms | 50.0 ms | 50.1 ms |
+| Cut-off film, closing hold, craft **off** | 16.7 ms | 16.7 ms | 33.4 ms |
+| Cut-off film, closing hold, craft **on** | 16.7 ms | 33.3 ms | 33.5 ms |
+| Delay film, closing hold, craft **on** | 16.7 ms | 16.7 ms | 16.8 ms |
+| Delay film, open, craft **off** | 16.7 ms | 50.0 ms | 50.1 ms |
+| Delay film, open, craft **on** | 16.7 ms | 50.0 ms | 66.7 ms |
+| Delay film, open, craft **on**, Pixel 7 viewport | 16.7 ms | 33.3 ms | 50.0 ms |
+
+Unthrottled, both films hold a locked 60 Hz with the craft layer on, and no frame is dropped. On a
+throttled CPU the craft layer costs one frame interval: the cut-off film goes from 60 Hz to 30 Hz,
+and the rate film from 30 Hz to 20 Hz.
+
+**The added arithmetic is not where it goes.** Priced on its own — 2,400 marks, the five `craft.ts`
+calls per mark — the layer adds about **0.4 ms per frame**, a fraction of the ~4 ms of unthrottled
+headroom the A/B implies. Roughly three quarters of that 0.4 ms was `hash()` recomputing constants a
+mark never changes, so `hash` now memoises. The memo is exact rather than an approximation and the
+dead-air gate is unmoved, which is the point: it had better return the same bitmap.
+
+It does not buy a frame. Repeated after the change, the cut-off film's throttled median straddles the
+boundary — 33.3, 16.7, 33.2 ms across three runs — where before it sat at 33.3. The film is now close
+enough to 60 Hz on a throttled CPU to touch it and not close enough to hold it. Anyone hoping for the
+next frame has to reduce the work below, not the arithmetic.
+
+The rest is the feature working. A held beat used to produce the same bitmap every frame, and a
+browser can skip compositing an unchanged canvas. Every held frame is now genuinely new, so every
+held frame is composited — at a phone's device pixel ratio that is the bill. Keeping a hold alive
+cannot be free. What can be reduced is the work per frame on small screens (device pixel ratio cap,
+mark count on narrow frames) or the rate at which the craft layer updates, which a deliberate 30 Hz
+would make steadier than an erratic 45.
+
+### What the third film changed (2026-09-26, same day)
+
+The delay film broke three assumptions this section was written on, and the table above now has its
+numbers.
+
+**"The densest hold" is not the dense frame of every film.** The gate measured one frame per film,
+the mid of its closing hold, because both films then existing accumulate towards their end. The delay
+film opens on every line in the network and spends nine acts taking them away, so its closing hold is
+its *cheapest* frame. Its expensive frame — the open, 6,380 marks — went unmeasured, and a draw that
+paid full per-mark cost for marks far too faint to change a pixel passed the gate. Each film now
+declares its probe points and the delay film declares two. The second failed on its first run.
+
+**The small-screen work was reducible after all, and this is the shape of it.** Two changes took the
+open from 12 Hz to 30 Hz on a Pixel 7 viewport at 4× throttle, and from dropping frames unthrottled to
+none. Neither touched the craft layer:
+
+- *Batch the marks.* A mark covers about five pixels and was paying a `beginPath`/`arc`/`fill` for
+  them. Rounding alpha to one of twelve steps lets thousands share a path and one fill rasterise them;
+  the profiler had already said the cost was per-call overhead rather than arithmetic. It is not free
+  of consequence — overlapping sub-paths of one path fill as a union, so marks inside a step stop
+  compositing over each other, and a saturated band becomes a band that shows its density.
+- *Thin the backdrop with the stage, never the subject.* Six sevenths of this field exists so that
+  whichever line the reader picks has 44 runs on it. On a phone that backdrop was drawn into roughly a
+  sixth of the desktop area at twice the device pixels per mark, which bought a smear. It now thins by
+  stage area while the selected line never does, so every act from the fourth on is identical on every
+  screen and the open shows a sparser sample of the same year on a small one. That cost is real and is
+  stated in the code: a phone reader sees fewer trains in the opening shot.
+
+**A camera has to move everything it is pointed at.** Creep was folded into this film's stop-axis
+projection, which is the two panels that share that axis — and did nothing at all to the survival
+panel, which is on its own axis and never goes through the projection. A held beat therefore drifted
+the marks, the ticks and the margin bars while the curve, its band and its labels stayed nailed down.
+That is worse than not moving: a foreground over a photograph. It also made a push in a horizontal
+stretch, since a span multiplier only narrows x. Applied instead as a transform on the stage it
+reproduces the old horizontal motion exactly and adds the vertical half, and the closing hold went
+from 0.98× the dead-air floor to 2.0×. The mark-breath constant that had been added to chase that
+floor was then deleted, having turned out to be worth 0.05 percentage points of it.
+
+The lesson the gate taught twice in one day: it measured the frames someone had thought to point it
+at. Both misses were frames nobody had.
+
+### The one-canvas assumption, found while measuring
+
+`rendered` has only ever described a single canvas, because that is all either film draws — the
+cut-off film's frontier chart is SVG. A film with two canvases would naturally hand in the union of
+their channels, and that reports no hold whenever *either* surface moves, hiding a frozen surface
+behind a moving one. That is precisely the trap the `rendered` list exists to prevent. Holds are
+per-surface: ask once per canvas. Pinned by a test in `cue-table.test.ts` so it is not rediscovered
+the hard way.

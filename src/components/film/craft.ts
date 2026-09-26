@@ -58,13 +58,39 @@ export function lerp(a: number, b: number, t: number): number {
 }
 
 /**
+ * A mark's hashes never change, and the draw loop asks for them on every frame.
+ * At ~2,400 marks that is most of the craft layer's arithmetic — see the frame
+ * cost table in `docs/ANIMATION_CRAFT.md`. Memoising is exact, not an
+ * approximation: the stored value is the one `hash` would have returned.
+ *
+ * The cap exists because the key space is a mark id, which this module does not
+ * own. Past it, `hash` simply computes as before.
+ */
+const HASH_MEMO = new Map<number, number>();
+const HASH_MEMO_CAP = 65_536;
+
+function computeHash(id: number, channel: number): number {
+  const x = Math.sin(id * 127.1 + 311.7 + channel * 269.5) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/**
  * Deterministic 0–1 from a mark id. `channel` picks an independent stream, so
  * one mark's drift, glow and rank jitter never correlate. Channel 0 matches the
  * jitter hash the fields already used.
  */
 export function hash(id: number, channel = 0): number {
-  const x = Math.sin(id * 127.1 + 311.7 + channel * 269.5) * 43758.5453;
-  return x - Math.floor(x);
+  // The key packs both arguments, which only stays collision-free for whole ids
+  // and the channels this module defines. Anything else computes.
+  if (!Number.isSafeInteger(id) || channel < 0 || channel > 7) {
+    return computeHash(id, channel);
+  }
+  const key = id * 8 + channel;
+  const seen = HASH_MEMO.get(key);
+  if (seen !== undefined) return seen;
+  const value = computeHash(id, channel);
+  if (HASH_MEMO.size < HASH_MEMO_CAP) HASH_MEMO.set(key, value);
+  return value;
 }
 
 /**

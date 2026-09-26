@@ -98,6 +98,30 @@ describe("cueTableHolds", () => {
     );
     expect(holds).toEqual([{ from: 0.8, to: 1, beat: 1 }]);
   });
+
+  /**
+   * Both shipped films draw one canvas, so `rendered` has only ever described one
+   * surface. A film with two would be tempted to hand in the union of their
+   * channels — and that hides a frozen surface behind a moving one, which is the
+   * same class of mistake as counting a DOM-only channel as motion. Holds are
+   * per-surface: ask once per canvas.
+   */
+  it("hides a frozen surface when two surfaces share one rendered list", () => {
+    const rows = table([
+      { at: 0, beat: 0, a: 0, b: 0 },
+      { at: 0.5, beat: 1, a: 1, b: 0 },
+      { at: 1, beat: 2, a: 2, b: 0 },
+    ]);
+
+    // Channel `b` — the second canvas — never moves, yet the union reports no hold.
+    expect(cueTableHolds(rows, { rendered: ["a", "b"] })).toEqual([]);
+
+    // Asked per surface, the frozen one is found and can be given its own creep.
+    expect(cueTableHolds(rows, { rendered: ["a"] })).toEqual([]);
+    expect(cueTableHolds(rows, { rendered: ["b"] })).toEqual([
+      { from: 0, to: 1, beat: 0 },
+    ]);
+  });
 });
 
 describe("holdAt", () => {
