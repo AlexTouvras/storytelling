@@ -37,12 +37,13 @@
 - [ ] Confirm live Orbit `/stories` shows cut-off film
 - [x] Animation craft pass from `anidoodle`: hold audit, craft layer, cue-table checker, dead-air gate
 - [x] Human scrub of the moving films — approved 2026-09-26 on the recorded clips ("it looks better")
-- [ ] Confirm the same on the live page (clips are re-encoded; live has strictly more motion)
-- [ ] Decide: should the landing hero settle on the horizon under reduced motion instead of holding the flight's opening frame? (films already pass; `docs/ANIMATION_CRAFT.md`)
+- [x] Push the craft pass to prod — `main` `7430497`, Orbit sync dispatched 2026-09-26
+- [ ] Confirm the craft pass on the live Orbit page (clips are re-encoded; live has strictly more motion)
 - [ ] Agent pipeline (research → evidence → spec → manifest) — only after a second story earns reusable steps
 - [ ] Weekly decision stories — after pipeline + human gate exist
 - [ ] HFCS research microdata (data ladder step 3)
 - [ ] Optional: self-host `socioeconomic-data-mcp` for broader series
+- [ ] Landing reduced-motion end frame — own piece of work, deferred 2026-09-26. `FlagshipLanding` drops the scroll listener under reduced motion and pins the hero canvas on the flight's *first* frame, so that reader never sees the horizon it travels to. The films are unaffected (they step pose to pose and reach every beat). anidoodle's rule is that a scroll piece should show its finished picture; whether the product index hero should settle on the horizon is an editorial call. Context in `docs/ANIMATION_CRAFT.md`.
 - [ ] Tier B: WebGL backends for motifs that earn it
 
 ## Later
