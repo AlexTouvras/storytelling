@@ -13,7 +13,7 @@ mkdirSync(out, { recursive: true });
 const browser = await chromium.launch();
 const context = await browser.newContext({
   viewport: { width, height },
-  colorScheme: "dark",
+  colorScheme: "light",
   recordVideo: { dir: out, size: { width, height } },
 });
 const page = await context.newPage();
@@ -41,7 +41,7 @@ await page.waitForTimeout(400);
 await page.click("[data-testid='present-button']");
 await page.waitForSelector("[data-testid='lecture-podium']");
 await page.waitForTimeout(2500);
-for (const beat of [1, 2, 3, 4]) {
+for (let i = 0; i < 4; i++) {
   await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(2200);
 }

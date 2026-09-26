@@ -45,6 +45,27 @@ describe("the lecture cannot outrun its card", () => {
     }
   });
 
+  it("gives every slide the furniture a deck exhibit needs", () => {
+    for (const beat of parsed.beats) {
+      expect(beat.exhibit.length).toBeGreaterThan(8);
+      expect(beat.takeaway.length).toBeGreaterThan(8);
+      // A so-what is a sentence, not a label.
+      expect(beat.takeaway).toMatch(/[.?!”]$/);
+    }
+  });
+
+  it("catches a list the card does not publish as a list", () => {
+    const broken = {
+      ...parsed,
+      beats: parsed.beats.map((beat, i) =>
+        i === 0 ? { ...beat, listRef: "killSwitch" } : beat,
+      ),
+    };
+    expect(danglingCardRefs(broken, card)).toEqual([
+      "beat 0: killSwitch is not a list of strings on the card",
+    ]);
+  });
+
   it("rejects a cue that points at a beat with no copy", () => {
     const broken = {
       ...manifest,

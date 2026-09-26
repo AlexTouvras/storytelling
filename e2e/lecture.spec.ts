@@ -21,19 +21,37 @@ async function scrubTo(page: Page, at: number) {
 }
 
 test.describe("field card lecture", () => {
-  test("scrolls through every beat, in order", async ({ page }) => {
+  test("scrolls through every exhibit, in order", async ({ page }) => {
     await page.goto(LECTURE);
     await expect(page.getByTestId("lecture-board")).toBeVisible();
     await expect(page.getByTestId("lecture-title")).toBeVisible();
 
-    for (const beat of manifest.beats) {
+    const order = [...manifest.beats].sort((a, b) => a.beat - b.beat);
+    for (const [index, beat] of order.entries()) {
       await scrubTo(page, timeline.beatStarts[beat.beat] + 0.01);
       await expect(page.getByTestId("film-stage")).toHaveAttribute(
         "data-beat",
         String(beat.beat),
       );
-      await expect(page.getByTestId("beat-copy")).toContainText(beat.title);
+      // An action title above the exhibit, a captioned exhibit, and a so-what.
+      await expect(page.getByTestId("beat-title")).toHaveText(beat.title);
+      await expect(page.getByTestId("beat-copy")).toContainText(beat.takeaway);
+      const slide = page.getByTestId("lecture-slide");
+      await expect(slide).toContainText(beat.exhibit);
+      await expect(slide).toContainText(`Exhibit ${index + 1}`);
+      // The source line names the card rows this slide is allowed to teach.
+      await expect(slide).toContainText(beat.cardRefs[0]);
     }
+  });
+
+  test("prints the card's own list rather than drawing it", async ({ page }) => {
+    await page.goto(LECTURE);
+    const ladder = manifest.beats.find((b) => b.listRef);
+    if (!ladder) throw new Error("no beat declares a listRef");
+    await scrubTo(page, timeline.beatStarts[ladder.beat] + 0.01);
+    const list = page.getByTestId("beat-list");
+    await expect(list.locator("li")).toHaveCount(lecture.card.ladder.length);
+    await expect(list).toContainText(lecture.card.ladder[0]);
   });
 
   test("reprints the card it teaches, from the frozen source", async ({ page }) => {

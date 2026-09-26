@@ -76,6 +76,11 @@
   .focus-ring {
     @apply outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/55 focus-visible:ring-offset-2 focus-visible:ring-offset-void;
   }
+
+  /* The same ring on paper: the lecture register is a light exhibit deck. */
+  .focus-ring-ink {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-steel/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+  }
 }
 
 @layer utilities {

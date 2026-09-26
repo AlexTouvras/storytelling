@@ -27,35 +27,40 @@ export const LectureVisualIdSchema = z.enum(LECTURE_VISUAL_IDS);
 export type LectureVisualId = z.infer<typeof LectureVisualIdSchema>;
 
 /**
- * Channels the agentic-stack canvas reads. Named for what the reader sees, so a
+ * Channels the exhibit canvas reads. Named for what the reader sees, so a
  * reviewer can read the cue table as a running order rather than as parameters.
  */
 export const AgenticStackCueSchema = z.object({
   at: z.number().min(0).max(1),
   beat: z.number().int().min(0),
-  /** World units visible vertically. Grows as the stack grows. */
+  /** World units visible vertically. Grows as the exhibit grows. */
   spanY: z.number().positive(),
-  /** Camera centre, in world units down the stack. */
+  /** Camera centre, in world units down the exhibit. */
   cy: z.number(),
-  /** Language core: the model itself. */
-  core: z.number().min(0).max(1),
-  /** Document marks on the knowledge band. */
+  /** The model box, with its prompt in and answer out. */
+  model: z.number().min(0).max(1),
+  /** The document grid on the knowledge row. */
   corpus: z.number().min(0).max(1),
-  /** Citation lines from documents up into the answer. */
+  /** The retrieve-and-cite return path from the corpus into the answer. */
   ground: z.number().min(0).max(1),
-  /** The control loop ring: plan, act, observe, stop. */
+  /** The control cycle: plan, act, observe, stop. */
   loop: z.number().min(0).max(1),
-  /** The token running that loop. */
+  /** The token running that cycle. */
   runner: z.number().min(0).max(1),
-  /** Spokes from the loop down into systems. */
+  /** Tool bus and the systems hanging off it. */
   reach: z.number().min(0).max(1),
   /** A peer agent across an ownership boundary. */
   peers: z.number().min(0).max(1),
-  /** Approve bar across the loop, and the caps beside it. */
+  /** Approve bar across the cycle, and the caps called out beside it. */
   gate: z.number().min(0).max(1),
-  /** The build ladder drawn beside the stack. */
-  ladder: z.number().min(0).max(1),
-  /** Dim the rungs nobody has earned yet. */
+  /**
+   * Which row the exhibit is about, as a row index. Fractional values slide the
+   * highlight between rows rather than cutting, so nothing blinks.
+   */
+  focus: z.number().min(0).max(4),
+  /** Strength of that highlight. 0 shows the whole exhibit, unemphasised. */
+  focusOn: z.number().min(0).max(1),
+  /** Fade back what nobody has earned yet. */
   thin: z.number().min(0).max(1),
 });
 
@@ -65,7 +70,7 @@ export type AgenticStackCue = z.infer<typeof AgenticStackCueSchema>;
 export const AGENTIC_STACK_RENDERED = [
   "spanY",
   "cy",
-  "core",
+  "model",
   "corpus",
   "ground",
   "loop",
@@ -73,21 +78,35 @@ export const AGENTIC_STACK_RENDERED = [
   "reach",
   "peers",
   "gate",
-  "ladder",
+  "focus",
+  "focusOn",
   "thin",
 ] as const;
 
 export const LectureBeatSchema = z.object({
   beat: z.number().int().min(0),
-  /** Short label above the beat title. */
+  /** Section label above the action title, e.g. `Layer 3 · Agent`. */
   kicker: z.string().min(1),
+  /**
+   * An action title: the slide's conclusion, not its subject. "The loop is what
+   * makes it an agent", never "The agent loop".
+   */
   title: z.string().min(1),
   /** What a reader reads. Two short paragraphs is the working ceiling. */
   paragraphs: z.array(z.string().min(1)).min(1).max(3),
+  /** Caption under the exhibit number, describing what is plotted. */
+  exhibit: z.string().min(1),
+  /** The so-what line. One sentence, and it must be a conclusion. */
+  takeaway: z.string().min(1),
+  /** Marginal note beside the exhibit, tied to the row in focus. Keep it short. */
+  annotation: z.string().min(1).max(84).optional(),
+  /**
+   * A card path resolving to an array of strings, printed as a numbered list in
+   * the commentary. Lists belong in type, not in a canvas.
+   */
+  listRef: z.string().min(1).optional(),
   /** What a presenter says over the same beat. Not shown to readers. */
   notes: z.array(z.string().min(1)).min(1).max(4),
-  /** One term or number held large beside the copy. */
-  figure: z.string().min(1).optional(),
   /**
    * Paths into the frozen field card this beat teaches, e.g. `layers[2]`,
    * `decisions[7].use`, `killSwitch`. Checked against the card at validate time.
@@ -183,7 +202,10 @@ export function resolveCardRef(card: unknown, ref: string): unknown {
   return node;
 }
 
-/** Every `cardRefs` entry that does not resolve against the frozen card. */
+/**
+ * Every declared card path that does not resolve against the frozen card, plus
+ * any `listRef` that resolves to something a numbered list cannot print.
+ */
 export function danglingCardRefs(
   manifest: LectureManifest,
   card: unknown,
@@ -195,6 +217,22 @@ export function danglingCardRefs(
         dangling.push(`beat ${beat.beat}: ${ref}`);
       }
     }
+    if (beat.listRef !== undefined) {
+      const list = resolveCardRef(card, beat.listRef);
+      if (!Array.isArray(list) || !list.every((item) => typeof item === "string")) {
+        dangling.push(
+          `beat ${beat.beat}: ${beat.listRef} is not a list of strings on the card`,
+        );
+      }
+    }
   }
   return dangling;
+}
+
+/** A `listRef`'s rows, or an empty list when the beat declares none. */
+export function resolveCardList(card: unknown, ref: string | undefined): string[] {
+  if (!ref) return [];
+  const list = resolveCardRef(card, ref);
+  if (!Array.isArray(list)) return [];
+  return list.filter((item): item is string => typeof item === "string");
 }

@@ -13,7 +13,7 @@ mkdirSync(out, { recursive: true });
 const stops = [0.02, 0.09, 0.19, 0.26, 0.35, 0.46, 0.57, 0.69, 0.81, 0.93];
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width, height }, colorScheme: "dark" });
+const page = await browser.newPage({ viewport: { width, height }, colorScheme: "light" });
 await page.goto(`${base}/lab/lectures/agentic-ai`);
 await page.waitForSelector("[data-testid='lecture-board']");
 

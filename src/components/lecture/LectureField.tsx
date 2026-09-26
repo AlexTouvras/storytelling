@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef } from "react";
-import { drawStack } from "@/components/lecture/draw-stack";
+import { drawExhibit } from "@/components/lecture/draw-exhibit";
 import type { LectureFrame } from "@/components/lecture/lecture-frame";
 
 type Props = {
@@ -25,7 +25,7 @@ function fit(canvas: HTMLCanvasElement) {
 }
 
 /**
- * Canvas host for a lecture board. Same contract as `AppField`: the host owns
+ * Canvas host for a lecture exhibit. Same contract as `AppField`: the host owns
  * the clock and the device ratio, the draw function stays pure, and `life` is 0
  * under reduced motion so the craft layer collapses to a still picture.
  */
@@ -61,7 +61,7 @@ export const LectureField = memo(function LectureField({
       const reduced = reducedRef.current ?? false;
       const frame = frameAtProgress(progressRef.current ?? 0, reduced);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawStack(ctx, cssW, cssH, frame, {
+      drawExhibit(ctx, cssW, cssH, frame, {
         time: (now - started) / 1000,
         life: reduced ? 0 : 1,
       });

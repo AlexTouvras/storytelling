@@ -1,13 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LectureBeatCopy } from "@/components/lecture/LectureBeatCopy";
+import { LectureSlide } from "@/components/lecture/LectureSlide";
 import type { LectureBeat, LectureManifest } from "@/lectures/schemas/lecture";
+import type { FieldCard } from "@/lectures/schemas/fieldCard";
 
 type Props = {
   manifest: LectureManifest;
+  card: FieldCard;
   beat: LectureBeat;
   beatNumber: number;
+  /** Position in the running order, 1-based. */
+  index: number;
+  total: number;
   progress: number;
   playing: boolean;
   reduced: boolean;
@@ -15,7 +20,7 @@ type Props = {
   onSeek: (progress: number) => void;
   onBeat: (beat: number) => void;
   onExit: () => void;
-  /** The board. Passed in so the same canvas host serves both drivers. */
+  /** The exhibit. Passed in so the same canvas host serves both drivers. */
   children: React.ReactNode;
 };
 
@@ -25,17 +30,22 @@ function clock(seconds: number): string {
 }
 
 /**
- * The podium. Full-screen board, the beat's copy at projection size, and the
- * speaker notes where only the presenter can see them.
+ * The podium: the same slide at projection size, with a presenter's console
+ * around it.
  *
- * The notes are the half of a lecture a scrolling reader never needs: what to
- * point at, what to say, and what not to rush. They live in the manifest beside
- * the reader copy, so one file is the lecture.
+ * The console is dark and the slide is not, which is the whole trick — a glance
+ * tells the speaker which half of the screen the room can see. The notes are the
+ * half of a lecture a scrolling reader never needs: what to point at, what to
+ * say, and what not to rush. They live in the manifest beside the reader copy,
+ * so one file is the lecture.
  */
 export function LecturePresenter({
   manifest,
+  card,
   beat,
   beatNumber,
+  index,
+  total,
   progress,
   playing,
   reduced,
@@ -61,8 +71,8 @@ export function LecturePresenter({
 
   const step = useCallback(
     (delta: number) => {
-      const index = beatNumbers.indexOf(beatNumber);
-      const target = beatNumbers[Math.min(beatNumbers.length - 1, Math.max(0, index + delta))];
+      const i = beatNumbers.indexOf(beatNumber);
+      const target = beatNumbers[Math.min(beatNumbers.length - 1, Math.max(0, i + delta))];
       if (target !== undefined) onBeat(target);
     },
     [beatNumber, beatNumbers, onBeat],
@@ -131,53 +141,62 @@ export function LecturePresenter({
   }, [camera]);
 
   const elapsed = progress * manifest.presentSeconds;
+  const chip =
+    "focus-ring border border-white/25 px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-white/75 transition hover:border-white/50";
 
   return (
     <div
       data-testid="lecture-podium"
-      className="fixed inset-0 z-50 flex flex-col bg-void text-white"
+      className="fixed inset-0 z-50 flex flex-col bg-steel-deep text-white"
     >
-      <div className="relative flex-1 overflow-hidden" data-testid="film-stage" data-beat={beatNumber}>
-        {children}
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-void via-void/85 to-transparent px-6 pb-8 pt-24 md:px-12">
-          <div className="mx-auto flex w-full max-w-6xl items-end justify-between gap-8">
-            <LectureBeatCopy beat={beat} variant="present" />
-            {beat.figure ? (
-              <p className="hidden font-display text-6xl font-semibold tracking-[-0.04em] text-neon-cyan md:block">
-                {beat.figure}
-              </p>
-            ) : null}
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <div
+          data-testid="film-stage"
+          data-beat={beatNumber}
+          className="relative flex min-h-0 flex-1 items-center justify-center p-2.5 md:p-4"
+        >
+          {/* Letterboxed to the reader's own slide shape, so a rehearsal in the
+              browser is a rehearsal of what the room will see. */}
+          <div className="flex h-full w-full md:h-auto md:max-h-full md:aspect-[16/10]">
+            <LectureSlide
+              manifest={manifest}
+              card={card}
+              beat={beat}
+              index={index}
+              total={total}
+              progress={progress}
+              board={children}
+              variant="present"
+            />
           </div>
+          {camera ? (
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className="absolute bottom-6 right-6 h-28 w-44 border border-white/25 object-cover shadow-lg md:h-36 md:w-56"
+            />
+          ) : null}
         </div>
-
-        {camera ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="absolute right-6 top-6 h-32 w-48 rounded-lg border border-white/20 object-cover shadow-glow md:h-40 md:w-60"
-          />
-        ) : null}
 
         {notesOpen ? (
           <aside
             data-testid="speaker-notes"
-            className="absolute left-6 top-6 max-w-sm rounded-xl border border-white/12 bg-void/85 p-4 backdrop-blur md:left-12"
+            className="max-h-[40%] shrink-0 overflow-y-auto border-t border-white/12 px-4 py-3 md:max-h-none md:w-[19rem] md:border-l md:border-t-0 md:px-5 md:py-5 lg:w-[22rem]"
           >
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-neon-violet/80">
-              Speaker notes · beat {beatNumber}
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45">
+              Speaker notes · section {index} of {total}
             </p>
-            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-white/75">
+            <ul className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-white/80">
               {beat.notes.map((note) => (
-                <li key={note.slice(0, 24)} className="border-l border-white/15 pl-3">
+                <li key={note.slice(0, 24)} className="border-l border-white/20 pl-3">
                   {note}
                 </li>
               ))}
             </ul>
             {nextBeat ? (
-              <p className="mt-4 border-t border-white/10 pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">
+              <p className="mt-5 border-t border-white/12 pt-3 font-mono text-[9px] uppercase tracking-[0.14em] text-white/40">
                 Next · {nextBeat.kicker}
               </p>
             ) : null}
@@ -185,13 +204,13 @@ export function LecturePresenter({
         ) : null}
       </div>
 
-      <div className="border-t border-white/10 bg-void/95 px-5 py-3">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-4 gap-y-3">
+      <div className="border-t border-white/12 bg-black/25 px-4 py-2.5">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-4 gap-y-2.5">
           <button
             type="button"
             onClick={onTogglePlay}
             data-testid="podium-play"
-            className="focus-ring rounded-full border border-neon-cyan/40 bg-neon-cyan/10 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-neon-cyan"
+            className="focus-ring bg-white px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-steel-deep"
           >
             {playing ? "Pause" : "Play"}
           </button>
@@ -200,7 +219,7 @@ export function LecturePresenter({
               type="button"
               onClick={() => step(-1)}
               aria-label="Previous beat"
-              className="focus-ring rounded-full border border-white/15 px-3 py-2 font-mono text-[11px] text-white/70"
+              className={chip}
             >
               ←
             </button>
@@ -208,7 +227,7 @@ export function LecturePresenter({
               type="button"
               onClick={() => step(1)}
               aria-label="Next beat"
-              className="focus-ring rounded-full border border-white/15 px-3 py-2 font-mono text-[11px] text-white/70"
+              className={chip}
             >
               →
             </button>
@@ -216,9 +235,9 @@ export function LecturePresenter({
 
           <div className="flex min-w-[12rem] flex-1 items-center gap-3">
             <div className="relative h-5 flex-1">
-              <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-white/10">
+              <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 bg-white/15">
                 <div
-                  className="h-full rounded-full bg-neon-cyan"
+                  className="h-full bg-white"
                   style={{ width: `${progress * 100}%` }}
                 />
               </div>
@@ -226,7 +245,7 @@ export function LecturePresenter({
                 <span
                   key={n}
                   aria-hidden
-                  className="absolute top-0 h-5 w-px -translate-x-1/2 bg-white/25"
+                  className="absolute top-0 h-5 w-px -translate-x-1/2 bg-white/30"
                   style={{
                     left: `${(manifest.cues.find((c) => c.beat === n)?.at ?? 0) * 100}%`,
                   }}
@@ -242,38 +261,26 @@ export function LecturePresenter({
                 className="focus-ring absolute inset-0 h-full w-full cursor-pointer opacity-0"
               />
             </div>
-            <span className="font-mono text-[11px] tabular-nums text-white/50">
+            <span className="font-mono text-[10px] tabular-nums text-white/60">
               {clock(elapsed)} / {clock(manifest.presentSeconds)}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setNotesOpen((open) => !open)}
-              className="focus-ring rounded-full border border-white/15 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-white/70"
-            >
+            <button type="button" onClick={() => setNotesOpen((o) => !o)} className={chip}>
               Notes
             </button>
-            <button
-              type="button"
-              onClick={() => setCamera((on) => !on)}
-              className="focus-ring rounded-full border border-white/15 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-white/70"
-            >
+            <button type="button" onClick={() => setCamera((on) => !on)} className={chip}>
               {camera ? "Camera off" : "Camera"}
             </button>
-            <button
-              type="button"
-              onClick={onExit}
-              className="focus-ring rounded-full border border-white/15 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-white/70"
-            >
+            <button type="button" onClick={onExit} className={chip}>
               Exit
             </button>
           </div>
         </div>
-        <p className="mx-auto mt-2 w-full max-w-6xl font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">
-          Space play · ← → beats · N notes · Esc exit
-          {reduced ? " · reduced motion: stepping beats, no autoplay" : ""}
+        <p className="mx-auto mt-2 w-full max-w-6xl font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
+          Space play · ← → sections · N notes · Esc exit
+          {reduced ? " · reduced motion: stepping sections, no autoplay" : ""}
           {cameraError ? ` · ${cameraError}` : ""}
         </p>
       </div>
