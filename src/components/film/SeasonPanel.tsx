@@ -1,6 +1,6 @@
 "use client";
 
-import { arrival, clamp01 } from "@/components/film/craft";
+import { arrival, clamp01, smoothstep } from "@/components/film/craft";
 
 export type SeasonMonth = {
   month: string;
@@ -82,13 +82,15 @@ export function SeasonPanel({ strength, months }: Props) {
   const carryLow = Math.min(...carryValues);
   const carryHigh = Math.max(...carryValues);
 
-  // The traces draw on left to right instead of fading up as a sheet.
-  const revealed = PAD.l + PLOT_W * arrival(1, k, 0.55);
+  // The traces draw on left to right instead of fading up as a sheet, and reach
+  // the right edge before the panel is fully opaque so the last month is not
+  // still arriving while the reader is reading the caption.
+  const revealed = PAD.l + PLOT_W * smoothstep(k * 1.35);
 
   return (
     <figure
       data-testid="season-panel"
-      className="pointer-events-none absolute left-1/2 top-1/2 w-[min(94vw,40rem)] -translate-x-1/2 -translate-y-[58%] border border-white/10 bg-void/80 p-4 backdrop-blur-sm md:p-5"
+      className="pointer-events-none absolute left-1/2 top-[10%] w-[min(94vw,44rem)] -translate-x-1/2 border border-white/12 bg-void/92 p-4 shadow-[0_0_60px_rgba(0,0,0,0.8)] backdrop-blur-sm md:p-5"
       style={{ opacity: k }}
     >
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -236,8 +238,9 @@ export function SeasonPanel({ strength, months }: Props) {
         </text>
 
         <text
-          x={PAD.l + 4}
+          x={PAD.l + PLOT_W * 0.5}
           y={PAD.t - 10}
+          textAnchor="middle"
           fill="rgba(92,214,226,0.6)"
           fontSize="9"
           fontFamily="ui-monospace, monospace"

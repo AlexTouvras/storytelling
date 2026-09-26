@@ -43,11 +43,19 @@ describe("recovery film frame", () => {
   });
 
   it("narrows once and never widens back to the network", () => {
-    let prev = 0;
+    let focus = 0;
+    let span = Infinity;
+    let ceiling = Infinity;
     for (let i = 0; i <= STEPS; i++) {
-      const { lineFocus } = recoveryFrameAt(i / STEPS);
-      expect(lineFocus).toBeGreaterThanOrEqual(prev - 1e-9);
-      prev = lineFocus;
+      const frame = recoveryFrameAt(i / STEPS);
+      expect(frame.lineFocus).toBeGreaterThanOrEqual(focus - 1e-9);
+      // The camera is only ever allowed to close: a shot that re-widens would
+      // undo the one move the film makes.
+      expect(frame.spanX).toBeLessThanOrEqual(span + 1e-9);
+      expect(1 - frame.focusY).toBeLessThanOrEqual(ceiling + 1e-9);
+      focus = frame.lineFocus;
+      span = frame.spanX;
+      ceiling = 1 - frame.focusY;
     }
   });
 
@@ -73,11 +81,10 @@ describe("recovery film frame", () => {
     expect(recoveryFrameAt(0.81).budget).toBeGreaterThanOrEqual(0.25 - 1e-9);
   });
 
-  it("declares a hold for each beat that only moves a panel", () => {
-    expect(RECOVERY_HOLDS).toHaveLength(2);
-    const [season, decision] = RECOVERY_HOLDS;
-    expect(season.beat).toBe(6);
-    expect(decision.beat).toBe(10);
+  it("declares a hold for every beat the reader reads rather than watches", () => {
+    // Act VI is one panel, Act VIII is a picker, Act X is a decision card. All
+    // three leave the canvas still, so all three have to ask for camera creep.
+    expect(RECOVERY_HOLDS.map((hold) => hold.beat)).toEqual([6, 8, 10]);
     for (const hold of RECOVERY_HOLDS) {
       const mid = (hold.from + hold.to) / 2;
       expect(recoveryFrameAt(mid).hold).toBeGreaterThan(0);
@@ -85,7 +92,7 @@ describe("recovery film frame", () => {
   });
 
   it("does not report a hold while the canvas is moving", () => {
-    for (const progress of [0.1, 0.25, 0.34, 0.4, 0.6, 0.72, 0.83]) {
+    for (const progress of [0.1, 0.25, 0.34, 0.4, 0.5, 0.66, 0.79, 0.86]) {
       expect(recoveryFrameAt(progress).hold).toBe(0);
     }
   });

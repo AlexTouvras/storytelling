@@ -39,12 +39,18 @@ export function RecoveryFilm({ model }: Props) {
 
   const drawContext = useMemo<DelayDrawContext>(() => {
     const packLine = pack.lines[lineIndex] ?? pack.lines[0];
+    const band = (points: typeof packLine.survival) =>
+      points.map((point) => ({
+        median: point.median,
+        low: point.low,
+        high: point.high,
+      }));
     return {
       lineIndex,
-      survival: packLine.survival.map((point) => point.median),
+      survival: band(packLine.survival),
       survivalByService: [
-        pack.survival.by_category.Commuter.map((point) => point.median),
-        pack.survival.by_category["Long-distance"].map((point) => point.median),
+        band(pack.survival.by_category.Commuter),
+        band(pack.survival.by_category["Long-distance"]),
       ],
     };
   }, [lineIndex]);
