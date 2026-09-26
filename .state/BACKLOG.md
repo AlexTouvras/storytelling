@@ -50,8 +50,15 @@
 - [x] Fix the line definition — origin/destination grouping starves all but one line; averaging stop positions invented a 38-station "Helsinki–Oulu" merging the Tampere and Savonia routes into a path no train runs. Modal route signature, expresses absorbed as subsequences: 115 → 34 real routes
 - [x] Correct the padding figures — freight had entered the scheduled-run-time median (`YV→KOK` 13.0 min vs **5.4** passenger-only). Corrected: 380 legs, median 0.9 min, 41 negative. The correction produced a **better claim**: long-distance 2.1 min / 3% negative vs commuter 0.2 min / 19%, which closes the mechanism against the 90% vs 71% survival split
 - [x] Attack the percentile floor — stable under resampling (n=40 → 13,671, <0.1 min), 4% of legs flip sign between windows, and a percentile-free check settles it: negative-padding legs beat schedule on 0% of runs vs 70% for positive legs, 0 of 41 ever beating it most of the time
-- [ ] **Human sign-off on the Spec's wording** — Question / Claim / Takeaway / limitations, plus the line-picker captions
-- [ ] Pull the 60-day window and freeze `data/figures/where-should-the-recovery-time-sit.v1.json` (after sign-off; every figure recomputed on the pack)
+- [x] Claim and picker captions signed off (human, 2026-09-26) — "long-distance trains are given room to recover; commuter trains are given almost none", picker as recognition with the sameness stated as the finding
+- [x] Pull the 60-day window (`scripts/fetch-rail-days.py`, 2026-07-28 → 09-25) and freeze `data/figures/where-should-the-recovery-time-sit.v1.json` — 160 KB, 65,373 passenger runs, every block `kind`-tagged
+- [x] Recompute every Spec figure on the pack — carry-over 81% median (67–90% band), commuter 87% vs long-distance 72% with commuter higher on **60/60 days**, 403 legs, 52 negative, 0 of 52 ever beating schedule
+- [x] **Found the real mechanism while recomputing:** leg margin predicts survival at ρ −0.96 across lines, −0.85 across 68 legs, −0.78/−0.75 within each service type. 99% carry at negative margin → 48% at 4+ min. Service type is just how margin is distributed
+- [x] Counterfactual frozen at five strengths per line, journey time conserved exactly — focus line 77% → 50% at +1; commuter lines only 93% → 86% because there is nothing to move, which reframes their decision as whether to *buy* margin
+- [x] Revise the "lines never separate" finding — on 60 days 2 of 9 pairs do separate, and separation tracks margin gap. Recorded as a revision in the open
+- [ ] **Human decision: adopt the proposed claim upgrade?** (margin, not service type) — strictly stronger than the signed-off claim, so not taken unilaterally
+- [ ] Human approves Question / Takeaway / limitations wording
+- [ ] Rewrite Act VI and VIII briefs against the margin finding, then narration and visual states
 - [ ] Implement third decision story film (after the pack is frozen)
 - [x] Frame-cost budget for the craft layer, desktop + phone — measured in `e2e/frame-cost.spec.ts`. Unthrottled both films hold 60 Hz; at 4× CPU throttle the craft layer costs one frame interval (cut-off 60→30 Hz, rate 30→20 Hz). The added arithmetic is only ~0.4 ms/frame; the rest is that a held frame is now genuinely new and must be composited.
 - [ ] Reduce held-frame work on small screens (DPR cap / mark count / deliberate 30 Hz) — scoped by the numbers in `docs/ANIMATION_CRAFT.md`, measurement already in place to check it
