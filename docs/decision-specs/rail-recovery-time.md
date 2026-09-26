@@ -304,29 +304,52 @@ tighter, 37 made slacker, largest single shift 11.9 minutes, and not one minute 
 Most of the gain arrives by quarter strength (75% → 66%), which is worth knowing for the scrub: the beat
 should not need to be dragged to the end to show its point.
 
-Per line, at full strength:
+**It is a rule at five strengths, not an optimiser.** This matters enough to state before any figure:
+survival-proportional re-allocation is one allocation rule, sampled at strengths 0, ¼, ½, ¾ and 1. It
+does not search for the best schedule, so nothing here may be called *optimal* — the strongest honest
+phrase is **the best of the five variants the pack holds**. An earlier draft of this Spec did say
+"optimally redistributed", and the numbers below are what caught it.
 
-| Line | Service | carry at +1, now → redistributed | gain |
-|---|---|---|--:|
-| Helsinki–Rovaniemi north main | Long-distance | 75% → **56%** | 19 pts |
-| Helsinki–Oulu | Long-distance | 75% → **56%** | 19 pts |
-| Helsinki–Joensuu | Long-distance | 77% → 65% | 12 pts |
-| Ring Rail loop | Commuter | 94% → 84% | 10 pts |
-| Helsinki–Siuntio coastal | Commuter | 89% → 79% | 10 pts |
-| Helsinki–Riihimäki trunk | Commuter | 89% → 82% | 7 pts |
-| Helsinki–Tampere | Commuter | 82% → 78% | 4 pts |
+**And the scrub is not monotone — on six of the seven lines.** More redistribution is not reliably
+better. Only the focus line improves at every strength, which is exactly why the error was easy to miss:
+the line the film spends most of its time on is the one that behaves.
 
-**The decision frame, stated precisely.** Redistribution helps every line, and roughly twice as much on
-long-distance as on commuter. But the number that matters is not the gain, it is the floor:
+Per line, current against the best of the five variants:
 
-> Even optimally redistributed, every commuter line still carries a delay to the next stop **78–84%** of
-> the time — worse than long-distance lines manage **today**, at 75–77%.
+| Line | Service | carry at +1 now | best variant | at strength | gain | full strength |
+|---|---|--:|--:|--:|--:|--:|
+| Helsinki–Rovaniemi north main | Long-distance | 74.6% | **55.7%** | 1.00 | 18.8 pts | 55.7% |
+| Helsinki–Oulu | Long-distance | 75.0% | **56.5%** | 1.00 | 18.5 pts | 56.5% |
+| Helsinki–Joensuu | Long-distance | 77.2% | 65.3% | 1.00 | 11.9 pts | 65.3% |
+| Ring Rail loop | Commuter | 93.6% | 81.5% | 0.25 | 12.1 pts | 83.8% |
+| Helsinki–Siuntio coastal | Commuter | 89.3% | 78.3% | 0.25 | 11.0 pts | 78.5% |
+| Helsinki–Riihimäki trunk | Commuter | 89.3% | 79.5% | 0.25 | 9.8 pts | 82.0% |
+| Helsinki–Tampere | Commuter | 81.9% | 74.9% | 0.50 | 7.0 pts | 77.7% |
 
-So redistribution answers the long-distance question and cannot answer the commuter one. Commuter lines
-do not have enough margin for rearranging it to close the gap. That is a *second* decision, and the film
-should carry it as such: for commuter services the question becomes whether to **buy** margin, which
-costs journey time on every train every day, and which this counterfactual deliberately does not model.
-Saying so is more useful than implying one lever fixes both.
+Two things in that table replace what this Spec said before. Gains are **12–19 points on long-distance
+against 7–12 on commuter** — a real difference, but the ranges touch, so "roughly twice as much" is gone.
+And on every commuter line the best variant is a **quarter or half** strength: push harder and the line
+gets worse again, Ring Rail bottoming at 81.5% before climbing back to 83.8%. That is not a defect in the
+scrub. It is what almost no margin looks like when a rule tries to move it, and it is the same finding
+the rest of the film makes, arriving from the other direction.
+
+**The decision frame, stated precisely.** The number that matters is not the gain, it is the floor:
+
+> At its best variant, each commuter line still carries a delay to the next stop **75–81%** of the time.
+> Long-distance lines sit at **75–77%** *today*, before anything is moved. Three of the four commuter
+> lines cannot reach even the worst long-distance line's current figure; the fourth, Helsinki–Tampere,
+> just reaches the bottom of that band at 74.9%.
+
+So redistribution answers the long-distance question and does not answer the commuter one. That is a
+*second* decision, and the film should carry it as such: for commuter services the question becomes
+whether to **buy** margin, which costs journey time on every train every day, and which this
+counterfactual deliberately does not model. Saying so is more useful than implying one lever fixes both.
+
+**The single-exception rule applies.** Helsinki–Tampere reaching the long-distance band is one line out of
+four, at one of five strengths, on a rule that is not an optimiser — so it is named, not buried, and it is
+not allowed to become the headline. If the film wants to make anything of it, the honest version is that
+the commuter line with the most margin to start with (0.58 min, highest of the four) is the one that gets
+closest, which is the mechanism again rather than an exception to it.
 
 The replay holds each train's running behaviour fixed. Taking slack off a leg cannot make that leg
 generate fresh delay in this arithmetic, though it would in the world. The pack states that in
@@ -425,7 +448,8 @@ all ten weekdays: `KEM→OL` adds a mean +6.0 min (range +2.8 to +12.3), `KV→L
 | **Season** | Volume is seasonal and the mechanism is not: monthly late share swings 2.7–7.2% while carry-over stays inside 75–85% all year. Winter makes both more delays and stickier ones |
 | **Segment scenario** | Move the same minutes within commuter vs within long-distance — the two need different profiles, not one line |
 | **Budget counterfactual** | Re-allocate the same total minutes toward the legs where delay survives: the focus line goes 75% → 56% with journey time untouched, most of it by quarter strength |
-| **The limit of redistribution** | Optimally redistributed, commuter lines still carry 78–84% — worse than long-distance manages today. For them the honest question is whether to *buy* margin, which costs journey time and is not modelled here |
+| **The limit of redistribution** | At their best variant commuter lines still carry 75–81% — where long-distance already sits today (75–77%), before moving anything. For them the honest question is whether to *buy* margin, which costs journey time and is not modelled here |
+| **The rule is not an optimiser** | Five strengths of one allocation rule. On six of seven lines it is non-monotone, and every commuter line does best at a quarter or half strength and then gets worse — so "optimal" is never available, and a reader who drags the scrub to the end must not be shown that as the best case |
 | **Thin attribution** | Only 1% of rows carry a cause. We can say a delay survived a leg; we mostly cannot say why. The story must not imply we can |
 | **Percentile floor** | The "technical minimum" is a 5th percentile of observed runs, not an engineering figure. Resampling shows it stable from n=40 upward and 4% of legs flip sign between windows, so the limit is interpretive rather than statistical — a leg with no slack is not necessarily a leg that *should* have slack |
 | **Line identity** | Lines separate only when their margin differs. The picker is for recognition; any beat implying line A is worse than line B needs the day count on screen |
@@ -567,10 +591,19 @@ Do not rank lines. Where two genuinely do sit apart, put the day count on screen
 
 ### IX — Move the budget
 Scrub a re-allocation of the *same total* minutes toward the legs where delay survives, and replay the
-observed delays through it: the focus line goes 75% → 56% at the next stop with journey time untouched.
-Badge the whole beat `modelled`. Travel increases then stops; no rewind. Note for the scrub's easing:
-most of the gain lands by quarter strength, so the curve should visibly respond early rather than
+observed delays through it: the focus line goes 74.6% → 55.7% at the next stop with journey time
+untouched. Badge the whole beat `modelled`. Travel increases then stops; no rewind. Note for the scrub's
+easing: most of the gain lands by quarter strength, so the curve should visibly respond early rather than
 rewarding only the end of the drag.
+
+**The scrub must not imply that further is better.** On six of seven lines the rule is non-monotone, and
+every commuter line reaches its best at a quarter or half strength and then gets *worse* — Ring Rail
+bottoms at 81.5% and climbs back to 83.8%. The beat shows that rather than hiding it, because it is the
+mechanism arguing for itself: a line with no margin cannot absorb having its margin moved. Whatever
+marker the scrub carries for "best", it must read as *best of five*, never as an optimum.
+
+Only five strengths exist in the pack. Marks may move continuously between them, but any figure printed
+on screen snaps to the nearest frozen variant — the film must never display a number it did not freeze.
 
 ### X — What it costs, and the decision it does not settle
 Two turns, not one — and the act where the film finally states the planner's question out loud.
@@ -585,14 +618,19 @@ survives — long-distance already has the minutes and only needs to move them; 
 enough to move.*
 
 First, for long-distance the question is answered: move the minutes you already have and delay survival
-falls by roughly 19 points for free.
+falls by roughly 19 points on the focus line, for no journey time at all.
 
-Then the turn. Redistribute commuter margin optimally and those lines **still** carry a delay 78–84% of
-the time — worse than long-distance lines manage today. There is not enough margin on a commuter line for
-rearranging it to close the gap, so the reader is left with a second, harder decision: buy margin, which
-costs journey time on every train every day, or accept that a commuter delay mostly does not die. The
-film should not pretend one lever settles both, and it must not price the second one — that needs
-capacity, rolling-stock and crew assumptions this evidence cannot supply.
+Then the turn. Take each commuter line's **best** of the five variants and those lines still carry a delay
+**75–81%** of the time — which is where long-distance lines already sit today, at 75–77%, before anything
+is moved. Three of the four cannot reach even the worst long-distance line's current figure. There is not
+enough margin on a commuter line for rearranging it to close the gap, so the reader is left with a second,
+harder decision: buy margin, which costs journey time on every train every day, or accept that a commuter
+delay mostly does not die. The film should not pretend one lever settles both, and it must not price the
+second one — that needs capacity, rolling-stock and crew assumptions this evidence cannot supply.
+
+Name Helsinki–Tampere here rather than letting a reader find it and feel misled: it is the one commuter
+line that reaches the bottom of the long-distance band (74.9%), and it is also the commuter line with the
+most margin to begin with. That is the mechanism again, not an exception to it.
 
 Decision card: where the margin should sit, what that buys, what it leaves unsolved, and what we could
 not see (cause attribution at 1%, the percentile floor, one timetable period for margin, one country, no
@@ -633,7 +671,8 @@ built by `scripts/freeze-rail-recovery.py` from the 6.5 GB day cache pulled by
 | Line-vs-line separation | pairs separate only where margin differs | observed | A ranking of lines |
 | Ring Rail as limiting case | highest carry (93%), lowest margin (0.13 min) | observed | That every loop behaves this way |
 | Re-allocated budget | focus line 75% → 56% at +1, journey time conserved exactly | **modelled** | A plan, a proposal, or feasibility |
-| **Redistribution's floor** | every commuter line still carries 78–84% when optimally redistributed — worse than long-distance today | **modelled** | That commuter cannot be improved, only that moving margin will not do it |
+| **Redistribution's floor** | best variant leaves commuter lines at 75–81%, where long-distance sits today | **modelled** | That commuter cannot be improved, only that this rule will not do it |
+| **The rule is non-monotone** | 6 of 7 lines; every commuter line peaks at ¼ or ½ strength | **modelled** | That a better allocation rule does not exist — only that this one is not searched |
 | Cause attribution | ~1% of rows | observed | A breakdown of causes |
 
 **Sources**
