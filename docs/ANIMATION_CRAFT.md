@@ -187,6 +187,10 @@ clean A/B. CPU throttling at 4× stands in for a mid-range phone.
 | Rate film, closing hold, craft **on** | 16.7 ms | 50.0 ms | 50.1 ms |
 | Cut-off film, closing hold, craft **off** | 16.7 ms | 16.7 ms | 33.4 ms |
 | Cut-off film, closing hold, craft **on** | 16.7 ms | 33.3 ms | 33.5 ms |
+| Delay film, closing hold, craft **on** | 16.7 ms | 16.7 ms | 16.8 ms |
+| Delay film, open, craft **off** | 16.7 ms | 50.0 ms | 50.1 ms |
+| Delay film, open, craft **on** | 16.7 ms | 50.0 ms | 66.7 ms |
+| Delay film, open, craft **on**, Pixel 7 viewport | 16.7 ms | 33.3 ms | 50.0 ms |
 
 Unthrottled, both films hold a locked 60 Hz with the craft layer on, and no frame is dropped. On a
 throttled CPU the craft layer costs one frame interval: the cut-off film goes from 60 Hz to 30 Hz,
@@ -208,8 +212,48 @@ browser can skip compositing an unchanged canvas. Every held frame is now genuin
 held frame is composited — at a phone's device pixel ratio that is the bill. Keeping a hold alive
 cannot be free. What can be reduced is the work per frame on small screens (device pixel ratio cap,
 mark count on narrow frames) or the rate at which the craft layer updates, which a deliberate 30 Hz
-would make steadier than an erratic 45. None of that is done here; it is a scoped piece of work with
-a measurement to check it against.
+would make steadier than an erratic 45.
+
+### What the third film changed (2026-09-26, same day)
+
+The delay film broke three assumptions this section was written on, and the table above now has its
+numbers.
+
+**"The densest hold" is not the dense frame of every film.** The gate measured one frame per film,
+the mid of its closing hold, because both films then existing accumulate towards their end. The delay
+film opens on every line in the network and spends nine acts taking them away, so its closing hold is
+its *cheapest* frame. Its expensive frame — the open, 6,380 marks — went unmeasured, and a draw that
+paid full per-mark cost for marks far too faint to change a pixel passed the gate. Each film now
+declares its probe points and the delay film declares two. The second failed on its first run.
+
+**The small-screen work was reducible after all, and this is the shape of it.** Two changes took the
+open from 12 Hz to 30 Hz on a Pixel 7 viewport at 4× throttle, and from dropping frames unthrottled to
+none. Neither touched the craft layer:
+
+- *Batch the marks.* A mark covers about five pixels and was paying a `beginPath`/`arc`/`fill` for
+  them. Rounding alpha to one of twelve steps lets thousands share a path and one fill rasterise them;
+  the profiler had already said the cost was per-call overhead rather than arithmetic. It is not free
+  of consequence — overlapping sub-paths of one path fill as a union, so marks inside a step stop
+  compositing over each other, and a saturated band becomes a band that shows its density.
+- *Thin the backdrop with the stage, never the subject.* Six sevenths of this field exists so that
+  whichever line the reader picks has 44 runs on it. On a phone that backdrop was drawn into roughly a
+  sixth of the desktop area at twice the device pixels per mark, which bought a smear. It now thins by
+  stage area while the selected line never does, so every act from the fourth on is identical on every
+  screen and the open shows a sparser sample of the same year on a small one. That cost is real and is
+  stated in the code: a phone reader sees fewer trains in the opening shot.
+
+**A camera has to move everything it is pointed at.** Creep was folded into this film's stop-axis
+projection, which is the two panels that share that axis — and did nothing at all to the survival
+panel, which is on its own axis and never goes through the projection. A held beat therefore drifted
+the marks, the ticks and the margin bars while the curve, its band and its labels stayed nailed down.
+That is worse than not moving: a foreground over a photograph. It also made a push in a horizontal
+stretch, since a span multiplier only narrows x. Applied instead as a transform on the stage it
+reproduces the old horizontal motion exactly and adds the vertical half, and the closing hold went
+from 0.98× the dead-air floor to 2.0×. The mark-breath constant that had been added to chase that
+floor was then deleted, having turned out to be worth 0.05 percentage points of it.
+
+The lesson the gate taught twice in one day: it measured the frames someone had thought to point it
+at. Both misses were frames nobody had.
 
 ### The one-canvas assumption, found while measuring
 

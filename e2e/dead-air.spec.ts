@@ -7,7 +7,7 @@ import { RECOVERY_HOLDS } from "../src/components/film/recovery-frame";
  * The dead-air gate, measured on pixels rather than on intent.
  *
  * Every cue table contains spans where no drawn channel moves — a third of the
- * rate film, nearly half of the cut-off film, and two declared holds in the
+ * rate film, nearly half of the cut-off film, and three declared holds in the
  * delay film, closing beats included. Those are the spans a reader dwells in,
  * because that is when they are reading. This walks to the middle of each one,
  * stops, and measures the canvas frame by frame.
