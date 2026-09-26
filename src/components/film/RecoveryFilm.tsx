@@ -182,9 +182,13 @@ export function RecoveryFilm({ model }: Props) {
           </div>
 
           {frame.picker > 0.25 ? (
+            // Seven long line names wrap to four rows on a phone, which put the
+            // picker over the survival curve — the picker has to sit above the
+            // canvas, not on it. One row that scrolls sideways keeps the stage
+            // clear at every width, and keeps every line one gesture away.
             <div
               data-testid="line-picker"
-              className="absolute inset-x-0 top-20 z-10 flex flex-wrap justify-center gap-2 px-5"
+              className="no-scrollbar absolute inset-x-0 top-3 z-10 flex snap-x gap-2 overflow-x-auto px-5 md:flex-wrap md:justify-center md:overflow-visible"
               style={{ opacity: frame.picker }}
             >
               {model.lines.map((line, index) => (
@@ -193,7 +197,7 @@ export function RecoveryFilm({ model }: Props) {
                   type="button"
                   onClick={() => setLineIndex(index)}
                   aria-pressed={index === lineIndex}
-                  className={`focus-ring rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${
+                  className={`focus-ring shrink-0 snap-start rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${
                     index === lineIndex
                       ? "border-neon-cyan/70 bg-neon-cyan/10 text-white"
                       : "border-white/15 text-white/55 hover:border-white/35 hover:text-white/80"
