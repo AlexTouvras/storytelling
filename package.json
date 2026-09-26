@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "validate:stories": "tsx scripts/validate-stories.ts",
+    "validate:lectures": "tsx scripts/validate-lectures.ts",
     "sim:rate-buffer": "tsx scripts/run-rate-buffer-sim.ts",
     "sim:calibrate": "tsx scripts/calibrate-rate-buffer.ts",
     "freeze:evidence": "tsx scripts/freeze-evidence-pack.ts",
@@ -15,7 +16,7 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",
-    "test:engine": "npm run validate:stories && npm run test:unit && npm run build && npm run test:e2e",
+    "test:engine": "npm run validate:stories && npm run validate:lectures && npm run test:unit && npm run build && npm run test:e2e",
     "test": "npm run test:engine"
   },
   "dependencies": {

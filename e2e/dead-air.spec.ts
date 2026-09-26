@@ -1,6 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 import { RATE_HOLDS } from "../src/components/film/frame";
 import { CUTOFF_HOLDS } from "../src/components/film/cutoff-frame";
+import { loadLecture } from "../src/lectures/load";
+import { buildLectureTimeline } from "../src/components/lecture/lecture-frame";
+
+const lecture = loadLecture("agentic-ai");
+if (!lecture) throw new Error("agentic-ai lecture failed to load");
+const LECTURE_HOLDS = buildLectureTimeline(lecture.manifest).holds;
 
 /**
  * The dead-air gate, measured on pixels rather than on intent.
@@ -113,6 +119,14 @@ const FILMS = [
     path: "/stories/where-should-the-cutoff-sit/film",
     track: "cutoff-film",
     holds: CUTOFF_HOLDS,
+  },
+  // A lecture holds on purpose — a beat is a point someone is making — so the
+  // same rule binds it: the board keeps living while the talking happens.
+  {
+    name: "agentic-ai lecture",
+    path: "/lab/lectures/agentic-ai",
+    track: "lecture-track",
+    holds: LECTURE_HOLDS,
   },
 ];
 
