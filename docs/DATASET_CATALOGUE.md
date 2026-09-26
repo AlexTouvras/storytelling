@@ -356,22 +356,39 @@ frontier logic in a wholly different domain — with a mechanism the camera can 
 | Observed vs modeled | Observed delays and the measured decay; modeled counterfactual of re-allocated padding, labeled as such |
 | Uncertainty | Thin cause attribution (1% of rows), sample thinning beyond ~4 stops, commuter vs long-distance differences, one 10-weekday window |
 
-**Still to check before a Spec:** whether the decay differs enough between commuter and long-distance
-services to need separating; whether scheduled padding per leg can be derived from the timetable
-itself (so absorption is attributable to the schedule and not to traffic); and one longer window, since
-ten consecutive weekdays is a small sample for a seasonal claim.
+**The three open questions, now answered (2026-09-26).** All three were checked before the Spec was
+written, on 24 days spanning October 2025 → September 2026 including three consecutive January days.
+
+1. **Commuter and long-distance must be separated.** Carry-over to the next stop is 73–97% for
+   commuter and 57–77% for long-distance, and commuter is higher on **24 of 24 days** with no overlap
+   in the medians. Over six stops the gap widens from 87% vs 71% to 64% vs 35%. Pooling them would
+   average two different mechanisms.
+2. **Padding per leg is derivable.** Scheduled leg run time minus the 5th percentile of observed run
+   times gives a padding figure on 273 legs with 60+ observations: median 0.5 min, range −2.4 to
+   +13.3, and **43 legs are negative** — scheduled faster than the leg has realistically ever run.
+   `YV→KOK` holds 13.3 minutes of slack on a 45-minute leg while `JK→SAU` is scheduled at 5.3 against
+   a 7.7-minute floor. The floor is a percentile proxy, not an engineering fact, and the Spec says so.
+3. **The carry-over survives a year, including winter.** Next-stop carry-over is 65–90% across the 24
+   days (median 77%) and never below 65%. The September window's 74–84% was not luck. Two things
+   emerged: the *lateness baseline* swings much more than the mechanism (2.1%–5.9% of arrivals), and
+   carry-over is highest on the days with the most lateness — so padding sized on a median day is
+   undersized exactly when it matters. That is now the story's counterpoint.
+
+**Decision Spec (draft):** [`docs/decision-specs/rail-recovery-time.md`](./decision-specs/rail-recovery-time.md)
 
 ### Where this leaves the field
 
 | id | craft_sum | standing |
 |----|----------:|----------|
-| `rata-delay-propagation` | **28** | **Recommended for story 3** — only measured C in the catalogue |
+| `rata-delay-propagation` | **28** | **Picked for story 3** (human, 2026-09-26). Only measured C in the catalogue |
 | `usgs-flood-routing` | 25 | Shortlist. Strong mechanism, US-centric, 3-year request cap, unverified |
 | `digitraffic-tms-raw` | 23 | Still a good decision story (onset timing), not a craft test |
 | `bts-rotation-delay` | 23 | Park. Over-told domain |
 | `entsoe-europe-load` | 24 | Park. Curve rather than field |
 
-**Awaiting:** human pick. No Spec, corpus pull, or film work starts before it.
+**Picked (human, 2026-09-26):** `rata-delay-propagation`. Catalogue closed again; Decision Spec is
+[`docs/decision-specs/rail-recovery-time.md`](./decision-specs/rail-recovery-time.md), awaiting
+sign-off. No corpus freeze or film work starts before that.
 
 ---
 

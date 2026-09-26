@@ -42,7 +42,12 @@
 - [x] Round D: re-score parked datasets for craft stress → story 3 candidate `digitraffic-tms-raw` (craft_sum 25), fallback `entsoe-europe-load` (24). `docs/DATASET_CATALOGUE.md`
 - [x] Verify the Round D assumptions against the live Digitraffic API + 70 station-days of passages — format, metadata and CC BY 4.0 licence pass; **the upstream propagation lag fails** (3/7 weekdays, front speed 2.8–45 km/h; 2.3 km detector spacing cannot resolve a ~15 km/h front). C drops 5 → 3, craft_sum 23. Queue flag is `0` in every row; congestion must come from speed.
 - [x] Round E: seed for a propagation whose lag is *recorded per event* rather than inferred from a coarse field → `rata-delay-propagation` (Digitraffic Railway), **craft_sum 28**, verified on ten weekdays before recommending. Delay carry-over 73.6–83.6% every day; decay curve tight and monotone for four stops; 10/12 legs keep their sign on all ten days.
-- [ ] **Human pick for story 3** — recommended `rata-delay-propagation` as *Where should the recovery time sit?*; `usgs-flood-routing` (25) is the shortlist alternative; `digitraffic-tms-raw` (23) remains a good decision story but not a craft test
+- [x] **Human pick for story 3** → `rata-delay-propagation`, 2026-09-26
+- [x] Answer the three Round E open questions on 24 days across a year: commuter vs long-distance **must** be separated (73–97% vs 57–77%, 24/24 days); padding per leg **is** derivable (273 legs, median 0.5 min, 43 negative); carry-over survives winter (65–90%, never below 65%)
+- [x] Decision Spec draft — `docs/decision-specs/rail-recovery-time.md`
+- [ ] **Human sign-off on the Decision Spec** — and with it: which line(s) v1 covers, and the counterfactual method plus its on-screen labelling
+- [ ] Freeze evidence pack `data/figures/where-should-the-recovery-time-sit.v1.json` (after sign-off)
+- [ ] Implement third decision story film (after the pack is frozen)
 - [x] Frame-cost budget for the craft layer, desktop + phone — measured in `e2e/frame-cost.spec.ts`. Unthrottled both films hold 60 Hz; at 4× CPU throttle the craft layer costs one frame interval (cut-off 60→30 Hz, rate 30→20 Hz). The added arithmetic is only ~0.4 ms/frame; the rest is that a held frame is now genuinely new and must be composited.
 - [ ] Reduce held-frame work on small screens (DPR cap / mark count / deliberate 30 Hz) — scoped by the numbers in `docs/ANIMATION_CRAFT.md`, measurement already in place to check it
 - [x] Cue-table `rendered` bookkeeping beyond one canvas — the union of two surfaces' channels hides a frozen surface; holds are per-surface. Pinned by a test; both films are single-canvas so nothing to fix today.
