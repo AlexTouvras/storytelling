@@ -1,11 +1,15 @@
-# Decision Spec — Where should the recovery time sit?
+# Decision Spec — Why don't delays die?
+
+> *(The decision: where should the recovery time sit?)*
 
 > Third Interactive Decision Storytelling piece (Orbit flagship).
 > Catalogue pick: `rata-delay-propagation` (Round E, `craft_sum` 28 — the catalogue's only *measured* craft score).
-> **Status:** draft. Scope, counterfactual method, Claim, picker captions and the ten-act arc signed off;
-> Question / Takeaway / limitations wording still open. **Evidence pack frozen on a full year**
-> (2025-09-26 → 2026-09-25).
-> **Slug (proposed):** `where-should-the-recovery-time-sit`
+> **Status:** **Spec closed, 2026-09-26.** Scope, counterfactual method, Claim, picker captions, the
+> ten-act arc, and the Question / Takeaway / limitations wording are all signed off. **Evidence pack
+> frozen on a full year** (2025-09-26 → 2026-09-25). Next work is narration and visual states, then the
+> film.
+> **Slug:** `where-should-the-recovery-time-sit` — the *decision*, not the title. Kept deliberately: the
+> frozen pack ships under that filename, and a URL that names the decision outlives a headline.
 > **Corpus:** Fintraffic Digitraffic Railway, `/api/v1/trains/{date}` (CC BY 4.0, no authentication, ~720 days retained).
 
 Companion positioning: `docs/FLAGSHIP.md`. Patterns earned from `docs/reference-story-spec.md`
@@ -20,14 +24,15 @@ and the motion rules in `docs/ANIMATION_CRAFT.md`.
 |---------|---------|
 | **Decision-maker** | Timetable planning at the infrastructure authority, allocating a fixed budget of recovery margin across a line |
 | **Stake** | Padding buys punctuality and costs journey time and capacity — and it is paid on every train, every day of the timetable period |
-| **QUESTION** | Where should the recovery time sit? |
+| **QUESTION** (reader's, and the title) | Why don't delays die? |
+| **DECISION** (the planner's, which the film resolves) | Where should the recovery time sit? — where to place a fixed budget of recovery margin along a line |
 | **CLAIM** | A delay dies only where the timetable leaves room for it to die. **Margin decides survival** — and today margin is handed out by service type, so long-distance trains get room to recover and commuter trains get almost none |
 | **MECHANISM** | Train is late at a stop → the next leg's scheduled run time either exceeds what the leg actually takes or it does not → the delay is absorbed or handed on → the same test repeats at every stop to the end of the run |
 | **VISUAL OBJECT** | One field of arrival marks (a mark = one train at one stop), positioned by place in the run against minutes late. The film opens on the whole network, then settles onto **one line** the reader can change. The same marks carry the decay curve and the padding profile |
 | **EVIDENCE** | Observed scheduled and actual times at every stop; calculated carry-over, decay curve and per-leg padding; a clearly-labelled modelled counterfactual for re-allocated padding |
 | **COUNTERPOINT** | The carry-over is not a constant. It rises when the network is stressed, so padding sized on a quiet day is padding sized for the wrong day |
 | **UNCERTAINTY** | Cause attribution covers only ~1% of rows; sample thins beyond ~4 stops; the technical minimum run time is a percentile proxy, not an engineering fact. Individual **lines within one service type do not reliably differ** — the separation is between service types |
-| **TAKEAWAY** | Size the margin from where delay actually survives, not evenly along the line. On long-distance that is free — the minutes already exist and only need moving. On commuter it is not: there is too little margin for rearranging it to help much, so the real question there is whether to buy any |
+| **TAKEAWAY** | Margin decides whether a delay dies. Put it where delay actually survives — long-distance already has the minutes and only needs to move them; commuter does not have enough to move |
 
 > ### How the Claim got here
 >
@@ -45,10 +50,35 @@ and the motion rules in `docs/ANIMATION_CRAFT.md`.
 > controls margin directly and does not control service type, so the claim now names a lever rather than a
 > grievance.
 
+> ### Why the title is a question the film does not open by answering
+>
+> **Signed off 2026-09-26:** the film is titled *Why don't delays die?* while the decision it resolves
+> stays *where should the recovery time sit?* Those are deliberately different sentences. The reader
+> arrives with the first one — it is the thing anyone standing on a platform actually wonders — and
+> leaves with the second, which is the only one a planner can act on. Open on the reader's question,
+> close on the planner's decision.
+>
+> **This costs something and the cost is managed, not ignored.** A *why* title promises causation, and
+> this pack cannot attribute a single delay to a cause: the feed's cause codes cover ~1% of rows. So the
+> film answers the title **structurally** — a delay dies where the next leg is scheduled longer than it
+> takes, and does not where it is not — and that answer rests on an association across legs (ρ −0.79,
+> holding within each service type and every timetable period), never on an experiment.
+>
+> Two prohibitions follow, and they are not optional. No beat may answer the title with a cause of
+> delays (weather, works, rolling stock, crew) — the film explains what happens to a delay that already
+> exists, not what created it. And the title must never appear beside a cause breakdown, because putting
+> them together implies the 1% can carry the question. If the film cannot hold that line, the title goes
+> back to being the decision.
+
 **Epistemic rule.** Teaching beats may follow one illustrative train. Any figure that looks like a
 network fact carries `observed` | `calculated` | `illustrative` | `hypothetical`. We are reading a
 public operational feed, not speaking for Fintraffic or VR: no beat may imply either endorses this
 analysis, and no beat may present the counterfactual as a plan.
+
+**Attribution and non-affiliation** live on the context/close panel only (signed off 2026-09-26): the
+CC BY 4.0 credit to Fintraffic plus an explicit "not affiliated with, and not endorsed by, Fintraffic or
+any operator". Not repeated per beat — but the Act VII and Act IX caveats stay in their beats, because
+those qualify a number the reader is looking at while they read it.
 
 ---
 
@@ -450,8 +480,13 @@ through it, the film has lost the claim that the network and the line are the sa
 ## Act briefs
 
 ### Open
-Headline: **WHERE SHOULD THE RECOVERY TIME SIT?**
+Headline: **WHY DON'T DELAYS DIE?**
 Sub: A delay is not an event. It is a thing that travels, and the timetable decides how far.
+
+The headline is the reader's question, not the planner's. It is asked here and answered structurally in
+Act VII; the planner's decision — where the recovery time should sit — is not put to the reader until
+Act X. Do not answer the headline in the opening copy, and do not let it sit near anything that looks
+like a cause breakdown.
 Hero: a day's arrivals, dim and unlabelled. Wide on purpose: the reader should feel the volume before
 meeting a single train. The pack holds a year, so the opening can also state the scale honestly —
 5.3 million arrivals, 395,094 runs.
@@ -538,7 +573,16 @@ most of the gain lands by quarter strength, so the curve should visibly respond 
 rewarding only the end of the drag.
 
 ### X — What it costs, and the decision it does not settle
-Two turns, not one.
+Two turns, not one — and the act where the film finally states the planner's question out loud.
+
+The title asked why delays don't die and Act VII answered it: because the timetable left them nowhere
+to. This act turns that into the decision — **so where should the recovery time sit?** — and it must be
+put as a question the reader can now answer themselves, not as a conclusion handed down. The whole film
+has been building the one fact needed to answer it.
+
+Takeaway line, as signed off: *margin decides whether a delay dies. Put it where delay actually
+survives — long-distance already has the minutes and only needs to move them; commuter does not have
+enough to move.*
 
 First, for long-distance the question is answered: move the minutes you already have and delay survival
 falls by roughly 19 points for free.
@@ -552,7 +596,13 @@ capacity, rolling-stock and crew assumptions this evidence cannot supply.
 
 Decision card: where the margin should sit, what that buys, what it leaves unsolved, and what we could
 not see (cause attribution at 1%, the percentile floor, one timetable period for margin, one country, no
-capacity or crew model). Limitations panel required.
+capacity or crew model). Limitations panel required, and this is the **only** place the full list
+appears — badges carry the rest of the film, and the reader should not be asked to read caveats they
+cannot yet interpret. Context/attribution sits on the same panel: CC BY 4.0 credit to Fintraffic, and
+not affiliated with or endorsed by Fintraffic or any operator.
+
+The counterpoint belongs here too, in one line: carry-over is worst in the months with the most delays,
+so margin sized on a median day is sized for the wrong day.
 
 ---
 
@@ -601,6 +651,15 @@ of rows. The technical minimum run time is a percentile proxy. Samples thin beyo
 Finland only. No capacity, rolling-stock, crew or cost model. The counterfactual is arithmetic on
 observed delays, not an operational plan.
 
+**Placement, signed off 2026-09-26:** the full list appears **once**, on the required panel at the close
+(Act X), alongside the CC BY 4.0 attribution and the non-affiliation line. The rest of the film carries
+its honesty through per-beat `observed` / `calculated` / `modelled` badges plus two caveats that stay in
+their own beats because they qualify a figure the reader is looking at as they read it — the
+percentile-floor note in Act VII and the `modelled` badge on the whole of Act IX. No standing caveat in
+the chrome and no limitations beat of its own: a reader cannot interpret these caveats before the film
+has taught the measurement, so front-loading them would cost trust rather than earn it. The cause-code
+limitation carries extra weight here because the title asks *why* — see the sign-off note above.
+
 ---
 
 ## Beat × visual-grammar map (Layer 2)
@@ -628,7 +687,7 @@ false statement, not merely a dull one. If the film ever draws a second canvas, 
 
 ## Out of scope for v1
 
-- Cause-code analysis as a headline (1% coverage cannot carry it)
+- Cause-code analysis as a headline (1% coverage cannot carry it) — and, now that the title asks *why*, any beat that answers it with a cause of delays rather than the structure that keeps them alive
 - Any claim about a specific operator's performance
 - Capacity, crew, rolling-stock or cost modelling
 - Real-time or live-updating views — this is a frozen evidence pack
@@ -643,7 +702,9 @@ false statement, not merely a dull one. If the film ever draws a second canvas, 
 
 - [x] Claim approved — "long-distance trains are given room to recover; commuter trains are given almost none"
 - [x] **Claim upgraded to the margin statement** (signed off 2026-09-26) — a planner controls margin, not service type
-- [ ] Human approves Question / Takeaway / limitations wording
+- [x] **Question wording** (signed off 2026-09-26) — titled *Why don't delays die?*, with the planner's decision held back to Act X and the causal promise fenced by two prohibitions
+- [x] **Takeaway wording** (signed off 2026-09-26) — mechanism first: margin decides whether a delay dies
+- [x] **Limitations placement** (signed off 2026-09-26) — full list once on the closing panel with attribution and non-affiliation; badges plus two in-beat caveats elsewhere
 - [x] Line or lines chosen for v1 — network-wide opening, north main line as the focus lane, all seven lines selectable
 - [x] Counterfactual method agreed — re-allocate the same total minutes in proportion to measured survival, whole beat badged `modelled`
 - [x] Picker captions agreed — recognition control, no ranking; revised so it also teaches that alike lines have alike margin

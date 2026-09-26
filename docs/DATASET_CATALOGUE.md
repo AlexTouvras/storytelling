@@ -343,7 +343,8 @@ finding rather than a staging device.
 (range +2.8 to +12.3); `KV→LH` absorbs **−4.8 min** (range −5.7 to −4.2); `OL→YV` absorbs **−8.1 min**.
 The two that flip both sit within a rounding of zero, which is the honest result rather than a problem.
 
-**Proposed question:** *Where should the recovery time sit?* A timetable has a finite budget of padding
+**Proposed question:** *Where should the recovery time sit?* — kept as the *decision*; the film is titled
+*Why don't delays die?* (`docs/decision-specs/rail-recovery-time.md`). A timetable has a finite budget of padding
 minutes. Spend it on the wrong legs and a delay survives eight stops; spend it on the right ones and
 the same delay is gone in two. That is a budgeted allocation across a network — the cut-off story's
 frontier logic in a wholly different domain — with a mechanism the camera can follow along one run.

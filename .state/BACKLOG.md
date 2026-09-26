@@ -65,8 +65,9 @@
 - [x] **Claim upgrade adopted** (human, 2026-09-26) — *a delay dies only where the timetable leaves room for it to die; margin decides survival, and today margin is handed out by service type.* Names the lever a planner actually controls
 - [x] **Seasonality gets its own act** (human, 2026-09-26) — Act VI *A year of it*, deliberately the shortest beat: volume swings by season, the mechanism does not, and Jan–Feb is worst at both. Arc is now ten acts with no new `visualId`; the beat is one image with no interaction, and falls back to a line on the decision card if it cannot land in one screen
 - [x] Rewrite the act briefs against the margin finding — full ten-act arc, commuter floor as Act X's second decision, beat list confirmed
-- [ ] Human approves Question / Takeaway / limitations wording
-- [ ] Narration and visual states for `where-should-the-recovery-time-sit`
+- [x] **Question / Takeaway / limitations wording signed off** (human, 2026-09-26) — **Spec closed.** Film titled *Why don't delays die?* with the planner's decision (*where should the recovery time sit?*) split into its own frame row and held back to Act X; Takeaway leads with the mechanism; limitations appear once on the closing panel with attribution and non-affiliation, badges plus two in-beat caveats elsewhere
+- [x] Fence the *why* title against the 1% cause codes — the film answers it structurally, and the Spec forbids answering it with a cause of delays or placing the title beside a cause breakdown. Reverts to the decision if that cannot hold
+- [ ] Narration and visual states for `where-should-the-recovery-time-sit` (slug keeps the decision, not the title)
 - [ ] Implement third decision story film (after the pack is frozen)
 - [x] Frame-cost budget for the craft layer, desktop + phone — measured in `e2e/frame-cost.spec.ts`. Unthrottled both films hold 60 Hz; at 4× CPU throttle the craft layer costs one frame interval (cut-off 60→30 Hz, rate 30→20 Hz). The added arithmetic is only ~0.4 ms/frame; the rest is that a held frame is now genuinely new and must be composited.
 - [ ] Reduce held-frame work on small screens (DPR cap / mark count / deliberate 30 Hz) — scoped by the numbers in `docs/ANIMATION_CRAFT.md`, measurement already in place to check it
