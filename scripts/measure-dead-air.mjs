@@ -9,7 +9,7 @@
  *
  * Usage: node scripts/measure-dead-air.mjs [baseURL]
  */
-import { chromium } from "playwright";
+import { chromium, devices } from "playwright";
 import { RATE_HOLDS } from "../src/components/film/frame.ts";
 import { CUTOFF_HOLDS } from "../src/components/film/cutoff-frame.ts";
 import { RECOVERY_HOLDS } from "../src/components/film/recovery-frame.ts";
@@ -24,7 +24,13 @@ const FILMS = [
 ];
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, colorScheme: "dark" });
+const asPhone = process.argv.includes("--phone");
+const page = await browser.newPage(
+  asPhone
+    ? { ...devices["Pixel 7"], colorScheme: "dark" }
+    : { viewport: { width: 1280, height: 720 }, colorScheme: "dark" },
+);
+console.log(asPhone ? "Pixel 7 viewport" : "1280x720 viewport");
 
 for (const film of FILMS) {
   await page.goto(BASE + film.path);

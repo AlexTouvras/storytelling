@@ -56,6 +56,40 @@ export function RecoveryFilm({ model }: Props) {
   }, [lineIndex]);
   const contextRef = useRef(drawContext);
 
+  /**
+   * Top of the narration, in stage pixels, so the canvas can stop above it.
+   *
+   * The stage used to end at a fixed share of viewport height. The narration's
+   * height is roughly fixed in *pixels* — a kicker, a heading, three paragraphs —
+   * so the two collide below some viewport height, and at 1280×720 they did: the
+   * margin bars were drawn straight through "WHERE THE SLACK IS". Measuring it is
+   * the only way to know, since the height depends on which beat's copy is up and
+   * how it wrapped.
+   *
+   * Measured on resize rather than per frame, so no frame reads layout.
+   */
+  const copyRef = useRef<HTMLDivElement>(null);
+  const copyTopRef = useRef(Number.POSITIVE_INFINITY);
+
+  useEffect(() => {
+    const el = copyRef.current;
+    if (!el) return;
+    const stage = el.closest("[data-testid='film-stage']");
+    if (!stage) return;
+    const measure = () => {
+      copyTopRef.current =
+        el.getBoundingClientRect().top - stage.getBoundingClientRect().top;
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
   useEffect(() => {
     reducedRef.current = reduced;
   }, [reduced]);
@@ -90,6 +124,25 @@ export function RecoveryFilm({ model }: Props) {
   }, []);
 
   const frame = recoveryFrameAt(progress, reduced);
+
+  /**
+   * A strip that scrolls can hold the reader's own line out of sight — the focus
+   * line is the third of seven, which on a phone starts off the right edge, so the
+   * beat would open with no visible selection. Centred by hand rather than with
+   * `scrollIntoView`, which is also allowed to scroll the page vertically and would
+   * fight the scroll the whole film is driven by.
+   */
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const showPicker = frame.picker > 0.25;
+
+  useEffect(() => {
+    if (!showPicker) return;
+    const strip = pickerRef.current;
+    const pressed = strip?.querySelector<HTMLElement>("[aria-pressed='true']");
+    if (!strip || !pressed) return;
+    strip.scrollLeft = pressed.offsetLeft - (strip.clientWidth - pressed.offsetWidth) / 2;
+  }, [lineIndex, showPicker]);
+
   const beat = recoveryBeatAt(progress);
   const copy = recoveryCopyFor(beat, {
     budget: frame.budget,
@@ -151,6 +204,7 @@ export function RecoveryFilm({ model }: Props) {
             contextRef={contextRef}
             progressRef={progressRef}
             reducedRef={reducedRef}
+            copyTopRef={copyTopRef}
             frameAtProgress={recoveryFrameAt}
             className="absolute inset-0 h-full w-full"
           />
@@ -181,31 +235,38 @@ export function RecoveryFilm({ model }: Props) {
             <div className="mt-12 h-14 w-px bg-gradient-to-b from-white/80 to-transparent" />
           </div>
 
-          {frame.picker > 0.25 ? (
-            // Seven long line names wrap to four rows on a phone, which put the
-            // picker over the survival curve — the picker has to sit above the
-            // canvas, not on it. One row that scrolls sideways keeps the stage
-            // clear at every width, and keeps every line one gesture away.
+          {showPicker ? (
+            // Seven Finnish line names need about 1,290px, so they wrapped onto a
+            // second row on a 1280 laptop and onto four on a phone — landing on the
+            // survival curve either way. The picker has to sit above the canvas, not
+            // on it, so it is one row at every width that scrolls sideways when it
+            // has to. `mx-auto` on the inner track centres it when there is room and
+            // leaves it scrollable from the start when there is not, which
+            // `justify-center` on the scroller itself would not: that clips the
+            // first buttons out of reach.
             <div
+              ref={pickerRef}
               data-testid="line-picker"
-              className="no-scrollbar absolute inset-x-0 top-3 z-10 flex snap-x gap-2 overflow-x-auto px-5 md:flex-wrap md:justify-center md:overflow-visible"
+              className="no-scrollbar absolute inset-x-0 top-3 z-10 flex snap-x overflow-x-auto px-5"
               style={{ opacity: frame.picker }}
             >
-              {model.lines.map((line, index) => (
-                <button
-                  key={line.id}
-                  type="button"
-                  onClick={() => setLineIndex(index)}
-                  aria-pressed={index === lineIndex}
-                  className={`focus-ring shrink-0 snap-start rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${
-                    index === lineIndex
-                      ? "border-neon-cyan/70 bg-neon-cyan/10 text-white"
-                      : "border-white/15 text-white/55 hover:border-white/35 hover:text-white/80"
-                  }`}
-                >
-                  {line.label}
-                </button>
-              ))}
+              <div className="mx-auto flex shrink-0 gap-2">
+                {model.lines.map((line, index) => (
+                  <button
+                    key={line.id}
+                    type="button"
+                    onClick={() => setLineIndex(index)}
+                    aria-pressed={index === lineIndex}
+                    className={`focus-ring shrink-0 snap-start rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${
+                      index === lineIndex
+                        ? "border-neon-cyan/70 bg-neon-cyan/10 text-white"
+                        : "border-white/15 text-white/55 hover:border-white/35 hover:text-white/80"
+                    }`}
+                  >
+                    {line.label}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : null}
 
@@ -213,7 +274,10 @@ export function RecoveryFilm({ model }: Props) {
             className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-void via-void/90 to-transparent px-5 pb-10 pt-28 md:px-10"
             style={{ opacity: body }}
           >
-            <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div
+              ref={copyRef}
+              className="mx-auto flex w-full max-w-5xl flex-col gap-6 md:flex-row md:items-end md:justify-between"
+            >
               <div data-testid="beat-copy" className="max-w-xl">
                 <div className="flex items-center gap-3">
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/75">

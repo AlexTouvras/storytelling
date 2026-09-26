@@ -150,20 +150,51 @@ type Stage = {
  */
 const AXIS_GUTTER_PX = 40;
 
-function stageOf(width: number, height: number, frame: RecoveryFrame): Stage {
+/**
+ * Slack in the clip for the held camera's own movement, as a share of the frame.
+ *
+ * The creep pans and pushes the whole stage, so anything sitting against an edge
+ * travels past it — at the closing hold the axis captions were being clipped
+ * mid-word ("ll late, stops after…"). This did not happen while creep was folded
+ * into the stop-axis projection, because that moved data positions and left text
+ * pinned to the band. Four percent covers the pan share plus the push, and the page
+ * margin outside the frame is empty, so a few pixels of bleed there cost nothing.
+ */
+const CREEP_SLACK = 0.04;
+
+/** Clearance between the lowest thing drawn and the first line of narration. */
+const COPY_CLEARANCE_PX = 10;
+/** Shortest stage the three panels are drawn on before they stop shrinking. */
+const MIN_STAGE_PX = 210;
+
+function stageOf(
+  width: number,
+  height: number,
+  frame: RecoveryFrame,
+  copyTop: number,
+): Stage {
   const left = width * 0.07;
   const w = width * 0.86;
   // Below the line picker, above the narration: the canvas owns the band in
   // between and nothing is drawn where copy will land.
   const top = height * 0.13;
-  const survivalH = height * 0.15;
-  const marginH = height * 0.095;
-  const floor = height * 0.63;
+  // A share of viewport height was not enough on its own. The narration is a
+  // kicker, a heading and three paragraphs, so its height is close to fixed in
+  // pixels while this floor scales — and below about 800px of viewport the two
+  // meet. At 1280×720 the margin bars were drawn straight through the kicker.
+  // `copyTop` is measured from the live layout, because how tall the copy is
+  // depends on which beat is up and how it wrapped.
+  const floor = Math.max(
+    top + MIN_STAGE_PX,
+    Math.min(height * 0.63, copyTop - COPY_CLEARANCE_PX),
+  );
+  const survivalH = (floor - top) * 0.3;
+  const marginH = (floor - top) * 0.19;
   // The field gets out of the survival panel's way faster than the curve arrives,
   // so the two are never drawn over each other mid-transition.
   const delayTop = lerp(
     top,
-    top + survivalH + height * 0.03,
+    top + survivalH + (floor - top) * 0.06,
     smoothstep(clamp01(frame.curve * 2)),
   );
   const baseline = floor - marginH;
@@ -473,16 +504,23 @@ export function drawDelays(
   frame: RecoveryFrame,
   context: DelayDrawContext,
   motion: Motion = STILL,
+  copyTop = Number.POSITIVE_INFINITY,
 ): void {
   ctx.clearRect(0, 0, width, height);
 
-  const stage = stageOf(width, height, frame);
+  const stage = stageOf(width, height, frame, copyTop);
   const zoom = BASE_SPAN / Math.max(frame.spanX, 1e-3);
   const line = model.lines[context.lineIndex] ?? model.lines[0];
 
   ctx.save();
   ctx.beginPath();
-  ctx.rect(stage.frame.left - 2, 0, stage.frame.width + 2 + AXIS_GUTTER_PX, height);
+  const slack = stage.frame.width * CREEP_SLACK;
+  ctx.rect(
+    stage.frame.left - 2 - slack,
+    0,
+    stage.frame.width + 2 + AXIS_GUTTER_PX + 2 * slack,
+    height,
+  );
   ctx.clip();
   // Clip first, creep second: the frame is the stage's edge and the camera moves
   // inside it, so a push in does not spill over the narration.

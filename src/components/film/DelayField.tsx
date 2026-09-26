@@ -10,6 +10,8 @@ type Props = {
   contextRef: React.RefObject<DelayDrawContext>;
   progressRef: React.RefObject<number>;
   reducedRef: React.RefObject<boolean>;
+  /** Top of the narration in stage pixels, so the stage can stop above it. */
+  copyTopRef: React.RefObject<number>;
   frameAtProgress: (progress: number, reduced: boolean) => RecoveryFrame;
   className?: string;
 };
@@ -31,6 +33,7 @@ export const DelayField = memo(function DelayField({
   contextRef,
   progressRef,
   reducedRef,
+  copyTopRef,
   frameAtProgress,
   className,
 }: Props) {
@@ -61,10 +64,16 @@ export const DelayField = memo(function DelayField({
       const context = contextRef.current;
       if (!context) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawDelays(ctx, cssW, cssH, model, frameAtProgress(progressRef.current ?? 0, reduced), context, {
-        time: (now - started) / 1000,
-        life: reduced ? 0 : 1,
-      });
+      drawDelays(
+        ctx,
+        cssW,
+        cssH,
+        model,
+        frameAtProgress(progressRef.current ?? 0, reduced),
+        context,
+        { time: (now - started) / 1000, life: reduced ? 0 : 1 },
+        copyTopRef.current ?? Number.POSITIVE_INFINITY,
+      );
     };
 
     let raf = 0;
@@ -79,7 +88,7 @@ export const DelayField = memo(function DelayField({
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [model, contextRef, progressRef, reducedRef, frameAtProgress]);
+  }, [model, contextRef, progressRef, reducedRef, copyTopRef, frameAtProgress]);
 
   return <canvas ref={canvasRef} data-testid="delay-field" className={className} aria-hidden />;
 });
