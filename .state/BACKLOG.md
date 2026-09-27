@@ -19,6 +19,16 @@
 - [x] Landing is the product index: data-field hero, shared path, story list
 - [x] Landing flight craft written into story grammar (not a new template)
 
+## Storytelling Engine v3 (`docs/STORYTELLING_ENGINE_SPEC_V3.md`)
+
+- [x] Adopt spec v3 as the working plan
+- [x] **Gate 1** — a real `.riv` renders in the app beside a data canvas, trigger/bool inputs drive its state machine, unmount frees it (`/lab/rive`, `e2e/rive-gates.spec.ts`)
+- [x] **Gate 2** — data point → camera FOCUS → Rive household opens on the same anchor → shock trigger → closes into the same dot → PULLBACK → the book reprices; reverses, no stacked fires under scrubbing, reduced motion cuts and settles (`/lab/transition`)
+- [ ] **Human review at Gate 2 — hard stop.** Scrub `/lab/transition` on desktop and phone. Nothing below starts until this is signed off
+- [ ] Decide Rive state-machine inputs vs data binding (runtime deprecates inputs) before a second illustration
+- [ ] Phase 3: flagship story on the transition (Decision Spec first)
+- [ ] Phase 4–5: regression + polish; documentation last
+
 ## Next (Orbit live — first topic shipped)
 
 - [x] Integrate into Orbit: portfolio teaser after the title, then `/stories` as the flagship landing, then `/stories/[slug]`
