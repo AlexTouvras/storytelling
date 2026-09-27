@@ -423,8 +423,8 @@ flagship needs one mechanism the reader can hold, not ten acts.
   The Nordic grid runs on the kinetic energy of spinning turbines. Wind and solar do not spin with it.
   When a big unit trips, inertia sets how fast frequency falls, and reserves must arrest it before
   49.0 Hz. Fingrid buys Fast Frequency Reserve (0–60 MW) only in low-inertia hours. The decision-maker
-  is the reserve planner, and the reference incident is Olkiluoto 3 (1,300 MW after its protection
-  scheme). Inertia cannot be seen in a frequency chart, which is the case for I = 5: one hour-dot
+  is the reserve planner. The Nordic reference incident is the loss of Oskarshamn 3 at 1,450 MW;
+  Olkiluoto 3 counts as 1,300 MW because its protection scheme sheds 300 MW of load when it trips. Inertia cannot be seen in a frequency chart, which is the case for I = 5: one hour-dot
   opens into the spinning machine.
 - **`bullwhip-inventories`.** *Why did the 2021 shortage become the 2023 glut?* Order swings grow at
   every step up a supply chain, and the lag is measured across the three inventory tiers. Fully open,
@@ -459,9 +459,10 @@ flagship needs one mechanism the reader can hold, not ten acts.
   Fingrid's disturbance reports name them. The link between each event's depth and that hour's
   kinetic energy needs dataset 260, and so needs the key.
 
-**Recommendation:** `fingrid-grid-inertia`, pending the human pick. Runner-up `bullwhip-inventories`
-is the only fully keyless one. Nothing is frozen and no Decision Spec is written until a topic is
-picked.
+**Picked (human, 2026-09-27):** `fingrid-grid-inertia`. Decision Spec draft:
+[`docs/decision-specs/grid-inertia-fast-reserve.md`](./decision-specs/grid-inertia-fast-reserve.md),
+awaiting sign-off. The year scan (2025-08 → 2026-07) found 33 trip-like events, 26 of them April to
+September, the deepest at 49.65 Hz; it is in the Spec.
 
 ---
 

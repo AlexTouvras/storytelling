@@ -27,8 +27,11 @@
 - [x] **Human review at Gate 2** — approved 2026-09-27 on PR #8
 - [ ] Decide Rive state-machine inputs vs data binding (runtime deprecates inputs) before a second illustration
 - [x] Round F topic search (human declined the spec's three suggestions): six new-domain candidates scored with a new **I** (illustration necessity) dimension; `fingrid-grid-inertia` verified on June 2026 10 Hz data. `docs/DATASET_CATALOGUE.md`
-- [ ] Phase 3: human picks the flagship topic from Round F (recommended `fingrid-grid-inertia`; it needs a free Fingrid API key as a secret for inertia and FFR)
-- [ ] Phase 3: Decision Spec for the picked topic, signed off before any manifest or visual
+- [x] Phase 3: human picked `fingrid-grid-inertia` (2026-09-27)
+- [x] Decision Spec draft — `docs/decision-specs/grid-inertia-fast-reserve.md` (six beats; published TSO figures; year scan of 10 Hz events; one-bus model fitted to the published design points, shape only)
+- [ ] **Human sign-off on the Decision Spec**: Question / Claim / Takeaway / limitations, the six beats, the wheels metaphor
+- [ ] Add `FINGRID_API_KEY` as a secret (free), then pull kinetic energy (260) and FFR (276/278), and pair each event with its hour's inertia
+- [ ] Validate the model on observed events once kinetic energy is in; freeze the evidence pack
 - [ ] Phase 3: build the flagship story on the director (only the infrastructure the story demands)
 - [ ] Phase 4–5: regression + polish; documentation last
 

@@ -33,6 +33,8 @@
 | Household illustration | `src/illustrations/household.ts` → `household.riv` | Built from the featured loan's modelled buffer, thin line and payment before/after. `npm run build:illustrations` writes it, `check:illustrations` fails if the committed file is stale |
 | Director core | `src/lib/director/` | `camera.ts` (shots, one transform), `entity-map.ts` (identity, no geometry), `anchors.ts` (local box → viewport px), `household-transition.ts` (Gate 2 cue table + layout) |
 | Director layers | `src/components/director/` | `RiveLayer` (inputs, anchor lookup, backing-store sizing), `DataLayer` (`drawField` with an anchor probe), `AnnotationLayer` (SVG labels in artboard units, Framer motion values), `TransitionScene` (the single RAF tick) |
+| Decision Spec (flagship) | `docs/decision-specs/grid-inertia-fast-reserve.md` | Grid inertia and fast reserve; **draft**, awaiting sign-off |
+| Grid event scan | `scripts/scan-grid-events.py` | Fingrid 10 Hz frequency (dataset 339, keyless) → sustained falls per month. Median-filters first (raw spikes fake near-misses) and flags on-the-hour schedule steps. Analysis-only Python deps: `numpy`, `py7zr` |
 | Engine labs | `/lab/rive` (Gate 1) · `/lab/transition` (Gate 2) | `noindex`, not linked from the landing |
 | Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Tight horizontal lanes, one irregular vertical thread, a zoom into a soft hole on the warp center, then a z-divide vortex whose streaks shorten into the horizon stars and galaxies. On portrait, `warpUnit` (~2× short axis) plus elliptical Y stretch fills the tall frame without emptying the sides; dust draws as additive core+halo pinpricks. Not a story template. |
 
