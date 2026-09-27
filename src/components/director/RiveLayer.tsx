@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useImperativeHandle, useMemo, useRef, type CSSProperties, type Ref } from "react";
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, type CSSProperties, type Ref } from "react";
 import {
   Alignment,
   EventType,
@@ -9,6 +9,7 @@ import {
   StateMachineInputType,
   useRive,
   type Event as RiveEvent,
+  type Rive,
 } from "@rive-app/react-canvas";
 import { artboardToLocal, localToViewport, type Anchor, type LocalBox } from "@/lib/director/anchors";
 import { configureRiveRuntime } from "@/components/director/rive-assets";
@@ -43,6 +44,16 @@ type Props = {
   onReady?: () => void;
   onStates?: (states: string[]) => void;
 };
+
+function sizeBackingStore(rive: Rive, canvas: HTMLCanvasElement, ratio: number) {
+  const width = Math.round(canvas.offsetWidth * ratio);
+  const height = Math.round(canvas.offsetHeight * ratio);
+  if (width < 1 || height < 1 || (canvas.width === width && canvas.height === height)) return;
+  canvas.width = width;
+  canvas.height = height;
+  rive.resizeToCanvas();
+  rive.drawFrame();
+}
 
 /**
  * A Rive illustration as a layer: the React runtime owns loading, drawing and
@@ -88,6 +99,18 @@ export function RiveLayer({
     pixelRatio ? { customDevicePixelRatio: pixelRatio } : undefined,
   );
 
+  // The canvas runtime sizes its backing store from getBoundingClientRect, which
+  // includes the camera's scale and the layer's own open scale. Size it from the
+  // untransformed layout box instead, or it keeps whatever scale it loaded at.
+  const ratio = pixelRatio ?? 0;
+  const fitBackingStore = useCallback(() => {
+    if (rive && canvas) sizeBackingStore(rive, canvas, ratio || Math.min(window.devicePixelRatio || 1, 2));
+  }, [rive, canvas, ratio]);
+
+  useEffect(() => {
+    fitBackingStore();
+  }, [fitBackingStore]);
+
   useEffect(() => {
     if (!rive) return;
     const onStop = () => {
@@ -124,7 +147,10 @@ export function RiveLayer({
           statesRef.current = [];
           return true;
         },
-        play: () => rive?.play(),
+        play() {
+          fitBackingStore();
+          rive?.play();
+        },
         pause: () => rive?.pause(),
         getAnchor(box) {
           if (!canvas) return null;
@@ -136,7 +162,7 @@ export function RiveLayer({
         states: () => statesRef.current,
       };
     },
-    [rive, canvas, stateMachine, artboard],
+    [rive, canvas, stateMachine, artboard, fitBackingStore],
   );
 
   return (
