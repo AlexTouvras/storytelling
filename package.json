@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "validate:stories": "tsx scripts/validate-stories.ts",
+    "build:illustrations": "tsx scripts/build-illustrations.ts",
+    "check:illustrations": "tsx scripts/build-illustrations.ts --check",
     "sim:rate-buffer": "tsx scripts/run-rate-buffer-sim.ts",
     "sim:calibrate": "tsx scripts/calibrate-rate-buffer.ts",
     "freeze:evidence": "tsx scripts/freeze-evidence-pack.ts",
@@ -15,10 +17,12 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",
-    "test:engine": "npm run validate:stories && npm run test:unit && npm run build && npm run test:e2e",
+    "test:engine": "npm run validate:stories && npm run check:illustrations && npm run test:unit && npm run build && npm run test:e2e",
     "test": "npm run test:engine"
   },
   "dependencies": {
+    "@rive-app/canvas": "2.43.1",
+    "@rive-app/react-canvas": "4.35.0",
     "clsx": "^2.1.1",
     "framer-motion": "^13.4.1",
     "next": "16.3.6",
