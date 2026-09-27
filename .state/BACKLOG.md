@@ -26,7 +26,10 @@
 - [x] **Gate 2** — data point → camera FOCUS → Rive household opens on the same anchor → shock trigger → closes into the same dot → PULLBACK → the book reprices; reverses, no stacked fires under scrubbing, reduced motion cuts and settles (`/lab/transition`)
 - [x] **Human review at Gate 2** — approved 2026-09-27 on PR #8
 - [ ] Decide Rive state-machine inputs vs data binding (runtime deprecates inputs) before a second illustration
-- [ ] Phase 3: flagship story on the transition (Decision Spec first)
+- [x] Round F topic search (human declined the spec's three suggestions): six new-domain candidates scored with a new **I** (illustration necessity) dimension; `fingrid-grid-inertia` verified on June 2026 10 Hz data. `docs/DATASET_CATALOGUE.md`
+- [ ] Phase 3: human picks the flagship topic from Round F (recommended `fingrid-grid-inertia`; it needs a free Fingrid API key as a secret for inertia and FFR)
+- [ ] Phase 3: Decision Spec for the picked topic, signed off before any manifest or visual
+- [ ] Phase 3: build the flagship story on the director (only the infrastructure the story demands)
 - [ ] Phase 4–5: regression + polish; documentation last
 
 ## Next (Orbit live — first topic shipped)
