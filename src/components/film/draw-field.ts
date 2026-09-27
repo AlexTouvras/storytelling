@@ -72,6 +72,21 @@ function radius(balance: number, frame: FilmFrame): number {
 }
 
 /**
+ * Lets a caller ask where marks were drawn. The field owns its geometry; a
+ * probe is how another layer finds a loan without recomputing the projection.
+ */
+export type FieldProbe = {
+  /** Loan ids whose drawn position should be recorded. */
+  track: ReadonlySet<number>;
+  /** Filled during the draw: centre, mark radius and ring radius, canvas CSS pixels. */
+  anchors: Map<number, { x: number; y: number; r: number; ring: number }>;
+  /** Ring the featured loan whatever the frame's focus. */
+  highlightFeatured?: boolean;
+  /** Multiplier on label size, for a canvas an outer camera will scale. */
+  labelScale?: number;
+};
+
+/**
  * Draw the book. Horizontal position is residual income.
  * Vertical position is unpaid balance. Scroll owns the camera.
  *
@@ -85,6 +100,7 @@ export function drawField(
   model: FieldModel,
   frame: FilmFrame,
   motion: Motion = STILL,
+  probe?: FieldProbe,
 ): void {
   ctx.clearRect(0, 0, width, height);
 
@@ -117,7 +133,7 @@ export function drawField(
     ctx.restore();
 
     ctx.fillStyle = `rgba(255,255,255,${0.55 * frame.line * smoothstep((drawn - 0.85) / 0.15)})`;
-    ctx.font = "12px ui-monospace, monospace";
+    ctx.font = `${12 * (probe?.labelScale ?? 1)}px ui-monospace, monospace`;
     ctx.textAlign = lineX > width * 0.72 ? "right" : "left";
     ctx.textBaseline = "middle";
     const labelX = lineX > width * 0.72 ? lineX - 10 : lineX + 10;
@@ -126,6 +142,7 @@ export function drawField(
 
   const featuredId = model.featured.id;
   const layers: Array<{
+    id: number;
     x: number;
     y: number;
     r: number;
@@ -155,6 +172,7 @@ export function drawField(
     const alpha = (point.floating ? 0.92 : 0.62) * population * dim * life.glow;
     if (alpha < 0.02) continue;
     layers.push({
+      id: point.id,
       x: projectX(share, view, width) + life.dx,
       y:
         projectY(point.balance, point.id, view, model.featured.balance, height) +
@@ -173,8 +191,14 @@ export function drawField(
       Number(a.floating) - Number(b.floating),
   );
 
+  probe?.anchors.clear();
   for (const dot of layers) {
-    if (dot.featured && (frame.focusY > 0.35 || frame.sleeve > 0.7)) {
+    const ringed =
+      dot.featured && (frame.focusY > 0.35 || frame.sleeve > 0.7 || !!probe?.highlightFeatured);
+    if (probe?.track.has(dot.id)) {
+      probe.anchors.set(dot.id, { x: dot.x, y: dot.y, r: dot.r, ring: ringed ? dot.r + 5 : dot.r });
+    }
+    if (ringed) {
       ctx.beginPath();
       ctx.fillStyle = "rgba(255,255,255,0.08)";
       ctx.arc(dot.x, dot.y, dot.r * 2.4, 0, Math.PI * 2);
