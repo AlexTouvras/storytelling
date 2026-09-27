@@ -2,7 +2,8 @@
 
 > Flagship story for engine spec v3 (`docs/STORYTELLING_ENGINE_SPEC_V3.md` §16).
 > Catalogue pick: `fingrid-grid-inertia`, Round F (flagship_sum 32 of 35). **Picked by the human 2026-09-27.**
-> **Status:** draft, awaiting sign-off. No freeze, manifest or visual work starts before that.
+> **Status:** approved as drafted, 2026-09-27. The human replied "Continue" to this draft; it is read as sign-off on Question, Claim, Takeaway and limitations. Object here and it goes back to draft.
+> **Built so far:** frequency model (`src/lib/sim/grid-frequency.ts`), keyless evidence pack v0 (`data/figures/how-much-fast-reserve.v0.json`), illustration `src/illustrations/grid.riv` (lab at `/lab/grid`). No manifest or route yet.
 > **Film title (proposed):** *When the spinning stops*
 > **Slug (proposed):** `how-much-fast-reserve`. The slug keeps the decision, as story 3 did.
 
@@ -19,7 +20,7 @@ Companion: `docs/FLAGSHIP.md`, `docs/DATASET_CATALOGUE.md` (Round F).
 | **QUESTION** | How much fast reserve should the grid hold when there is less spinning mass to hold it up? |
 | **CLAIM (draft)** | The grid does not need to be kept spinning; it needs to be caught faster. In a low-inertia hour, a few hundred MW that react within a second do what tens of GWs of extra spinning mass would |
 | **MECHANISM** | A plant trips → the rest of the grid's spinning mass (inertia, as kinetic energy in GWs) gives up energy and slows → frequency falls at a rate set by loss ÷ inertia → fast reserve switches on at 49.7/49.6/49.5 Hz within 1.3/1.0/0.7 s → disturbance reserve (FCR-D) ramps over seconds → the fall stops (the nadir) → slower reserves restore 50 Hz over minutes |
-| **VISUAL OBJECT** | A field of hours, one dot per hour of the year placed by the grid's kinetic energy. One hour opens into the grid as a machine: spinning wheels on one shaft, a plant that drops out, and fast hands that catch the shaft |
+| **VISUAL OBJECT** | A field of hours, one dot per hour of the year placed by the grid's kinetic energy. One hour opens into the grid as a machine: spinning wheels on one shaft, a plant that drops out, a dial against the floor, and fast reserve that fires on its own to catch the fall |
 | **EVIDENCE** | Observed 10 Hz frequency (Fingrid 339); observed hourly kinetic energy (Fingrid 260) and FFR procured (Fingrid 276); published grid-operator figures (Nordic TSOs 2025, FFR design 2024, Ørum et al. 2017). Model output is labelled modelled |
 | **COUNTERPOINT** | Keep inertia instead: synchronous condensers or holding thermal units online. Buying 0.1 Hz of nadir at 80 GWs takes about 20 GWs of extra kinetic energy (Ørum et al. 2017). The other lever is to cap the largest unit, which the operators use only in exceptional hours |
 | **UNCERTAINTY** | Kinetic energy is itself an operator estimate; the model is one-bus and ignores regional oscillation; trips are unattributed in the open data; Finland's FFR is one share of a Nordic need |
@@ -58,7 +59,7 @@ Companion: `docs/FLAGSHIP.md`, `docs/DATASET_CATALOGUE.md` (Round F).
 ### Measured by us (observed)
 
 - **Frequency events.** Fingrid dataset 339 at 10 Hz, keyless. A year of events is scanned below; the method median-filters over 9 samples, because the raw data has 1–2-sample spikes that would otherwise read as near-misses at 49.01 Hz.
-- **The event the film opens on (proposed):** 2026-06-01 17:44:06. Frequency falls 49.97 → 49.65 Hz in about 6 s (steepest about 0.2 Hz/s), rebounds to 49.79 Hz within 20 s and holds, then recovers over minutes.
+- **The event the film opens on (proposed):** 2026-06-01 17:44. The fall begins at 17:44:06.9 and reaches 49.651 Hz at 17:44:12 (filtered), from 49.96 Hz; steepest about 0.2 Hz/s. It rebounds to 49.79 Hz within 20 s and holds, then recovers over minutes. The pack's event time, 17:44:02.2, is the start of the 5 s window the fall was detected in.
 - **Hour-shift deviations are a different mechanism.** Some dips land exactly on the hour, when market schedules step. The film must not present them as trips; they are separated by timestamp and excluded from the event field.
 
 **Year scan, 2025-08 → 2026-07** (`scripts/scan-grid-events.py`; 311M samples, gap share at most 0.16% in any month):
@@ -89,12 +90,12 @@ The key is free. It goes in as a secret named `FINGRID_API_KEY`.
 | Item | Decision |
 |------|----------|
 | Form | One-bus swing equation: df/dt = f₀ · (−loss + FCR-D + FFR + load relief) / (2 · kinetic energy) |
-| FCR-D | Linear between 49.9 and 49.5 Hz up to 1,450 MW, first-order lag |
+| FCR-D | Linear between 49.9 and 49.5 Hz up to 1,450 MW, 0.75 s dead time, 3.5 s first-order lag; load relief 0.5 %/Hz of 40 GW |
 | FFR | Step to its volume at its activation frequency, over its activation time |
 | Calibration targets | (a) 150 GWs, no FFR, 1,450 MW → nadir 49.0 Hz; (b) 100 GWs with about 300 MW FFR → nadir 49.0 Hz; (c) about 20 GWs of extra mass per 0.1 Hz at 80 GWs |
-| First fit (2026-09-27) | Hits (a) exactly and gets (b) and (c) in shape but not size: 49.09 Hz instead of 49.0, and 12 GWs instead of 20. **Good enough to draw the shape, not to quote.** Headline numbers come from the published figures, never from the model |
+| Fit (2026-09-27, `grid-frequency.test.ts`) | (a) 49.00 Hz and (b) 49.05 Hz, both within 0.05 Hz. Misses (c): about 11 GWs instead of 20; that study used the pre-2024 FCR-D requirements. **Good enough to draw the shape, not to quote.** Headline numbers come from the published figures, never from the model |
 | Validation to do | With dataset 260, back out each observed event's loss from its initial fall and check that the model reproduces its nadir time and depth |
-| Output | Three curves for the reference trip — 190 GWs (a typical hour), 150 GWs, 100 GWs — each with and without FFR, labelled modelled |
+| Output | Curves for the reference trip at 194 GWs (a typical hour: the 2022–2024 mean), 150 GWs and 100 GWs, each with and without FFR, labelled modelled. Modelled nadirs: 194 GWs 49.13 Hz; 100 GWs 48.73 Hz without FFR, 49.05 Hz with 300 MW |
 
 ---
 
@@ -130,14 +131,16 @@ Following the v3 pipeline: for each insight, what must the reader understand, an
 
 ## Illustration brief (Rive)
 
-One artboard, **Grid**:
-- A shaft with wheels (spinning generators). The number of wheels is driven by the hour's kinetic energy.
-- One larger wheel that drops out on a `trip` trigger.
-- Hands (fast reserve) that grab the shaft on a `catch` trigger.
+Built as `src/illustrations/grid.ts` → `grid.riv`, one artboard, **Grid**:
+- A row of wheels on one shaft (spinning generators): 8 in a typical hour (194 GWs), 4 in a light hour (100 GWs). The count is the ratio of the two hours' kinetic energy; a light hour fades every other wheel.
+- One larger violet wheel, the plant, that drops out on the `trip` trigger.
+- A dial above the shaft with the 49.0 Hz floor and the 48.8 Hz shedding mark. The needle follows the modelled reference trip to scale and turns violet below the floor.
+- Fast reserve is a cyan block under the shaft. It fires on its own at the sample where the modelled frequency reaches 49.6 Hz; there is no `catch` trigger, because real FFR is not dispatched by hand.
+- The wheels slow visibly. That is exaggerated (a real 1 Hz fall is 2% of the speed), and the film says so; the dial is the honest reading.
 
-States: `steady` → `tripped` (shaft slows) → `caught` (slowing stops) → `held`.
+Inputs: trigger `trip`; bools `tripped` (jump to the end state), `light`, `reserve`. States: `steady` → `trip <variant>` → `held <variant>`, for the four combinations of light and reserve.
 
-This needs a **number input** (or data binding) for the wheel count. The `.riv` writer so far emits only triggers and booleans. Decide state-machine inputs versus data binding before building it (open in `.state/BACKLOG.md`).
+No number input was needed: the story shows two hours, not a continuum, so two bools cover it. The optional sleeve, if built, draws its continuum in the data layer.
 
 ---
 
@@ -168,8 +171,8 @@ New `visualId`s go through `SceneRenderer` only when implementing.
 
 ## Definition of done (this Spec)
 
-- [ ] Human approves Question / Claim / Takeaway / limitations
+- [x] Human approves Question / Claim / Takeaway / limitations ("Continue", 2026-09-27)
 - [ ] Fingrid API key added; kinetic energy and FFR pulled and checked
 - [ ] Model validated against observed events with their hour's kinetic energy
-- [ ] Evidence pack frozen with kind tags
+- [ ] Evidence pack frozen with kind tags (v0 frozen, keyless and partial; v1 needs the key)
 - [ ] Beat list stable enough to write narration and visual states

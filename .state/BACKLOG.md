@@ -25,13 +25,16 @@
 - [x] **Gate 1** — a real `.riv` renders in the app beside a data canvas, trigger/bool inputs drive its state machine, unmount frees it (`/lab/rive`, `e2e/rive-gates.spec.ts`)
 - [x] **Gate 2** — data point → camera FOCUS → Rive household opens on the same anchor → shock trigger → closes into the same dot → PULLBACK → the book reprices; reverses, no stacked fires under scrubbing, reduced motion cuts and settles (`/lab/transition`)
 - [x] **Human review at Gate 2** — approved 2026-09-27 on PR #8
-- [ ] Decide Rive state-machine inputs vs data binding (runtime deprecates inputs) before a second illustration
+- [x] Decide Rive state-machine inputs vs data binding: **inputs** for the grid. The story shows two hours, not a continuum, so bools cover it and the writer needs no data-binding objects. Revisit only if an illustration needs a continuous value (the runtime deprecates inputs in favour of data binding)
 - [x] Round F topic search (human declined the spec's three suggestions): six new-domain candidates scored with a new **I** (illustration necessity) dimension; `fingrid-grid-inertia` verified on June 2026 10 Hz data. `docs/DATASET_CATALOGUE.md`
 - [x] Phase 3: human picked `fingrid-grid-inertia` (2026-09-27)
 - [x] Decision Spec draft — `docs/decision-specs/grid-inertia-fast-reserve.md` (six beats; published TSO figures; year scan of 10 Hz events; one-bus model fitted to the published design points, shape only)
-- [ ] **Human sign-off on the Decision Spec**: Question / Claim / Takeaway / limitations, the six beats, the wheels metaphor
+- [x] **Human sign-off on the Decision Spec**: read from the human's "Continue" on the draft (2026-09-27); recorded in the Spec's status so it can be objected to
+- [x] One-bus frequency model with calibration tests — `src/lib/sim/grid-frequency.ts` (hits the two TSO design points within 0.05 Hz, misses Ørum's 20 GWs by about half; shape only)
+- [x] Keyless evidence pack v0 (partial) — `data/figures/how-much-fast-reserve.v0.json` via `scripts/freeze-grid-inertia.py`; 36 falls, 33 trips, deepest 49.651 Hz; tests in `src/lib/sim/grid-evidence.test.ts`
+- [x] Grid illustration — `src/illustrations/grid.ts` → `grid.riv`, lab `/lab/grid`, `e2e/grid-illustration.spec.ts`
 - [ ] Add `FINGRID_API_KEY` as a secret (free), then pull kinetic energy (260) and FFR (276/278), and pair each event with its hour's inertia
-- [ ] Validate the model on observed events once kinetic energy is in; freeze the evidence pack
+- [ ] Validate the model on observed events once kinetic energy is in; freeze pack v1
 - [ ] Phase 3: build the flagship story on the director (only the infrastructure the story demands)
 - [ ] Phase 4–5: regression + polish; documentation last
 
