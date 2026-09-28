@@ -39,6 +39,8 @@ export type GridParams = {
   /** Generation lost at t = 0, MW. */
   lossMW: number;
   fastReserve?: FastReserve;
+  /** Frequency just before the loss, Hz. Load relief acts on the change from it. */
+  startHz?: number;
 };
 
 export type GridModel = {
@@ -96,7 +98,8 @@ export function simulateTrip(
   const deadSteps = Math.round(model.fcrdDeadSeconds / DT);
   const seen: number[] = [];
 
-  let f = NOMINAL_HZ;
+  const startHz = params.startHz ?? NOMINAL_HZ;
+  let f = startHz;
   let fcrd = 0;
   let firedAt: number | null = null;
   let nadirHz = f;
@@ -113,7 +116,7 @@ export function simulateTrip(
     if (reserve && firedAt === null && f <= reserve.activationHz) firedAt = t;
     const ffr =
       reserve && firedAt !== null ? reserve.mw * Math.min(1, (t - firedAt) / reserve.fullSeconds) : 0;
-    const relief = (-model.loadMW * model.loadReliefPctPerHz * (f - NOMINAL_HZ)) / 100;
+    const relief = (-model.loadMW * model.loadReliefPctPerHz * (f - startHz)) / 100;
     f += ((NOMINAL_HZ * (-params.lossMW + fcrd + ffr + relief)) / (2 * energyMWs)) * DT;
     if (f < nadirHz) {
       nadirHz = f;
