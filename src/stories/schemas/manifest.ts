@@ -107,7 +107,10 @@ export const ReaderSchema = z
 export const MethodRefSchema = z
   .object({
     pack: z.string().regex(/^data\/figures\/[a-z0-9.-]+\.json$/, "pack must be a file in data/figures/"),
-    spec: z.string().regex(/^docs\/decision-specs\/[a-z0-9-]+\.md$/, "spec must be a file in docs/decision-specs/"),
+    // The first reference story's Spec predates docs/decision-specs/ and is linked from the rules.
+    spec: z
+      .string()
+      .regex(/^docs\/(decision-specs\/)?[a-z0-9-]+\.md$/, "spec must be a Decision Spec in docs/decision-specs/"),
   })
   .strict();
 
