@@ -171,6 +171,22 @@ export const StoryManifestSchema = z
   })
   .strict()
   .superRefine((manifest, ctx) => {
+    if (manifest.meta.role === "reference") {
+      if (!manifest.reader) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["reader"],
+          message: "a reference story needs a reader block: orientation, beats and the terms each beat teaches",
+        });
+      }
+      if (!manifest.method) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["method"],
+          message: "a reference story needs a method block naming its evidence pack and Decision Spec",
+        });
+      }
+    }
     const reader = manifest.reader;
     if (reader) {
       for (const problem of orientationProblems(reader.orientation, reader.terms)) {

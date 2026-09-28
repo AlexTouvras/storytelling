@@ -6,8 +6,28 @@ import { termOrderProblems } from "@/lib/reader/terms";
 import { schemaProblems } from "@/lib/reader/method";
 import { NARRATION } from "@/stories/reader/narration";
 import { METHOD_REGISTRY } from "@/stories/method/registry";
+import { safeParseStoryManifest } from "@/stories/schemas/manifest";
 
 const manifests = loadAllStoryManifests();
+
+describe("reader kit coverage", () => {
+  it.each(manifests.filter((m) => m.meta.role === "reference").map((m) => [m.meta.slug, m] as const))(
+    "%s declares a reader and a method page",
+    (_slug, manifest) => {
+      expect(manifest.reader).toBeDefined();
+      expect(manifest.method).toBeDefined();
+    },
+  );
+
+  it("rejects a reference manifest without them", () => {
+    const [reference] = manifests.filter((m) => m.meta.role === "reference");
+    const { reader: _reader, method: _method, ...bare } = reference;
+    const result = safeParseStoryManifest(bare);
+    expect(result.success).toBe(false);
+    const paths = result.error?.issues.map((issue) => issue.path.join(".")) ?? [];
+    expect(paths).toEqual(expect.arrayContaining(["reader", "method"]));
+  });
+});
 
 describe.each(manifests.filter((m) => m.reader).map((m) => [m.meta.slug, m] as const))("%s: terms", (slug, manifest) => {
   const reader = manifest.reader!;
