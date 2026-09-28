@@ -88,10 +88,10 @@ function build(): GridPose[] {
   // 0 · Fifty: a real quiet minute, written on.
   add(0.03, 0);
   add(0.13, 0, { pen: 60 });
-  // 1 · A trip: the pen follows the fall; the axis opens down to the floor.
+  // 1 · A trip: the axis opens down to the floor first, so the fall lands in frame.
   add(0.17, 1);
-  add(0.26, 1, { pen: 100, t0: 30, t1: 110 });
-  add(0.31, 1, { yLo: 48.85 });
+  add(0.22, 1, { yLo: 48.85, t0: 30, t1: 110 });
+  add(0.31, 1, { pen: 100 });
   add(0.35, 1, { pen: 150, t0: 30, t1: 160 });
   // 2 · Inside the hour: the trace folds into its hour; the hour opens.
   add(0.37, 2);
@@ -201,6 +201,10 @@ export type Rect = { x: number; y: number; width: number; height: number };
 
 export type GridLayout = {
   wide: boolean;
+  /** Bottom edge of the picture, screen px: the stage's bottom on a wide screen, above the narration on a phone. */
+  pictureBottom: number;
+  /** Where the phone narration's scrim starts: the picture's bottom, or higher when the narration is too tall to fit under it. */
+  scrimTop: number;
   /** Camera zoom on the featured hour. */
   zoom: number;
   /** Where the featured hour is held on screen once focused. */
@@ -218,14 +222,25 @@ function centred(cx: number, cy: number, width: number, height: number): Rect {
   return { x: cx - width / 2, y: cy - height / 2, width, height };
 }
 
+/** Matches the `lg` breakpoint, where the narration moves into the left column. */
+export const WIDE_MIN = 1024;
+/** Gap between the picture and the narration on a phone, px. */
+export const PHONE_COPY_GAP = 16;
+/** Room under the phone machine for its two-line legend caption, px; kept above too, so the machine stays centred on its hour. */
+const PHONE_CAPTION = 36;
+
 /**
  * On a wide screen the narration sits in a left column and the picture to its
  * right; on a phone the picture takes the top of the screen and the narration
- * the bottom.
+ * the bottom. `copyReserve` is how far the tallest beat's narration reaches up
+ * from the bottom edge on a phone; the picture ends above it, so no beat's
+ * text runs into the drawing. The picture never shrinks below 36% of the
+ * screen; past that (large system text) the scrim starts above the narration
+ * and covers the overlap.
  */
-export function gridLayout(viewport: Size): GridLayout {
+export function gridLayout(viewport: Size, copyReserve = 0): GridLayout {
   const { width: W, height: H } = viewport;
-  const wide = W >= 900;
+  const wide = W >= WIDE_MIN;
   if (wide) {
     const region = { x: 0.4 * W, y: 0.08 * H, width: 0.58 * W, height: 0.84 * H };
     const screen = { x: region.x + region.width / 2, y: region.y + region.height / 2 };
@@ -234,6 +249,8 @@ export function gridLayout(viewport: Size): GridLayout {
     const machineAsideCx = region.x + region.width * 0.27 - screen.x;
     return {
       wide,
+      pictureBottom: H,
+      scrimTop: H,
       zoom: 6,
       screen,
       trace: centred(0, 0, region.width * 0.94, Math.min(region.height * 0.62, 460)),
@@ -249,13 +266,15 @@ export function gridLayout(viewport: Size): GridLayout {
     };
   }
   const top = 0.07 * H;
-  const bottom = 0.56 * H;
+  const bottom = Math.max(0.36 * H, Math.min(0.56 * H, H - copyReserve - PHONE_COPY_GAP));
   const screen = { x: W / 2, y: (top + bottom) / 2 };
-  const side = Math.min(0.78 * W, (bottom - top) * 0.9);
+  const side = Math.min(0.78 * W, bottom - top - 2 * PHONE_CAPTION);
   const aside = Math.min(0.6 * W, (bottom - top) * 0.62);
   const asideCy = top + aside / 2 - screen.y;
   return {
     wide,
+    pictureBottom: bottom,
+    scrimTop: copyReserve ? Math.min(bottom, H - copyReserve - PHONE_COPY_GAP) : bottom,
     zoom: 6,
     screen,
     trace: centred(0, 0, 0.94 * W, (bottom - top) * 0.82),

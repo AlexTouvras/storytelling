@@ -10,6 +10,7 @@ import {
   cameraFor,
   viewportToWorld,
   wideShot,
+  wideShotOn,
   worldToViewport,
 } from "@/lib/director/camera";
 import { EntityMap, type Entity } from "@/lib/director/entity-map";
@@ -98,6 +99,20 @@ describe("camera", () => {
     expect(blendShots(a, b, 0.5).zoom).toBeCloseTo(2);
     expect(blendShots(a, b, -1)).toEqual(a);
     expect(blendShots(a, b, 2).zoom).toBeCloseTo(4);
+  });
+
+  it("pulls back on a subject without swinging it past its place", () => {
+    const subject = { x: 1112, y: 444 };
+    const close = { focus: subject, zoom: 6, screen: { x: 883, y: 400 } };
+    expect(cameraFor(wideShotOn(subject))).toEqual({ x: 0, y: 0, zoom: 1 });
+    const xs: number[] = [];
+    for (let t = 0; t <= 1.0001; t += 0.05) {
+      xs.push(worldToViewport(subject, cameraFor(blendShots(close, wideShotOn(subject), t)), { x: 0, y: 0 }).x);
+    }
+    xs.forEach((x, i) => i && expect(x).toBeGreaterThanOrEqual(xs[i - 1] - 1e-9));
+    expect(xs.at(-1)).toBeCloseTo(1112);
+    const toCentre = blendShots(close, wideShot(vp), 0.3);
+    expect(worldToViewport(subject, cameraFor(toCentre), { x: 0, y: 0 }).x).toBeGreaterThan(1112);
   });
 });
 

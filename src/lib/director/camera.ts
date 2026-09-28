@@ -40,6 +40,17 @@ export function wideShot(viewport: Size): Shot {
   return { focus: centre, zoom: 1, screen: centre };
 }
 
+/**
+ * PULLBACK target held on a subject: the same untransformed stage as
+ * `wideShot`, expressed around `subject`. Blending from a close shot on that
+ * subject moves it on a straight line to its place in the wide frame. Blending
+ * to the frame centre instead swings an off-centre subject past its place, and
+ * off screen, while the zoom is still high.
+ */
+export function wideShotOn(subject: Point): Shot {
+  return { focus: subject, zoom: 1, screen: subject };
+}
+
 /** FOCUS: the transform that holds `shot.focus` at `shot.screen`, `shot.zoom` close. */
 export function cameraFor(shot: Shot): CameraState {
   return {

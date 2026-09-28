@@ -4,6 +4,8 @@ import {
   GRID_HOLDS,
   GRID_POSES,
   GRID_RUNS,
+  PHONE_COPY_GAP,
+  WIDE_MIN,
   fieldPoint,
   gridBeatAt,
   gridFrameAt,
@@ -11,6 +13,7 @@ import {
   gridRunAt,
 } from "@/lib/director/grid-film";
 import { GRID_BEATS } from "@/components/film/grid-copy";
+import { gridFilmData } from "@/components/film/grid-film-data";
 
 describe("grid film timeline", () => {
   it("walks the six beats in order and ends on the decision", () => {
@@ -63,6 +66,37 @@ describe("grid layout", () => {
     const phone = gridLayout({ width: 390, height: 844 });
     expect(phone.screen.y + phone.machine.height / 2).toBeLessThan(0.58 * 844);
     expect(phone.chart.y + phone.chart.height + phone.screen.y).toBeLessThanOrEqual(0.56 * 844 + 1);
+  });
+
+  it("ends the phone picture above the tallest beat's narration", () => {
+    const vp = { width: 360, height: 740 };
+    const phone = gridLayout(vp, 380);
+    expect(phone.pictureBottom).toBeCloseTo(740 - 380 - PHONE_COPY_GAP);
+    const low = (r: { y: number; height: number }) => phone.screen.y + r.y + r.height;
+    expect(low(phone.machine) + 36).toBeLessThanOrEqual(phone.pictureBottom + 0.5);
+    expect(low(phone.chart)).toBeLessThanOrEqual(phone.pictureBottom);
+    expect(low(phone.trace)).toBeLessThanOrEqual(phone.pictureBottom);
+    expect(phone.field.y + phone.field.height).toBeLessThanOrEqual(phone.pictureBottom);
+    expect(gridLayout(vp, 700).pictureBottom).toBeCloseTo(0.36 * 740);
+    expect(gridLayout(vp, 0).pictureBottom).toBeCloseTo(0.56 * 740);
+  });
+
+  it("switches to the side-by-side layout where the narration moves into its column", () => {
+    expect(gridLayout({ width: WIDE_MIN - 1, height: 800 }).wide).toBe(false);
+    expect(gridLayout({ width: WIDE_MIN, height: 800 }).wide).toBe(true);
+  });
+
+  it("keeps every drawn sample of the trip above the axis bottom, and shows the floor before the fall", () => {
+    const { trace, sampleSeconds, onsetSeconds } = gridFilmData();
+    for (let p = 0; p <= 0.4; p += 0.002) {
+      const f = gridFrameAt(p);
+      if (f.trace < 0.5) continue;
+      const first = Math.max(0, Math.floor(f.t0 / sampleSeconds));
+      const last = Math.min(trace.length - 1, Math.floor(Math.min(f.pen, f.t1) / sampleSeconds));
+      const drawn = trace.slice(first, last + 1);
+      if (drawn.length) expect(Math.min(...drawn), `at ${p.toFixed(3)}`).toBeGreaterThanOrEqual(f.yLo);
+      if (f.pen > onsetSeconds + 1) expect(f.yLo, `at ${p.toFixed(3)}`).toBeLessThan(49);
+    }
   });
 
   it("places an hour inside the field", () => {

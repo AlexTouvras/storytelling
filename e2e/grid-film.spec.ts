@@ -104,6 +104,39 @@ test.describe("when the spinning stops film", () => {
     await expect(decision.getByTestId("end-method-link")).toHaveAttribute("href", METHOD);
   });
 
+  test("the trip falls in frame, with the floor already on screen", async ({ page }) => {
+    await page.goto(FILM);
+    const height = page.viewportSize()!.height;
+    for (const at of [0.23, 0.27, 0.31, 0.34]) {
+      await scrubTo(page, at);
+      const path = await page.getByTestId("trace-path").boundingBox();
+      expect(path!.y + path!.height, `trace at ${at}`).toBeLessThan(height);
+    }
+    await scrubTo(page, 0.24);
+    const floor = await page.getByTestId("trace-floor").getAttribute("opacity");
+    expect(Number(floor)).toBeGreaterThan(0.99);
+    const [floorBox, path] = await Promise.all([
+      page.getByTestId("trace-floor").boundingBox(),
+      page.getByTestId("trace-path").boundingBox(),
+    ]);
+    expect(floorBox!.y + floorBox!.height).toBeLessThan(height);
+    expect(path!.y + path!.height).toBeLessThan(floorBox!.y + floorBox!.height);
+  });
+
+  test("the pullback keeps the trip's hour on screen until it sits among the year", async ({ page }) => {
+    await page.goto(FILM);
+    const { width, height } = page.viewportSize()!;
+    for (const at of [0.87, 0.88, 0.89, 0.9, 0.91, 0.93]) {
+      await scrubTo(page, at);
+      const ring = await page.locator("[data-testid='featured-hour'] circle").last().boundingBox();
+      const cx = ring!.x + ring!.width / 2;
+      const cy = ring!.y + ring!.height / 2;
+      expect(cx, `hour x at ${at}`).toBeGreaterThan(0);
+      expect(cx, `hour x at ${at}`).toBeLessThan(width - 8);
+      expect(cy, `hour y at ${at}`).toBeLessThan(height);
+    }
+  });
+
   test("the method page shows labels, every event, the schema and a download", async ({ page, request }) => {
     await page.goto(METHOD);
     await expect(page.locator("#kind-modelled")).toBeVisible();
@@ -116,5 +149,37 @@ test.describe("when the spinning stops film", () => {
     const pack = await res.json();
     expect(pack.id).toMatch(/how-much-fast-reserve/);
     expect(pack.years.months.length).toBeGreaterThan(0);
+  });
+});
+
+test.describe("when the spinning stops film, on a small phone", () => {
+  test.use({ viewport: { width: 360, height: 740 } });
+
+  test("no beat's narration runs into the picture", async ({ page }) => {
+    await page.goto(FILM);
+    for (const at of [0.3, 0.5, 0.57, 0.6, 0.62, 0.7, 0.8, 0.93]) {
+      await scrubTo(page, at);
+      await page.waitForTimeout(150);
+      const boxes = await page.evaluate(() => {
+        const copyTop = document.querySelector("[data-testid='beat-copy']")!.getBoundingClientRect().top;
+        const shown = ["machine", "legend-caption", "model-chart", "trace-panel"]
+          .map((id) => document.querySelector(`[data-testid='${id}']`) as HTMLElement | null)
+          .filter((el): el is HTMLElement => {
+            if (!el) return false;
+            let node: HTMLElement | null = el;
+            while (node) {
+              const cs = getComputedStyle(node);
+              if (cs.visibility === "hidden" || Number(cs.opacity) < 0.05) return false;
+              node = node.parentElement;
+            }
+            return true;
+          })
+          .map((el) => ({ id: el.dataset.testid, bottom: el.getBoundingClientRect().bottom }));
+        return { copyTop, shown };
+      });
+      for (const box of boxes.shown) {
+        expect(box.bottom, `${box.id} at ${at}`).toBeLessThanOrEqual(boxes.copyTop);
+      }
+    }
   });
 });
