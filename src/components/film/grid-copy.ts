@@ -174,3 +174,47 @@ export function gridCopyFor(beat: number): GridCopy {
 export function gridNarration(): GridCopy[] {
   return GRID_BEATS.map((_, beat) => gridCopyFor(beat));
 }
+
+export type GridDecision = {
+  title: string;
+  paragraphs: string[];
+  trendCaption: string;
+  trend: { period: string; hours: number; kind: EvidenceKind }[];
+  notClaimed: string[];
+  events: number;
+  attribution: string;
+};
+
+export function gridDecision(): GridDecision {
+  const publishedYears = pack.years.published_hours_below_150 as Record<string, number>;
+  const ours = (year: number) => pack.years.kinetic.find((y) => y.year === year);
+  const lastPublished = Number(GRID_FILM.publishedLast.year);
+  const recent = Object.keys(publishedYears)
+    .map(Number)
+    .filter((y) => y >= lastPublished - 2)
+    .sort();
+  const nextYear = ours(lastPublished + 1);
+  const tenth = GRID_FILM.massForTenth;
+  return {
+    title: "Size fast reserve to the hour's spinning mass, and watch the light hours.",
+    paragraphs: [
+      `Fingrid already buys fast reserve by the hour: in ${Math.round(GRID_FILM.reserveShare120 * 100)}% of the lightest hours, and none above ${GRID_FILM.noReserveAbove} GWs. The open question is volume, because light hours are becoming more common.`,
+      `The other way to hold the floor is to keep more mass spinning, with synchronous condensers or thermal plants kept online. By the operators' figures, lifting the lowest point by ${tenth.hz} Hz that way takes about ${tenth.extra_gws} GWs more of it. About ${n(GRID_RESERVE_MW)} MW of fast reserve holds the floor in their test case for a very light hour.`,
+      "Light hours move with wind, water and sun from one year to the next, so one summer is not a forecast. It is a reason to size reserve to the hour rather than to the year.",
+    ],
+    trendCaption: "Hours below 150 GWs: the operators' published counts, then ours from Fingrid's real-time estimate",
+    trend: [
+      ...recent.map((y) => ({ period: String(y), hours: publishedYears[String(y)], kind: "published" as const })),
+      ...(nextYear ? [{ period: String(nextYear.year), hours: nextYear.hours_below_150, kind: "calculated" as const }] : []),
+      { period: "May–July 2026", hours: GRID_FILM.summer2026, kind: "calculated" as const },
+    ],
+    notClaimed: [
+      `The grid held every time: no event in ${GRID_FILM.window} came near ${n(FLOOR_HZ, 1)} Hz. This is a story about margin, not a near-miss.`,
+      "We do not say which unit tripped on any day; the open data does not.",
+      "The modelled curves are a design case drawn as shapes. They are never a prediction of a real trip.",
+      "Finland's fast reserve is one share of a Nordic need.",
+    ],
+    events: pack.events.all.length,
+    attribution: `${pack.sources["fingrid-339"].attribution}. Published thresholds: Nordic TSOs 2025, FFR design 2024, Ørum et al. 2017. Not affiliated with, and not endorsed by, Fingrid or any Nordic operator.`,
+  };
+}
