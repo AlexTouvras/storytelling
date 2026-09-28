@@ -31,10 +31,14 @@
 - [x] Decision Spec draft — `docs/decision-specs/grid-inertia-fast-reserve.md` (six beats; published TSO figures; year scan of 10 Hz events; one-bus model fitted to the published design points, shape only)
 - [x] **Human sign-off on the Decision Spec**: read from the human's "Continue" on the draft (2026-09-27); recorded in the Spec's status so it can be objected to
 - [x] One-bus frequency model with calibration tests — `src/lib/sim/grid-frequency.ts` (hits the two TSO design points within 0.05 Hz, misses Ørum's 20 GWs by about half; shape only)
-- [x] Keyless evidence pack v0 (partial) — `data/figures/how-much-fast-reserve.v0.json` via `scripts/freeze-grid-inertia.py`; 36 falls, 33 trips, deepest 49.651 Hz; tests in `src/lib/sim/grid-evidence.test.ts`
+- [x] Keyless evidence pack v0 (partial), since superseded by v1
 - [x] Grid illustration — `src/illustrations/grid.ts` → `grid.riv`, lab `/lab/grid`, `e2e/grid-illustration.spec.ts`
-- [ ] Add `FINGRID_API_KEY` as a secret (free), then pull kinetic energy (260) and FFR (276/278), and pair each event with its hour's inertia
-- [ ] Validate the model on observed events once kinetic energy is in; freeze pack v1
+- [x] Fingrid key received (pasted in chat 2026-09-28, used for the session only); 260 (2020-01 → 2026-07), 276 (2020-01 → 2026-07) and 278 (window) pulled via `scripts/fetch-fingrid.py`; each event paired with its hour's inertia
+- [x] Scan fixed (gaps held, not read as 50 Hz) and events classified by shape: 19 trips of 33 falls
+- [x] Evidence pack v1 — `data/figures/how-much-fast-reserve.v1.json`; yearly low-inertia counts within 6% of the published KPIs; FFR by kinetic-energy band
+- [x] Model checked on the 19 trips — `src/lib/sim/grid-validation.ts`: nadir timing right, depth 1.7× conservative (design case)
+- [ ] Human: add `FINGRID_API_KEY` as a Cloud Agents secret for future runs (and consider rotating the one pasted in chat)
+- [ ] Human: note the Spec's "since sign-off" changes (19 trips, seasonal cluster partly explained, 2026 step change in low-inertia hours)
 - [ ] Phase 3: build the flagship story on the director (only the infrastructure the story demands)
 - [ ] Phase 4–5: regression + polish; documentation last
 

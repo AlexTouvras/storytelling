@@ -461,8 +461,9 @@ flagship needs one mechanism the reader can hold, not ten acts.
 
 **Picked (human, 2026-09-27):** `fingrid-grid-inertia`. Decision Spec draft:
 [`docs/decision-specs/grid-inertia-fast-reserve.md`](./decision-specs/grid-inertia-fast-reserve.md),
-awaiting sign-off. The year scan (2025-08 → 2026-07) found 33 trip-like events, 26 of them April to
-September, the deepest at 49.65 Hz; it is in the Spec.
+approved 2026-09-27. The year scan (2025-08 → 2026-07), classified by shape and paired with kinetic
+energy, found 19 trips, 13 of them April to September, the deepest at 49.65 Hz; it is in the Spec.
+(An earlier keyless count of 33 read data gaps as 50 Hz and did not separate transients.)
 
 ---
 
