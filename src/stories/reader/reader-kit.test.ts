@@ -21,7 +21,9 @@ describe("reader kit coverage", () => {
 
   it("rejects a reference manifest without them", () => {
     const [reference] = manifests.filter((m) => m.meta.role === "reference");
-    const { reader: _reader, method: _method, ...bare } = reference;
+    const bare: Record<string, unknown> = { ...reference };
+    delete bare.reader;
+    delete bare.method;
     const result = safeParseStoryManifest(bare);
     expect(result.success).toBe(false);
     const paths = result.error?.issues.map((issue) => issue.path.join(".")) ?? [];
