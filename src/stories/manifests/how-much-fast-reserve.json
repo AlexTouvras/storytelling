@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "slug": "how-much-fast-reserve",
+    "title": "When the Spinning Stops",
+    "summary": "A year of the Nordic grid at ten readings a second: when a power plant drops out, how far the frequency falls depends on how much mass is spinning that hour. In light hours, a few hundred MW of fast reserve does what tens of GWs of extra spinning mass would. Fingrid open data and the Nordic operators' published figures; frozen and labelled.",
+    "date": "2026-09-28",
+    "templateId": "scrolling-narrative",
+    "role": "reference",
+    "hero": {
+      "kicker": "Decision story",
+      "title": "When the Spinning Stops",
+      "question": "How much fast reserve should the grid hold when there is less spinning mass to hold it up?"
+    }
+  },
+  "sections": [
+    {
+      "id": "catch-it-faster",
+      "headline": "The grid does not need to be kept spinning; it needs to be caught faster",
+      "body": "This story ships as a directed film. Open /stories/how-much-fast-reserve/film.\n\nA real trip on 1 June 2026, the grid as a machine of spinning wheels, and a year of hours by spinning mass. The method, data and schema are at /stories/how-much-fast-reserve/method.",
+      "scenes": [
+        {
+          "id": "catch-scene",
+          "trigger": "section-visible",
+          "visualId": "cashflow-pressure",
+          "visualState": "transmission",
+          "transition": "trace"
+        }
+      ]
+    }
+  ],
+  "dataRefs": [
+    {
+      "id": "featured-trip",
+      "label": "1 June 2026, 17:44 Finnish time: the frequency fell to 49.651 Hz in 5.5 s",
+      "kind": "observed",
+      "note": "Fingrid 10 Hz frequency, median-filtered over 0.9 s. The hour held 169.6 GWs of kinetic energy and no fast reserve was bought."
+    },
+    {
+      "id": "trips",
+      "label": "19 trips in a year; none fell below 49.6 Hz",
+      "kind": "calculated",
+      "note": "33 sustained falls, classified by shape; 19 are lost generation."
+    },
+    {
+      "id": "design-curves",
+      "label": "The largest trip at 194 and 100 GWs, with and without 300 MW of fast reserve",
+      "kind": "modelled",
+      "note": "One-bus model fitted to the operators' design points; drawn as a shape, never quoted, and about 1.7× deeper than the real trips as a design case."
+    },
+    {
+      "id": "light-hours",
+      "label": "873 hours below 150 GWs in the year; 584 of them in May–July 2026",
+      "kind": "calculated",
+      "note": "Hourly means of Fingrid's real-time estimate of Nordic kinetic energy. Our yearly counts are within 6% of the operators' published ones for 2020–2024."
+    },
+    {
+      "id": "reserve-by-mass",
+      "label": "Fast reserve bought in 91% of hours at 120–140 GWs, and in none above 200 GWs",
+      "kind": "calculated",
+      "note": "Fingrid's procured volume per hour against that hour's kinetic energy."
+    },
+    {
+      "id": "published-design",
+      "label": "Floor 49.0 Hz; largest trip 1,450 MW; about 300 MW of fast reserve at 100 GWs; about 20 GWs of mass per 0.1 Hz",
+      "kind": "published",
+      "note": "Nordic TSOs 2025 and FFR design 2024; Ørum et al. 2017 via Energinet."
+    },
+    {
+      "id": "machine",
+      "label": "Wheels on a shaft, a plant that trips, a dial against the floor",
+      "kind": "illustrative",
+      "note": "The dial follows the modelled trip to scale; the wheels' slow-down is exaggerated."
+    }
+  ],
+  "sources": [
+    {
+      "id": "fingrid-339",
+      "label": "Fingrid open data, Frequency – historical data (dataset 339), CC BY 4.0",
+      "url": "https://data.fingrid.fi/en/datasets/339"
+    },
+    {
+      "id": "fingrid-260",
+      "label": "Fingrid open data, Kinetic energy of the Nordic power system (dataset 260), CC BY 4.0",
+      "url": "https://data.fingrid.fi/en/datasets/260"
+    },
+    {
+      "id": "fingrid-276",
+      "label": "Fingrid open data, Fast Frequency Reserve FFR, procured volume (dataset 276), CC BY 4.0",
+      "url": "https://data.fingrid.fi/en/datasets/276"
+    },
+    {
+      "id": "nordic-tsos-2025",
+      "label": "Nordic TSOs, Requirements for minimum inertia in the Nordic power system, 28 August 2025"
+    },
+    {
+      "id": "evidence-pack",
+      "label": "Frozen evidence pack v1 (how-much-fast-reserve), August 2025 – July 2026"
+    }
+  ],
+  "methodology": "Directed film over one frozen evidence pack. Fingrid's 10 Hz frequency archive for August 2025 – July 2026 is median-filtered over 0.9 s and scanned for falls of more than 100 mHz within 5 s; each fall is classified by its shape, and 19 of 33 are trips. Each event is paired on UTC with that hour's kinetic energy and fast-reserve purchase. Hours are clock-hour means of Fingrid's real-time kinetic-energy estimate. Published thresholds are quoted from the Nordic operators. A one-bus frequency model fitted to the operators' design points draws the design-case curves and drives the illustration's dial; it is never quoted as a figure.",
+  "limitations": "Which unit tripped is not in the open data. Frequency is measured at Finnish substations and local oscillation is not separated. Kinetic energy is itself an operator estimate. Finland's fast reserve is one share of a Nordic need. The model is one-bus and draws shapes only. No event in the window came near 49.0 Hz; the story is about margin, not a near-miss. Not affiliated with, and not endorsed by, Fingrid or any Nordic operator.",
+  "a11y": {
+    "alt": "Interactive film: a real minute of Nordic grid frequency, a power plant tripping, the grid drawn as spinning wheels on one shaft, and a year of hours placed by spinning mass",
+    "reducedMotionNote": "With reduced motion, camera moves cut instead of gliding, the illustration shows each state without animating, and the beat narration is announced in a live region."
+  },
+  "reader": {
+    "orientation": "The Nordic grid is one machine turning at 50 turns a second. When a power plant drops out, it slows. This story is about how far it slows, why that depends on the hour, and what the grid buys to stop it.",
+    "beats": ["Fifty", "A trip", "Inside the hour", "Fewer wheels", "Every hour", "Catch it faster"],
+    "terms": [
+      {
+        "id": "frequency",
+        "word": "frequency",
+        "forms": ["50 Hz"],
+        "technical": "system frequency",
+        "definition": "How fast every generator in the Nordic grid turns, all in step. 50 Hz is normal.",
+        "beat": 0
+      },
+      {
+        "id": "trip",
+        "word": "trip",
+        "technical": "loss of generation",
+        "definition": "A power plant or import link disconnecting without warning.",
+        "beat": 1
+      },
+      {
+        "id": "lowest-point",
+        "word": "lowest point",
+        "technical": "nadir",
+        "definition": "How far the frequency falls before the grid catches it.",
+        "beat": 1
+      },
+      {
+        "id": "floor",
+        "word": "floor",
+        "technical": "frequency limit after the reference incident",
+        "definition": "49.0 Hz: the lowest the operators allow after the largest trip. Below 48.8 Hz, customers are disconnected automatically.",
+        "beat": 1
+      },
+      {
+        "id": "spinning-mass",
+        "word": "spinning mass",
+        "technical": "inertia; kinetic energy, GWs",
+        "definition": "Energy stored in the turning generators, measured in GWs. The more there is, the slower the fall.",
+        "beat": 2
+      },
+      {
+        "id": "slower-reserve",
+        "word": "slower reserve",
+        "technical": "FCR-D",
+        "definition": "Plants that ramp up over several seconds once the frequency drops below 49.9 Hz.",
+        "beat": 2
+      },
+      {
+        "id": "light-hour",
+        "word": "light hour",
+        "technical": "low-inertia hour",
+        "definition": "An hour with less spinning mass, usually windy or sunny with few large thermal plants running. Below 150 GWs in the operators' terms.",
+        "beat": 3
+      },
+      {
+        "id": "largest-trip",
+        "word": "largest trip",
+        "technical": "reference incident",
+        "definition": "The biggest single loss the grid is designed for: 1,450 MW.",
+        "beat": 3
+      },
+      {
+        "id": "fast-reserve",
+        "word": "fast reserve",
+        "technical": "Fast Frequency Reserve, FFR",
+        "definition": "Reserve that switches on within about a second, at 49.7, 49.6 or 49.5 Hz.",
+        "beat": 3
+      }
+    ],
+    "legend": {
+      "beat": 2,
+      "labels": ["wheels: generators turning in step", "violet: the plant that trips", "dial: frequency and the floor", "cyan: fast reserve"],
+      "caption": "Illustration. The wheels' slow-down is exaggerated; the dial is to scale."
+    }
+  },
+  "method": {
+    "pack": "data/figures/how-much-fast-reserve.v1.json",
+    "spec": "docs/decision-specs/grid-inertia-fast-reserve.md"
+  }
+}
