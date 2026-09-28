@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { buildAppField } from "@/lib/sim/app-field";
 import { CutoffFilm } from "@/components/film/CutoffFilm";
+import { loadStoryManifest } from "@/lib/loadStory";
+
+const SLUG = "where-should-the-cutoff-sit";
 
 export const metadata: Metadata = {
   title: "Where Should the Cut-Off Sit?",
@@ -9,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default function CutoffFilmPage() {
+  const manifest = loadStoryManifest(SLUG);
+  if (!manifest.reader) throw new Error(`${SLUG} needs a reader block`);
   const model = buildAppField();
-  return <CutoffFilm model={model} />;
+  return <CutoffFilm slug={SLUG} reader={manifest.reader} model={model} />;
 }
