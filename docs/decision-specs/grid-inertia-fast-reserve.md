@@ -250,6 +250,7 @@ New `visualId`s go through `SceneRenderer` only when implementing.
 - [x] Fingrid API key added; kinetic energy and FFR pulled and checked (yearly counts within 6% of the published KPIs)
 - [x] Model checked against observed events with their hour's kinetic energy (timing right; depth 1.7× conservative)
 - [x] Evidence pack frozen with kind tags (v1)
-- [ ] Beat list stable enough to write narration and visual states
-- [ ] Orientation card, term list and illustration legend written; term-order test passes
-- [ ] Method page generated from the pack, linked from the film and every kind badge
+- [x] Beat list stable enough to write narration and visual states (six beats, `src/components/film/grid-copy.ts`, `src/lib/director/grid-film.ts`)
+- [x] Orientation card, term list and illustration legend written; term-order test passes (nine terms, legend at beat 2)
+- [x] Method page generated from the pack, linked from the film and every kind badge (`/stories/how-much-fast-reserve/method`)
+- [ ] Human reads the film beat by beat on a laptop and a phone before it is proposed for listing
