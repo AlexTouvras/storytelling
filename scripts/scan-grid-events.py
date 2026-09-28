@@ -9,11 +9,13 @@ under ~1 GB.
 The raw series has 1-2 sample spikes (e.g. 48.86 Hz between two 50.07 Hz
 readings), so it is median-filtered over 9 samples before looking for a fall;
 a raw minimum reports near-misses that never happened. Out-of-range samples
-(gaps are written as 0) are treated as 50 Hz.
+(gaps are written as 0) hold the last good value, and each event counts the
+gap samples around it.
 
 An event is a fall of more than 100 mHz within 5 s, at least 2 minutes after
 the previous one. Falls within 20 s of the hour are flagged `on_hour`: they are
-market-schedule steps, not trips.
+market-schedule steps, not trips. `t` is the start of the 5 s window the fall
+is detected in; `onset` is where the fall itself begins.
 """
 
 import csv
@@ -33,6 +35,16 @@ FALL_HZ = 0.1
 FALL_WINDOW = 5 * SAMPLES_PER_SECOND
 MIN_GAP = 120 * SAMPLES_PER_SECOND
 NADIR_WINDOW = 20 * SAMPLES_PER_SECOND
+# Onset: the first sample 15 mHz below the pre-event mean, backed off 0.2 s to
+# where the fall began. `rocof_1s` is the mean slope over the first second
+# from there, which is what backs out the size of the loss.
+ONSET_HZ = 0.015
+ONSET_BACK = 2
+# Share of the fall still there 25–35 s after onset. A lost generator leaves
+# the frequency low until slower reserves restore it over minutes; a
+# measurement transient (a nearby fault disturbing the reading) snaps back.
+RETAIN_FROM = 25 * SAMPLES_PER_SECOND
+RETAIN_TO = 35 * SAMPLES_PER_SECOND
 
 
 def read_day(path):
@@ -53,25 +65,54 @@ def on_hour(ts):
     return (minute == "00" and second < "20") or (minute == "59" and second > "40")
 
 
-def scan_day(times, values):
+def fill_gaps(values):
+    """Out-of-range samples (gaps are written as 0) hold the last good value.
+    Reading them as 50 Hz fakes a fall whenever a gap lands in a high hour."""
     bad = (values < 49) | (values > 51)
-    clean = values.copy()
-    clean[bad] = 50.0
-    smooth = np.median(sliding_window_view(np.pad(clean, 4, mode="edge"), 9), axis=1)
+    good = np.where(~bad, np.arange(len(values)), 0)
+    np.maximum.accumulate(good, out=good)
+    clean = values[good]
+    if bad.all():
+        clean = np.full_like(values, 50.0)
+    elif bad[0]:
+        first = int(np.argmax(~bad))
+        clean[:first] = values[first]
+    return clean, bad
+
+
+def smooth_day(values):
+    clean, bad = fill_gaps(values)
+    return np.median(sliding_window_view(np.pad(clean, 4, mode="edge"), 9), axis=1), bad
+
+
+def scan_day(times, values):
+    smooth, bad = smooth_day(values)
     fall = smooth[FALL_WINDOW:] - smooth[:-FALL_WINDOW]
     events, last = [], -(10**9)
     for i in np.where(fall < -FALL_HZ)[0]:
         if i - last > MIN_GAP:
             j = i + int(np.argmin(smooth[i : i + NADIR_WINDOW]))
             before = float(smooth[max(0, i - FALL_WINDOW) : i].mean())
-            steps = smooth[i + 1 : i + FALL_WINDOW] - smooth[i : i + FALL_WINDOW - 1]
+            below = np.where(smooth[i : j + 1] < before - ONSET_HZ)[0]
+            k = i + int(below[0]) if len(below) else i
+            start = max(0, k - ONSET_BACK)
+            steps = np.diff(smooth[start : j + 1]) if j > start else np.zeros(1)
+            slope = (smooth[min(start + SAMPLES_PER_SECOND, len(smooth) - 1)] - smooth[start])
+            late = smooth[start + RETAIN_FROM : start + RETAIN_TO]
+            depth = before - float(smooth[j])
+            retained = (before - float(late.mean())) / depth if len(late) and depth > 0 else None
             events.append(
                 {
                     "t": times[i][:21],
+                    "onset": times[start][:21],
                     "pre": round(before, 3),
                     "nadir": round(float(smooth[j]), 3),
+                    "nadir_s": round((j - start) / SAMPLES_PER_SECOND, 1),
                     "depth_mHz": round((float(smooth[j]) - before) * 1000),
-                    "rocof": round(float(steps.min()) * SAMPLES_PER_SECOND, 3),
+                    "steepest_hz_s": round(float(steps.min()) * SAMPLES_PER_SECOND, 3),
+                    "rocof_1s": round(float(slope), 3),
+                    "retained_30s": None if retained is None else round(retained, 2),
+                    "gap_samples": int(bad[max(0, start - FALL_WINDOW) : start + RETAIN_TO].sum()),
                     "on_hour": on_hour(times[i]),
                 }
             )
