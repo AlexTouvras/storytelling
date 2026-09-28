@@ -18283,6 +18283,482 @@
     "hours_below_120": 1
    }
   ],
+  "months": [
+   {
+    "month": "2020-01",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-02",
+    "hours": 695,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-03",
+    "hours": 744,
+    "hours_below_150": 1,
+    "hours_below_120": 1
+   },
+   {
+    "month": "2020-04",
+    "hours": 719,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-05",
+    "hours": 744,
+    "hours_below_150": 11,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-06",
+    "hours": 719,
+    "hours_below_150": 56,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-07",
+    "hours": 744,
+    "hours_below_150": 21,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-08",
+    "hours": 744,
+    "hours_below_150": 83,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-09",
+    "hours": 711,
+    "hours_below_150": 45,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-10",
+    "hours": 743,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-11",
+    "hours": 720,
+    "hours_below_150": 12,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2020-12",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-01",
+    "hours": 742,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-02",
+    "hours": 672,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-03",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-04",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-05",
+    "hours": 744,
+    "hours_below_150": 88,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-06",
+    "hours": 720,
+    "hours_below_150": 107,
+    "hours_below_120": 18
+   },
+   {
+    "month": "2021-07",
+    "hours": 744,
+    "hours_below_150": 103,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-08",
+    "hours": 744,
+    "hours_below_150": 179,
+    "hours_below_120": 10
+   },
+   {
+    "month": "2021-09",
+    "hours": 720,
+    "hours_below_150": 39,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-10",
+    "hours": 743,
+    "hours_below_150": 18,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-11",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2021-12",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-01",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-02",
+    "hours": 672,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-03",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-04",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-05",
+    "hours": 744,
+    "hours_below_150": 52,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-06",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-07",
+    "hours": 744,
+    "hours_below_150": 7,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-08",
+    "hours": 730,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-09",
+    "hours": 720,
+    "hours_below_150": 3,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-10",
+    "hours": 743,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-11",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2022-12",
+    "hours": 744,
+    "hours_below_150": 20,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-01",
+    "hours": 744,
+    "hours_below_150": 31,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-02",
+    "hours": 672,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-03",
+    "hours": 740,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-04",
+    "hours": 720,
+    "hours_below_150": 2,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-05",
+    "hours": 744,
+    "hours_below_150": 70,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-06",
+    "hours": 720,
+    "hours_below_150": 40,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-07",
+    "hours": 744,
+    "hours_below_150": 81,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-08",
+    "hours": 744,
+    "hours_below_150": 13,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-09",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-10",
+    "hours": 742,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-11",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2023-12",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-01",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-02",
+    "hours": 696,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-03",
+    "hours": 742,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-04",
+    "hours": 720,
+    "hours_below_150": 77,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-05",
+    "hours": 744,
+    "hours_below_150": 63,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-06",
+    "hours": 717,
+    "hours_below_150": 53,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-07",
+    "hours": 735,
+    "hours_below_150": 70,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-08",
+    "hours": 744,
+    "hours_below_150": 24,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-09",
+    "hours": 720,
+    "hours_below_150": 38,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-10",
+    "hours": 743,
+    "hours_below_150": 9,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-11",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2024-12",
+    "hours": 728,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-01",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-02",
+    "hours": 672,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-03",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-04",
+    "hours": 720,
+    "hours_below_150": 8,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-05",
+    "hours": 744,
+    "hours_below_150": 56,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-06",
+    "hours": 720,
+    "hours_below_150": 46,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-07",
+    "hours": 744,
+    "hours_below_150": 5,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-08",
+    "hours": 744,
+    "hours_below_150": 65,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-09",
+    "hours": 720,
+    "hours_below_150": 80,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-10",
+    "hours": 744,
+    "hours_below_150": 39,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-11",
+    "hours": 720,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2025-12",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2026-01",
+    "hours": 744,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2026-02",
+    "hours": 672,
+    "hours_below_150": 0,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2026-03",
+    "hours": 744,
+    "hours_below_150": 30,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2026-04",
+    "hours": 720,
+    "hours_below_150": 75,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2026-05",
+    "hours": 744,
+    "hours_below_150": 195,
+    "hours_below_120": 1
+   },
+   {
+    "month": "2026-06",
+    "hours": 720,
+    "hours_below_150": 205,
+    "hours_below_120": 0
+   },
+   {
+    "month": "2026-07",
+    "hours": 744,
+    "hours_below_150": 184,
+    "hours_below_120": 0
+   }
+  ],
   "published_hours_below_150": {
    "2020": 243,
    "2021": 559,
@@ -18622,6 +19098,7 @@
  },
  "limitations": [
   "Which unit tripped is not in the open data; events are unattributed, and their size is estimated from the first second of the fall.",
+  "Event classes are a rule, not a label from the operator. The rule was checked by eye on the borderline traces; 19 trips is too few to settle the seasonal question.",
   "Frequency is measured at Finnish 400 kV substations; the Nordic system shares one frequency, but local oscillation is not separated.",
   "Kinetic energy is itself an operator estimate, updated every 15 minutes.",
   "Finland's FFR is one share of a Nordic need.",

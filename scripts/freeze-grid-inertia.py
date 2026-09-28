@@ -6,7 +6,9 @@ Usage: python3 scripts/freeze-grid-inertia.py [--scan scan.json] [first-month la
 Needs the Fingrid cache written by scripts/fetch-fingrid.py:
   260 (kinetic energy) 2020-01 → last month, 276 (FFR procured) 2020-01 → last month.
 `--scan` reuses the output of scripts/scan-grid-events.py for the same months
-instead of downloading the 10 Hz archives again.
+instead of downloading the 10 Hz archives again. `--reuse PACK` takes the scan
+and the featured trace from an existing pack, so a change to the pairing or the
+hourly counts re-freezes from the Fingrid cache alone.
 
 Every block carries a `kind`: `observed` (operator data as published),
 `calculated` (our arithmetic on observed data), `observed-published` (figures
@@ -49,6 +51,7 @@ HELSINKI = ZoneInfo("Europe/Helsinki")
 KPI_YEARS = [2020, 2021, 2022, 2023, 2024]
 SUMMER = ("04", "05", "06", "07", "08", "09")
 LARGE_LOSS_MW = 600
+SCAN_FIELDS = ("t", "onset", "pre", "nadir", "nadir_s", "depth_mHz", "steepest_hz_s", "rocof_1s", "retained_30s", "gap_samples", "on_hour")
 
 # What a lost generator looks like at 10 Hz, and what else a fixed threshold
 # catches. Checked by eye on the traces of the borderline events.
@@ -158,6 +161,17 @@ def year_stats(hourly, year):
     }
 
 
+def month_stats(hourly):
+    """Hours below the operators' lines per UTC month, from unrounded hourly means."""
+    by_month = {}
+    for k, v in hourly.items():
+        by_month.setdefault(k.strftime("%Y-%m"), []).append(v)
+    return [
+        {"month": m, "hours": len(vals), "hours_below_150": sum(v < 150 for v in vals), "hours_below_120": sum(v < 120 for v in vals)}
+        for m, vals in sorted(by_month.items())
+    ]
+
+
 def featured_trace(event_t):
     """10 Hz window around the event, raw and median-filtered, from its day's file."""
     month, day = event_t[:7], event_t[:10]
@@ -193,11 +207,18 @@ def median(xs):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scan")
+    ap.add_argument("--reuse", help="take the scan and the featured trace from an existing pack instead of the 10 Hz archives")
     ap.add_argument("months", nargs="*", default=["2025-08", "2026-07"])
     args = ap.parse_args()
     first, last = args.months
 
-    if args.scan:
+    reused_trace = None
+    if args.reuse:
+        old = json.load(open(args.reuse))
+        assert old["method"]["window"]["first_month"] == first and old["method"]["window"]["last_month"] == last, "pack covers other months"
+        months = [{**m, "events": [{k: e[k] for k in SCAN_FIELDS} for e in old["events"]["all"] if e["t"][:7] == m["month"]]} for m in old["coverage"]["months"]]
+        reused_trace = (old["featured_event"]["event"]["t"], old["featured_event"]["trace"])
+    elif args.scan:
         months = json.load(open(args.scan))
         assert [m["month"] for m in months] == list(fetch.months_between(first, last)), "scan covers other months"
     else:
@@ -312,7 +333,12 @@ def main():
             "apr_sep": season(True),
             "oct_mar": season(False),
         },
-        "featured_event": {"kind": "observed", "source": "fingrid-339", "event": featured, "trace": featured_trace(featured["t"])},
+        "featured_event": {
+            "kind": "observed",
+            "source": "fingrid-339",
+            "event": featured,
+            "trace": reused_trace[1] if reused_trace and reused_trace[0] == featured["t"] else featured_trace(featured["t"]),
+        },
         "hours": {
             "kind": "observed",
             "sources": ["fingrid-260", "fingrid-276"],
@@ -325,6 +351,7 @@ def main():
             "source": "fingrid-260",
             "note": "Hourly means of the real-time estimate. The published KPIs use the operators' own pre-disturbance series, so small differences are expected. 2020's minimum is one outlying hour in March (58 GWs) in the real-time series; the published minimum is 135. The latest year is partial",
             "kinetic": years,
+            "months": month_stats(k_hourly),
             "published_hours_below_150": dict(zip(map(str, KPI_YEARS), kpi["hours_below_150"])),
             "ffr": ffr_years,
         },
