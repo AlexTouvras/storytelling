@@ -187,7 +187,7 @@ Proposed 2026-09-28 by the human: a reader must understand the terms and the ill
 
 The human also proposed optional documentation for anyone who wants the data, the schema, the calculations and the analysis. Agreed. It is a **separate, linked page**, not a longer end box: readers who want it get a real document, and the film stays short.
 
-- **Route:** `/stories/how-much-fast-reserve/method`, unlisted like the film. Linked from the orientation card, the end of the film, and every kind badge.
+- **Route:** `/stories/how-much-fast-reserve/method`. Reached from the film, not from the landing page. Linked from the orientation card, the end of the film, and every kind badge.
 - **Generated from the pack, not typed.** Every figure is formatted out of `how-much-fast-reserve.v1.json` and the model modules (the "narration reads the pack" pattern), so a re-freeze moves the page with the data. The page shows the pack's `generated` date and version.
 - **Sections:**
   1. **The decision.** Question, claim, takeaway, and what we do not claim, from this Spec.
@@ -253,4 +253,4 @@ New `visualId`s go through `SceneRenderer` only when implementing.
 - [x] Beat list stable enough to write narration and visual states (six beats, `src/components/film/grid-copy.ts`, `src/lib/director/grid-film.ts`)
 - [x] Orientation card, term list and illustration legend written; term-order test passes (nine terms, legend at beat 2)
 - [x] Method page generated from the pack, linked from the film and every kind badge (`/stories/how-much-fast-reserve/method`)
-- [ ] Human reads the film beat by beat on a laptop and a phone before it is proposed for listing
+- [x] Human approved listing (2026-09-28); slug added to `LISTED_SLUGS`, the landing links the film

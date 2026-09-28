@@ -40,12 +40,12 @@
 - [ ] Human: add `FINGRID_API_KEY` as a Cloud Agents secret for future runs (and consider rotating the one pasted in chat)
 - [ ] Human: note the Spec's "since sign-off" changes (19 trips, seasonal cluster partly explained, 2026 step change in low-inertia hours)
 - [x] Reader orientation and method page specified (human proposed, 2026-09-28) — Spec sections *Reader orientation* and *Method page*: orientation card, terms taught at first use (no glossary wall), illustration legend at beat 2, kind badges linked to a pack-generated method page
-- [x] Phase 3: build the flagship story on the director — `GridFilm` at `/stories/how-much-fast-reserve/film` (unlisted): one held camera on the trip's hour, the machine opening out of it, three Rive runs against the modelled chart, pullback to 8,760 hours, the decision. `e2e/grid-film.spec.ts`
+- [x] Phase 3: build the flagship story on the director — `GridFilm` at `/stories/how-much-fast-reserve/film`: one held camera on the trip's hour, the machine opening out of it, three Rive runs against the modelled chart, pullback to 8,760 hours, the decision. `e2e/grid-film.spec.ts`
 - [x] Engine (Layer 1): orientation card, term buttons (`<button aria-expanded>`, keyboard + touch), Terms drawer, kind badges — story-agnostic, terms and copy per story; term-order test
 - [x] Method route `/stories/[slug]/method`, unlisted, every figure generated from the pack; `/method/evidence.json` download
 - [x] Retrofit orientation + method pages to the three existing films — hand-written method boxes replaced by generated method pages; copy moved out of client components so the term check reads what renders
 - [x] Make the reader kit a requirement: `validate:stories` rejects a reference story without `reader` + `method`, locked decision 14 in the story-engine rule, `docs/READER_KIT.md`, `e2e/reader-kit.spec.ts` on all four films
-- [ ] Human: read the grid film beat by beat (laptop + phone) and decide whether to list it
+- [x] Human: approve the grid film for listing — approved 2026-09-28; slug in `LISTED_SLUGS`, landing links `/film` (`e2e/grid-film.spec.ts` asserts it). Reaches prod when PRs #8 and #9 merge
 - [ ] Human: review the retrofitted terms and orientation cards on the three older films — some beat copy was reworded so a term is not used before it is taught (cut-off beats 0, 1, 2, 4, 5; rates title card; recovery beat 9)
 - [ ] Rates pack `calibration.notes` says the thin line is "<10% residual income"; the model and film use 6%. The pack is frozen, so fix it at the next re-freeze
 - [ ] Phase 4–5: regression + polish; documentation last

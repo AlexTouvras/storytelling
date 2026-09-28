@@ -15,10 +15,9 @@ async function scrubTo(page: Page, at: number) {
 }
 
 test.describe("when the spinning stops film", () => {
-  test("landing does not list the grid story before sign-off", async ({ page }) => {
+  test("landing lists the grid story to its film", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Stories" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /spinning stops/i })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "When the Spinning Stops" })).toHaveAttribute("href", FILM);
   });
 
   test("opens with the orientation card and a way into the method", async ({ page }) => {
