@@ -5,11 +5,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import { cameraCreep, clamp01, lerp } from "@/components/film/craft";
 import { nextTriggerState, reconcileTrigger, type TriggerState } from "@/components/film/cue-table";
-import { applyCamera, blendShots, cameraFor, wideShot, type CameraState } from "@/lib/director/camera";
+import { applyCamera, blendShots, cameraFor, wideShotOn, type CameraState } from "@/lib/director/camera";
 import { openOpacity, openScale } from "@/lib/director/household-transition";
 import {
   FIELD_RANGE,
   GRID_RUNS,
+  PHONE_COPY_GAP,
   fieldPoint,
   gridFrameAt,
   gridLayout,
@@ -26,7 +27,7 @@ import { TermText } from "@/components/reader/TermText";
 import { TermsDrawer } from "@/components/reader/TermsDrawer";
 import { KindBadge } from "@/components/reader/KindBadge";
 import { OrientationCard } from "@/components/reader/OrientationCard";
-import { methodHref } from "@/lib/reader/kinds";
+import { KIND_INFO, methodHref } from "@/lib/reader/kinds";
 import type { GridCopy, GridDecision } from "@/components/film/grid-copy";
 import type { StoryReader } from "@/stories/schemas/manifest";
 
@@ -62,6 +63,8 @@ const RING_WORLD = 5;
 const RING_SHARE = 0.375;
 const TRACE_TOP_HZ = 50.06;
 const CHART = { t: 20, lo: 48.6, hi: 50.05 } as const;
+/** The narration's distance from the stage's bottom edge on a phone (`bottom-8`), px. */
+const COPY_BOTTOM = 32;
 
 declare global {
   interface Window {
@@ -140,8 +143,10 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
   const reducedRef = useRef(reduced);
   const [beat, setBeat] = useState(0);
   const [viewport, setViewport] = useState({ width: 1280, height: 800, dpr: 1 });
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [copyReserve, setCopyReserve] = useState(0);
 
-  const layout = useMemo(() => gridLayout(viewport), [viewport]);
+  const layout = useMemo(() => gridLayout(viewport, copyReserve), [viewport, copyReserve]);
   const dot = useMemo(
     () => fieldPoint(layout.field, data.featuredHour, data.hours.length, data.featuredGWs, FIELD_RANGE),
     [layout.field, data.featuredHour, data.hours.length, data.featuredGWs],
@@ -167,6 +172,20 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
     observer.observe(stage);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    const box = measureRef.current;
+    if (!box) return;
+    const blocks = Array.from(box.children) as HTMLElement[];
+    const measure = () => {
+      const tallest = Math.max(0, ...blocks.map((b) => b.offsetHeight));
+      setCopyReserve(tallest ? Math.ceil(tallest) + COPY_BOTTOM : 0);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    blocks.forEach((b) => observer.observe(b));
+    return () => observer.disconnect();
+  }, [copy]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -245,7 +264,7 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
       // One camera: wide on the year, or held on the featured hour.
       const creep = cameraCreep(time, f.hold, life);
       const on = { focus: dot, zoom: lay.zoom, screen: lay.screen };
-      const shot = blendShots(wideShot(vp), on, f.focus);
+      const shot = blendShots(wideShotOn(dot), on, f.focus);
       shot.zoom /= creep.span;
       shot.focus = { x: shot.focus.x + (creep.pan * vp.width) / shot.zoom, y: shot.focus.y };
       camera = cameraFor(shot);
@@ -298,14 +317,14 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
         box.style.opacity = String(openA);
         box.style.visibility = openA > 0.001 ? "visible" : "hidden";
       }
-      // On a phone the chart takes the space under the machine, where its caption sat.
-      if (captionRef.current) captionRef.current.style.opacity = lay.wide ? "1" : String(1 - f.split);
+      // On a phone the chart takes the space under the machine, where its caption sat: the caption leaves before the chart arrives.
+      if (captionRef.current) captionRef.current.style.opacity = lay.wide ? "1" : String(clamp01(1 - 2 * f.split));
       legendRef.current?.setAttribute("opacity", f.legend.toFixed(3));
       legendReserveRef.current?.setAttribute("opacity", f.legendReserve.toFixed(3));
 
       const chart = chartRef.current;
       if (chart) {
-        chart.style.opacity = String(clamp01(f.split * openA));
+        chart.style.opacity = String(clamp01((lay.wide ? f.split : 2 * f.split - 1) * openA));
         chart.style.visibility = f.split > 0.01 ? "visible" : "hidden";
       }
       [f.curveTypical, f.curveLight, f.curveReserve].forEach((draw, i) => {
@@ -541,7 +560,11 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
 
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-[50%] bg-gradient-to-t from-void via-void/92 to-transparent lg:hidden"
+              className="pointer-events-none absolute inset-x-0 bottom-0 lg:hidden"
+              style={{
+                top: Math.max(0, layout.scrimTop),
+                background: `linear-gradient(to bottom, oklch(var(--void) / 0), oklch(var(--void) / 0.94) ${PHONE_COPY_GAP}px, oklch(var(--void)))`,
+              }}
             />
             <div
               aria-hidden
@@ -552,35 +575,14 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
               data-testid="beat-copy"
               className="pointer-events-none absolute inset-x-5 bottom-8 max-w-xl lg:inset-x-auto lg:bottom-auto lg:left-10 lg:top-1/2 lg:w-[32%] lg:-translate-y-1/2"
             >
-              <div className="flex flex-wrap items-center gap-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/75">{beatCopy.kicker}</p>
-                <KindBadge kind={beatCopy.kind} slug={slug} />
-              </div>
-              <h2 className="mt-2 font-display text-2xl font-semibold leading-[1.08] tracking-[-0.03em] md:text-3xl">
-                {beatCopy.title}
-              </h2>
-              <TermText
-                paragraphs={beatCopy.paragraphs}
-                beat={beat}
-                className="mt-3 space-y-2 text-sm leading-relaxed text-white/70 md:text-base"
-              />
-              {beatCopy.figure ? (
-                <p className="mt-4">
-                  <span data-testid="hero-figure" className="font-display text-4xl font-semibold tracking-[-0.04em] text-neon-cyan md:text-5xl">
-                    {beatCopy.figure}
-                  </span>
-                  {beatCopy.figureNote ? (
-                    <span className="ml-3 font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">
-                      {beatCopy.figureNote}
-                    </span>
-                  ) : null}
-                </p>
-              ) : null}
-              {beatCopy.caveat ? (
-                <p data-testid="beat-caveat" className="mt-3 border-l border-white/15 pl-3 text-xs leading-relaxed text-white/45">
-                  {beatCopy.caveat}
-                </p>
-              ) : null}
+              <BeatCopy copy={beatCopy} beat={beat} slug={slug} />
+            </div>
+            <div ref={measureRef} aria-hidden inert className="invisible absolute inset-x-0 top-0 h-0 overflow-hidden lg:hidden">
+              {copy.map((c, i) => (
+                <div key={i} data-measure-beat={i} className="absolute inset-x-5 top-0 max-w-xl">
+                  <BeatCopy copy={c} beat={i} slug={slug} measure />
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -588,6 +590,60 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
         <DecisionSection slug={slug} decision={decision} />
       </div>
     </ReaderProvider>
+  );
+}
+
+/**
+ * One beat's narration. `measure` renders the same boxes without links, term
+ * buttons or test ids, for the invisible copy the phone layout is sized from.
+ */
+function BeatCopy({ copy, beat, slug, measure = false }: { copy: GridCopy; beat: number; slug: string; measure?: boolean }) {
+  const Title = measure ? "div" : "h2";
+  const paragraphs = "mt-3 space-y-2 text-sm leading-relaxed text-white/70 md:text-base";
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/75">{copy.kicker}</p>
+        {measure ? (
+          <span className="rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em]">
+            {KIND_INFO[copy.kind].label}
+          </span>
+        ) : (
+          <KindBadge kind={copy.kind} slug={slug} />
+        )}
+      </div>
+      <Title className="mt-2 font-display text-2xl font-semibold leading-[1.08] tracking-[-0.03em] md:text-3xl">{copy.title}</Title>
+      {measure ? (
+        <div className={paragraphs}>
+          {copy.paragraphs.map((p) => (
+            <p key={p.slice(0, 32)}>{p}</p>
+          ))}
+        </div>
+      ) : (
+        <TermText paragraphs={copy.paragraphs} beat={beat} className={paragraphs} />
+      )}
+      {copy.figure ? (
+        <p className="mt-4">
+          <span
+            data-testid={measure ? undefined : "hero-figure"}
+            className="font-display text-4xl font-semibold tracking-[-0.04em] text-neon-cyan md:text-5xl"
+          >
+            {copy.figure}
+          </span>
+          {copy.figureNote ? (
+            <span className="ml-3 font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">{copy.figureNote}</span>
+          ) : null}
+        </p>
+      ) : null}
+      {copy.caveat ? (
+        <p
+          data-testid={measure ? undefined : "beat-caveat"}
+          className="mt-3 border-l border-white/15 pl-3 text-xs leading-relaxed text-white/45"
+        >
+          {copy.caveat}
+        </p>
+      ) : null}
+    </>
   );
 }
 
@@ -624,7 +680,7 @@ function TracePanel({
           50 Hz
         </text>
       </g>
-      <g ref={floorRef} opacity="0">
+      <g ref={floorRef} opacity="0" data-testid="trace-floor">
         <line x1={0} x2={rect.width} y1={0} y2={0} stroke="oklch(0.72 0.2 300)" strokeDasharray="5 5" strokeWidth={1.2} />
         <text x={0} y={-8} fill="oklch(0.72 0.2 300)" fontSize={10} letterSpacing={1.4} className="font-mono uppercase">
           floor · 49.0 Hz
