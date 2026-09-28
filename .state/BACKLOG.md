@@ -45,9 +45,10 @@
 - [x] Method route `/stories/[slug]/method`, unlisted, every figure generated from the pack; `/method/evidence.json` download
 - [x] Retrofit orientation + method pages to the three existing films — hand-written method boxes replaced by generated method pages; copy moved out of client components so the term check reads what renders
 - [x] Make the reader kit a requirement: `validate:stories` rejects a reference story without `reader` + `method`, locked decision 14 in the story-engine rule, `docs/READER_KIT.md`, `e2e/reader-kit.spec.ts` on all four films
-- [x] Human: approve the grid film for listing — approved 2026-09-28; slug in `LISTED_SLUGS`, landing links `/film` (`e2e/grid-film.spec.ts` asserts it). Reaches prod when PRs #8 and #9 merge
+- [x] Human: approve the grid film for listing — approved 2026-09-28; slug in `LISTED_SLUGS`, landing links `/film` (`e2e/grid-film.spec.ts` asserts it). Shipped via PR #10 (PR #9 merged into the gates branch)
 - [ ] Human: review the retrofitted terms and orientation cards on the three older films — some beat copy was reworded so a term is not used before it is taught (cut-off beats 0, 1, 2, 4, 5; rates title card; recovery beat 9)
 - [ ] Rates pack `calibration.notes` says the thin line is "<10% residual income"; the model and film use 6%. The pack is frozen, so fix it at the next re-freeze
+- [x] Grid film reader fixes (2026-09-28): the axis opens to the floor before the fall; the pullback holds the trip's hour on screen (`wideShotOn`); the phone picture ends above the tallest beat's text, with the caption and chart cross-fading in turn. e2e guards for each
 - [ ] Phase 4–5: regression + polish; documentation last
 
 ## Next (Orbit live — first topic shipped)

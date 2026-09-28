@@ -69,6 +69,15 @@ Rejected and not to be retried: a 2D scale around a point, a tube or orbit camer
 5. **The cue table is checked at load,** against the channels the canvas actually reads — a channel that never reaches pixels cannot rescue a still frame.
 6. **Dead air is measured, not asserted.** The gate scrubs to every declared hold and counts changed pixels; reduced motion must measure exactly zero.
 
+## Craft earned from the grid film
+
+Found by a reader on a phone and a laptop after the film shipped. None of these failed a test until a test was written for the frame.
+
+1. **Show the limit before the fall.** When a mark falls towards a threshold, open the axis to the threshold first, then draw the fall. Rescaling after the pen has passed leaves the mark off screen for the moment the reader is told about it.
+2. **Pull back on the subject.** A pullback from a subject that is not at the frame centre blends to `wideShotOn(subject)`, not `wideShot`. Blending focus and zoom separately towards the centre swings the subject past its place, off screen, while the zoom is still high.
+3. **Size the phone picture from the tallest narration.** Measure every beat's text at the phone width (invisibly, at load and on resize) and end the picture above the tallest. Do not use a fixed share of the screen: system text size and small phones will run the words into the drawing. Keep a floor for the picture, and above that floor start the scrim over the narration.
+4. **Cross-fade text in turn, not together.** Two labels in the same place fade one out, then the other in. Otherwise the middle frame shows both.
+
 ## Next story rule
 
 Before adding a new visualId, ask: can an existing grammar object + stage config express the beat? Only register a new visual when the metaphor cannot share the spine/field. A new shot still gets its own decision spec; it inherits the craft rules above and does not inherit the landing’s metaphor.
