@@ -393,6 +393,80 @@ sign-off. No corpus freeze or film work starts before that.
 
 ---
 
+## Round F: the v3 flagship, scored for illustration (2026-09-27)
+
+Engine spec v3 (`docs/STORYTELLING_ENGINE_SPEC_V3.md` §16) asks for a flagship in a **new domain**
+where "a chart alone is insufficient". Rates, credit cut-offs and rail are taken. The human declined
+the spec's three suggestions (incident response, model deployment, technical debt) and asked for
+something else.
+
+One dimension is added. Gate 2 proved the engine can open a data point into an illustration and close
+it back, so the new test is whether a topic *needs* that.
+
+| Code | Dimension | 1 = | 5 = |
+|------|-----------|-----|-----|
+| **I** | Illustration necessity | The chart already shows the mechanism | The mechanism is invisible in any chart of the data, and one unit of the data opens naturally into it |
+
+`flagship_sum = score_sum + C + I` (max 35). Story 3's verdict applies here too: *too packed*. A
+flagship needs one mechanism the reader can hold, not ten acts.
+
+| id | source | D | V | A | X | E | score_sum | C | I | flagship_sum |
+|----|--------|--:|--:|--:|--:|--:|----------:|--:|--:|-------------:|
+| `fingrid-grid-inertia` | [Fingrid open data](https://data.fingrid.fi/en/datasets): 10 Hz frequency (339), kinetic energy (260), FFR procured/forecast (276/278), CC BY 4.0 | 5 | 5 | 4 | 4 | 4 | **22** | **5 (measured)** | 5 | **32** |
+| `bullwhip-inventories` | FRED / US Census retail, wholesale, manufacturing inventories and sales, public domain | 3 | 4 | 4 | 5 | 4 | 20 | 5 | 4 | 29 |
+| `nhs-exit-block` | NHS England A&E monthly + KH03 / UEC sitrep beds, OGL | 5 | 4 | 4 | 3 | 3 | 19 | 4 | 5 | 28 |
+| `baltic-hypoxia` | ICES / SYKE oxygen profiles, HELCOM loads | 4 | 5 | 3 | 4 | 3 | 19 | 4 | 5 | 28 |
+| `llm-serving-batching` | MLPerf Inference results, Apache 2.0 | 4 | 3 | 3 | 4 | 4 | 18 | 3 | 4 | 25 |
+| `heat-pump-cold-snap` | FMI temperatures + Helsinki Nuuka building energy | 3 | 4 | 3 | 3 | 3 | 16 | 3 | 5 | 24 |
+
+- **`fingrid-grid-inertia`.** *How much fast reserve should the grid hold when the spinning stops?*
+  The Nordic grid runs on the kinetic energy of spinning turbines. Wind and solar do not spin with it.
+  When a big unit trips, inertia sets how fast frequency falls, and reserves must arrest it before
+  49.0 Hz. Fingrid buys Fast Frequency Reserve (0–60 MW) only in low-inertia hours. The decision-maker
+  is the reserve planner. The Nordic reference incident is the loss of Oskarshamn 3 at 1,450 MW;
+  Olkiluoto 3 counts as 1,300 MW because its protection scheme sheds 300 MW of load when it trips. Inertia cannot be seen in a frequency chart, which is the case for I = 5: one hour-dot
+  opens into the spinning machine.
+- **`bullwhip-inventories`.** *Why did the 2021 shortage become the 2023 glut?* Order swings grow at
+  every step up a supply chain, and the lag is measured across the three inventory tiers. Fully open,
+  but the decision-maker is generic and the data are national aggregates.
+- **`nhs-exit-block`.** *Where should a hospital add capacity: the front door or the ward?* A&E jams
+  because the ward is full. Published trust-level panels put the tipping point at 92% bed occupancy.
+  It is a strong illustration case, because the queue shows up one place and is caused somewhere
+  else. NHS England's site blocks scripted downloads from this pod, so the files need a manual
+  download. It is also UK health data.
+- **`baltic-hypoxia`.** *Why do nutrient cuts take decades to clear the dead zones?* The halocline
+  stops oxygen mixing, and internal loading delays recovery. Access is not verified this round.
+- **Rejected:** `llm-serving-batching` (thin decision, evidence is benchmarks rather than outcomes) and
+  `heat-pump-cold-snap` (no open unit-level heat-pump data, so the mechanism would be all model).
+
+### Verification of `fingrid-grid-inertia` (2026-09-27)
+
+- **Access.** The 10 Hz frequency archives download without a key: monthly `.7z` of daily CSVs, about
+  64 MB packed and 840 MB unpacked, from `data.fingrid.fi/files/339/`. Kinetic energy and FFR need a
+  **free Fingrid API key** (`x-api-key`, 10,000 requests a day). The web form uses a session token and
+  is not scripted around.
+- **Data quality.** June 2026 has 25.9M samples with a 0.007% gap share. There are 1–2-sample spikes
+  (one reads 48.86 Hz between two 50.07 Hz readings), so detection must median-filter first. A raw
+  minimum would have reported a near-miss at 49.01 Hz that never happened.
+- **Events are real and textbook.** After the filter, June has **8 sustained disturbances** (a fall
+  of more than 100 mHz within 5 s). The largest, 2026-06-01 17:44:06, falls 49.97 → **49.65 Hz** in
+  about 6 s (steepest about 0.2 Hz/s), rebounds to 49.79 Hz within 20 s, holds, then recovers over
+  minutes. Those are the four stages the illustration needs: inertia, loss, fast arrest, slower
+  restore. Two others fall exactly on the hour (01:00 and 11:00), the known hour-shift deviation
+  when market schedules step. That is a second, deterministic mechanism, and the Spec must separate
+  it from trips.
+- **Not yet shown.** Which unit tripped is not in the open data, so causes stay unattributed unless
+  Fingrid's disturbance reports name them. The link between each event's depth and that hour's
+  kinetic energy needs dataset 260, and so needs the key.
+
+**Picked (human, 2026-09-27):** `fingrid-grid-inertia`. Decision Spec draft:
+[`docs/decision-specs/grid-inertia-fast-reserve.md`](./decision-specs/grid-inertia-fast-reserve.md),
+approved 2026-09-27. The year scan (2025-08 → 2026-07), classified by shape and paired with kinetic
+energy, found 19 trips, 13 of them April to September, the deepest at 49.65 Hz; it is in the Spec.
+(An earlier keyless count of 33 read data gaps as 50 Hz and did not separate transients.)
+
+---
+
 ## Candidates
 
 ### kind legend

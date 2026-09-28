@@ -83,7 +83,7 @@ test.describe("why don't delays die film", () => {
     await expect(page.getByTestId("beat-copy")).not.toContainText(/optimal/i);
   });
 
-  test("the decision names the commuter floor and the limits are on one panel", async ({
+  test("the decision names the commuter floor and the limits are on the method page", async ({
     page,
   }) => {
     await page.goto("/stories/where-should-the-recovery-time-sit/film");
@@ -91,10 +91,12 @@ test.describe("why don't delays die film", () => {
     await expect(decision).toContainText(/75%–81%/);
     await expect(decision).toContainText(/3 of 4/);
 
-    await page.getByRole("group").getByText(/Method, limits and attribution/i).click();
-    const panel = page.getByRole("group");
-    await expect(panel).toContainText(/CC BY 4\.0/);
-    await expect(panel).toContainText(/not endorsed by, Fintraffic/i);
-    await expect(panel).toContainText(/5th-percentile proxy/i);
+    const attribution = page.getByTestId("attribution");
+    await expect(attribution).toContainText(/CC BY 4\.0/);
+    await expect(attribution).toContainText(/not endorsed by, Fintraffic/i);
+
+    await page.getByTestId("end-method-link").click();
+    await expect(page).toHaveURL(/\/stories\/where-should-the-recovery-time-sit\/method$/);
+    await expect(page.getByTestId("method-limitations")).toContainText(/5th-percentile proxy/i);
   });
 });

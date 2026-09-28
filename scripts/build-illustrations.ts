@@ -7,17 +7,19 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildField } from "@/lib/sim/book-field";
 import { buildHousehold, householdValues } from "@/illustrations/household";
+import { buildGrid, gridValues } from "@/illustrations/grid";
 
 const check = process.argv.includes("--check");
 const dir = join(process.cwd(), "src", "illustrations");
 
 const featured = buildField().featured;
-const files: Array<[string, Uint8Array]> = [
-  ["household.riv", buildHousehold(householdValues(featured))],
+const files: Array<[string, Uint8Array, string]> = [
+  ["household.riv", buildHousehold(householdValues(featured)), `for loan ${featured.id}`],
+  ["grid.riv", buildGrid(gridValues()), "from the grid frequency model"],
 ];
 
 let stale = 0;
-for (const [name, bytes] of files) {
+for (const [name, bytes, why] of files) {
   const path = join(dir, name);
   if (check) {
     let current: Buffer | null = null;
@@ -34,7 +36,7 @@ for (const [name, bytes] of files) {
     }
   } else {
     writeFileSync(path, bytes);
-    console.log(`wrote ${name} (${bytes.length} bytes) for loan ${featured.id}`);
+    console.log(`wrote ${name} (${bytes.length} bytes) ${why}`);
   }
 }
 if (stale) process.exit(1);

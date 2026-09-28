@@ -22,16 +22,17 @@ The **story is the interface**; the product is a **reasoning / decision process*
 1. **Approach B** — agent/human writes a manifest; the engine renders it. Do not invent a new page architecture per story.
 2. **Engine is a stage** — sticky graphic + `react-scrollama` (one path all breakpoints). Keep Layer 1 boring; put intelligence in grammar + decision composition.
 3. **Reference story first** — extract primitives from `when-rates-rise` / `docs/reference-story-spec.md`. `rates-and-defaults` is an engine fixture only.
-4. **Decision Spec before code** — Question, Evidence, Model, Mechanism, Uncertainty, Scenarios, Decision frame (+ beat × visual-grammar map) before manifest + visuals.
+4. **Decision Spec before code** — Question, Evidence, Model, Mechanism, Uncertainty, Scenarios, Decision frame (+ beat × visual-grammar map, + the reader kit: orientation and each term with the beat that teaches it) before manifest + visuals.
 5. **Beats over rigid story templates** — do not invent five *page architectures* up front; earn grammar from real stories. **Atmosphere motifs** (cinematic intro/outro chrome) are allowed as Layer 2 — see `docs/ATMOSPHERE_MOTIFS.md`.
 6. **Visual grammar** — behaviors such as `reveal`, `transform`, `compare`, `split`, `trace`, `annotate`, `zoom`, … — not only opaque `visualState` strings. Scrubbed shots keep the same marks through a transition, move the camera, and let travel increase and then stop. See `docs/STORY_GRAMMAR.md` (Craft earned from the landing flight). Do not turn that flight into a template.
 7. **Allow-listed visuals** — map `visualId` through `SceneRenderer` only. Never eval component names from a manifest.
-8. **No invented evidence** — label observed / calculated / illustrative / hypothetical distinctly.
+8. **No invented evidence** — label observed / published / calculated / modelled / hypothetical / illustrative distinctly (`src/lib/reader/kinds.ts`).
 9. **Human gate on publish** — drafts and previews are fine; do not auto-publish.
 10. **Validate before render** — `npm run validate:stories` and `loadStoryManifest` must reject invalid manifests.
 11. **Progressive enhancement** — readable with reduced motion and without sticky positioning.
 12. **Orbit stays separate** — do not modify `C:\Users\kater\Documents\Orbit` from this project. On Orbit, the first section after the title is a teaser (short copy, one visual, a button). The button opens the flagship landing at `/stories`, where stories are added as rows. When Rates Rise opens its film. IDS is that system, not a side feature.
 13. **AI is pipeline, not headline** — research/evidence/architect agents later; do not lead with “AI-powered storytelling.”
+14. **Every reference story ships its reader kit** — an orientation card, each term taught at its first use (never a glossary up front), a Terms drawer, a kind badge per beat linked to the method page, and `/stories/<slug>/method` generated from the frozen pack with the pack downloadable. Manifest `reader` + `method` blocks, narration and method modules registered; `validate:stories` rejects a reference story without them. See `docs/READER_KIT.md`.
 
 ## Three layers
 

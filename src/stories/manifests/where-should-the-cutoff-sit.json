@@ -58,6 +58,119 @@
   ],
   "methodology": "Directed film scrubbing a seeded application PD field. Champion scorecard and OOT cut-off metrics are frozen from PowerBI/11-credit-risk gold (LightGBM + Platt). Operating policy maximises OOT approval subject to bad rate among approved ≤ 4% appetite. Cloud marks are illustrative; published figures are calculated or observed as tagged in the evidence pack.",
   "limitations": "Sample model only — not production IRB or IFRS 9. Competition history is not a live euro-area retail book. LGD 0.45 is illustrative. Mid-50s time-OOT Gini is honest for this public feature set. Budgeted appetite is an illustrative policy input.",
+  "reader": {
+    "orientation": "A lender has to say yes or no to each loan application before knowing how it ends. This story follows one application into a risk score, then a whole book of them, and asks where to draw the line between yes and no, and what that line costs.",
+    "beats": [
+      "Title",
+      "One file",
+      "Score to PD",
+      "The book",
+      "The frontier",
+      "Move the gate",
+      "Out of time",
+      "After go-live"
+    ],
+    "terms": [
+      {
+        "id": "default",
+        "word": "default",
+        "technical": "TARGET = 1",
+        "definition": "Here, the dataset's flag for payment difficulties: a payment more than a set number of days late on one of the loan's first instalments.",
+        "beat": 1
+      },
+      {
+        "id": "pd",
+        "word": "PD",
+        "technical": "probability of default",
+        "definition": "The model's estimate of the chance that this applicant defaults, from 0% to 100%.",
+        "beat": 2
+      },
+      {
+        "id": "champion",
+        "word": "champion",
+        "technical": "champion scorecard",
+        "definition": "The model currently chosen to score applications. Here it is gradient-boosted trees with a calibration step on top.",
+        "beat": 2
+      },
+      {
+        "id": "calibrated",
+        "word": "calibrated",
+        "technical": "Platt calibration",
+        "definition": "Its probabilities match what happens: of applicants given 8%, about 8 in 100 default.",
+        "beat": 2
+      },
+      {
+        "id": "gate",
+        "word": "gate",
+        "technical": "approval threshold",
+        "definition": "The PD line: approve an application when its PD is at or below it, reject it when it is above.",
+        "beat": 4
+      },
+      {
+        "id": "frontier",
+        "word": "frontier",
+        "technical": "acceptance frontier",
+        "definition": "The curve of approval rate against bad rate that every possible gate traces. The decision is a point on it.",
+        "beat": 4
+      },
+      {
+        "id": "bad-rate",
+        "word": "bad rate",
+        "technical": "default rate among approved loans",
+        "definition": "The share of approved loans that go on to default.",
+        "beat": 4
+      },
+      {
+        "id": "youden",
+        "word": "Youden",
+        "technical": "Youden's J; max-KS",
+        "definition": "The gate where the score best separates defaulters from the rest. A statistical choice that ignores how much bad rate the lender can carry.",
+        "beat": 4
+      },
+      {
+        "id": "appetite",
+        "word": "appetite",
+        "technical": "risk appetite",
+        "definition": "The most bad rate the lender will accept among approved loans. 4% in this story, set as an illustration.",
+        "beat": 4
+      },
+      {
+        "id": "out-of-time",
+        "word": "out-of-time",
+        "forms": [
+          "OOT"
+        ],
+        "technical": "out-of-time validation sample",
+        "definition": "Applications from a later period than the model was built on. How the model does there is the best guide to how it will do live.",
+        "beat": 5
+      },
+      {
+        "id": "gini",
+        "word": "Gini",
+        "technical": "Gini coefficient",
+        "definition": "How well the score ranks defaulters above everyone else: 0% is a coin toss, 100% is perfect.",
+        "beat": 6
+      },
+      {
+        "id": "psi",
+        "word": "PSI",
+        "technical": "population stability index",
+        "definition": "How far the mix of applicants on one input has moved since the model was built. A large value means the score may no longer fit.",
+        "beat": 7
+      },
+      {
+        "id": "iv",
+        "word": "IV",
+        "technical": "information value",
+        "definition": "How strongly one input separated defaulters from the rest when the score was built.",
+        "beat": 7
+      }
+    ]
+  },
+  "method": {
+    "pack": "data/figures/where-should-the-cutoff-sit.v1.json",
+    "spec": "docs/decision-specs/home-credit-cutoff.md"
+  },
   "a11y": {
     "alt": "Interactive film of an application PD field with a moving origination cut-off gate",
     "reducedMotionNote": "With reduced motion, camera poses snap without smooth interpolation. Skip link jumps to the decision section."

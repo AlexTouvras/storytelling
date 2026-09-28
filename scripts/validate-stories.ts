@@ -21,6 +21,11 @@ import {
   isAtmosphereMotifId,
 } from "../src/stories/schemas/atmosphereAllowlist";
 import { ATMOSPHERE_REGISTRY } from "../src/components/storytelling/atmosphere/registry";
+import type { StoryManifest } from "../src/stories/schemas/manifest";
+import { termOrderProblems } from "../src/lib/reader/terms";
+import { schemaProblems } from "../src/lib/reader/method";
+import { NARRATION } from "../src/stories/reader/narration";
+import { METHOD_REGISTRY } from "../src/stories/method/registry";
 
 const MANIFESTS_DIR = path.join(process.cwd(), "src", "stories", "manifests");
 
@@ -61,6 +66,40 @@ function assertVisualParity(): string[] {
   }
 
   return errors;
+}
+
+/** The reader kit: narration and method page registered, terms taught in order, every pack block documented. */
+function readerKitProblems(manifest: StoryManifest): string[] {
+  const slug = manifest.meta.slug;
+  const problems: string[] = [];
+  if (manifest.reader) {
+    const narration = NARRATION[slug];
+    if (!narration) {
+      problems.push(`no narration in src/stories/reader/narration.ts`);
+    } else {
+      const beats = narration();
+      if (beats.length !== manifest.reader.beats.length) {
+        problems.push(`narration has ${beats.length} beats; reader.beats names ${manifest.reader.beats.length}`);
+      }
+      problems.push(...termOrderProblems(manifest.reader.terms, beats));
+    }
+  }
+  if (manifest.method) {
+    const method = METHOD_REGISTRY[slug];
+    if (!method) {
+      problems.push(`no method page in src/stories/method/registry.ts`);
+    } else {
+      problems.push(...schemaProblems(method.pack, method.schema));
+    }
+    for (const file of [manifest.method.pack, manifest.method.spec]) {
+      try {
+        readFileSync(path.join(process.cwd(), file));
+      } catch {
+        problems.push(`${file} does not exist`);
+      }
+    }
+  }
+  return problems;
 }
 
 function main() {
@@ -161,8 +200,16 @@ function main() {
         continue;
       }
 
+      const kitProblems = readerKitProblems(manifest);
+      if (kitProblems.length > 0) {
+        console.error(`✗ ${file}: reader kit`);
+        for (const problem of kitProblems) console.error(`  - ${problem}`);
+        failed += 1;
+        continue;
+      }
+
       console.log(
-        `✓ ${file} (${manifest.meta.templateId}, ${manifest.sections.length} sections${manifest.meta.role ? `, ${manifest.meta.role}` : ""})`,
+        `✓ ${file} (${manifest.meta.templateId}, ${manifest.sections.length} sections${manifest.meta.role ? `, ${manifest.meta.role}` : ""}${manifest.reader ? `, ${manifest.reader.terms.length} terms` : ""}${manifest.method ? ", method page" : ""})`,
       );
     } catch (err) {
       console.error(`✗ ${file}: ${err instanceof Error ? err.message : err}`);
