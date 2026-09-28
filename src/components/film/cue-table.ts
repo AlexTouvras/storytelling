@@ -130,6 +130,65 @@ export function checkCueTable<T extends Cue>(
 }
 
 /**
+ * A trigger cue is an event on the timeline rather than a channel: when the
+ * reader crosses `at`, a visual that runs on its own clock (a Rive state
+ * machine) is told to play. Channels interpolate; triggers do not, so they
+ * are reconciled instead of replayed.
+ */
+export type TriggerCue = {
+  id: string;
+  at: number;
+};
+
+/**
+ * What a triggered visual has been told so far. `armed`: waiting at its entry
+ * state. `played`: it was fired and ran its own animation. `settled`: it was
+ * put straight into its end state without animating.
+ */
+export type TriggerState = "armed" | "played" | "settled";
+
+export type TriggerAction = "none" | "fire" | "settle" | "reset";
+
+/**
+ * Bring one triggered visual in line with the timeline. The rule is a pure
+ * function of where the reader was, where they are, and what the visual was
+ * last told, so rapid scrubbing cannot stack animations:
+ *
+ * - behind the cue, anything but `armed` resets;
+ * - past it, an `armed` visual fires only when the reader crossed the cue going
+ *   forward while the visual was on screen and motion is allowed; every other
+ *   way of arriving (reload mid-film, a jump, scrolling back into it from
+ *   later, reduced motion) settles it into its end state instead;
+ * - nothing ever fires twice, because firing leaves `armed`.
+ */
+export function reconcileTrigger(
+  cue: TriggerCue,
+  from: number,
+  to: number,
+  state: TriggerState,
+  context: { visible: boolean; reduced: boolean },
+): TriggerAction {
+  if (to < cue.at) return state === "armed" ? "none" : "reset";
+  if (state !== "armed") return "none";
+  const crossedForward = from < cue.at && to >= cue.at;
+  if (crossedForward && context.visible && !context.reduced) return "fire";
+  return "settle";
+}
+
+export function nextTriggerState(state: TriggerState, action: TriggerAction): TriggerState {
+  switch (action) {
+    case "fire":
+      return "played";
+    case "settle":
+      return "settled";
+    case "reset":
+      return "armed";
+    default:
+      return state;
+  }
+}
+
+/**
  * How held the film is at `progress`. Eased at the edges so creep arrives and
  * leaves without a step.
  */
