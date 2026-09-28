@@ -201,10 +201,8 @@ export type Rect = { x: number; y: number; width: number; height: number };
 
 export type GridLayout = {
   wide: boolean;
-  /** Bottom edge of the picture, screen px: the stage's bottom on a wide screen, above the narration on a phone. */
+  /** Bottom edge of the picture, screen px: the stage's bottom on a wide screen, the top of the narration strip on a phone. */
   pictureBottom: number;
-  /** Where the phone narration's scrim starts: the picture's bottom, or higher when the narration is too tall to fit under it. */
-  scrimTop: number;
   /** Camera zoom on the featured hour. */
   zoom: number;
   /** Where the featured hour is held on screen once focused. */
@@ -224,21 +222,18 @@ function centred(cx: number, cy: number, width: number, height: number): Rect {
 
 /** Matches the `lg` breakpoint, where the narration moves into the left column. */
 export const WIDE_MIN = 1024;
-/** Gap between the picture and the narration on a phone, px. */
-export const PHONE_COPY_GAP = 16;
+/** What stays of the phone narration while the picture plays: its kicker and label, px from the bottom edge. */
+export const PHONE_STRIP = 52;
 /** Room under the phone machine for its two-line legend caption, px; kept above too, so the machine stays centred on its hour. */
 const PHONE_CAPTION = 36;
 
 /**
  * On a wide screen the narration sits in a left column and the picture to its
- * right; on a phone the picture takes the top of the screen and the narration
- * the bottom. `copyReserve` is how far the tallest beat's narration reaches up
- * from the bottom edge on a phone; the picture ends above it, so no beat's
- * text runs into the drawing. The picture never shrinks below 36% of the
- * screen; past that (large system text) the scrim starts above the narration
- * and covers the overlap.
+ * right. On a phone the picture takes the whole screen above the narration
+ * strip: the narration and the picture take turns (`phoneMomentAt`), so the
+ * picture is never shrunk to make room for the words.
  */
-export function gridLayout(viewport: Size, copyReserve = 0): GridLayout {
+export function gridLayout(viewport: Size): GridLayout {
   const { width: W, height: H } = viewport;
   const wide = W >= WIDE_MIN;
   if (wide) {
@@ -250,7 +245,6 @@ export function gridLayout(viewport: Size, copyReserve = 0): GridLayout {
     return {
       wide,
       pictureBottom: H,
-      scrimTop: H,
       zoom: 6,
       screen,
       trace: centred(0, 0, region.width * 0.94, Math.min(region.height * 0.62, 460)),
@@ -265,29 +259,93 @@ export function gridLayout(viewport: Size, copyReserve = 0): GridLayout {
       field: { x: region.x + 0.04 * region.width, y: 0.14 * H, width: region.width * 0.92, height: 0.64 * H },
     };
   }
-  const top = 0.07 * H;
-  const bottom = Math.max(0.36 * H, Math.min(0.56 * H, H - copyReserve - PHONE_COPY_GAP));
+  const top = 0.08 * H;
+  const bottom = H - PHONE_STRIP - 12;
+  const span = bottom - top;
   const screen = { x: W / 2, y: (top + bottom) / 2 };
-  const side = Math.min(0.78 * W, bottom - top - 2 * PHONE_CAPTION);
-  const aside = Math.min(0.6 * W, (bottom - top) * 0.62);
-  const asideCy = top + aside / 2 - screen.y;
+  const side = Math.min(0.88 * W, span - 2 * PHONE_CAPTION);
+  const aside = Math.min(0.62 * W, span * 0.42);
+  const chartHeight = Math.min(span - aside - 8, 0.9 * W);
+  const stackTop = top + (span - aside - 8 - chartHeight) / 2;
+  const asideCy = stackTop + aside / 2 - screen.y;
   return {
     wide,
     pictureBottom: bottom,
-    scrimTop: copyReserve ? Math.min(bottom, H - copyReserve - PHONE_COPY_GAP) : bottom,
     zoom: 6,
     screen,
-    trace: centred(0, 0, 0.94 * W, (bottom - top) * 0.82),
+    trace: centred(0, 0, 0.94 * W, Math.min(span * 0.82, 1.2 * W)),
     machine: centred(0, 0, side, side),
     machineAside: centred(0, asideCy, aside, aside),
     chart: {
       x: -0.46 * W,
-      y: asideCy + aside / 2 + 4,
+      y: asideCy + aside / 2 + 8,
       width: 0.92 * W,
-      height: bottom - top - aside - 8,
+      height: chartHeight,
     },
-    field: { x: 0.1 * W, y: top + 0.04 * H, width: 0.84 * W, height: bottom - top - 0.06 * H },
+    field: { x: 0.1 * W, y: top + 0.04 * H, width: 0.84 * W, height: span - 0.08 * H },
   };
+}
+
+/** Where each beat starts on the film's timeline. */
+export const GRID_BEAT_STARTS: readonly number[] = POSES.filter((p, i) => i === 0 || p.beat !== POSES[i - 1].beat).map((p) => p.at);
+
+/** Each phone reading span, as a share of the film's timeline. */
+export const PHONE_READ = 0.08;
+/** Share of a reading span spent raising or lowering the narration. */
+const CARD_EDGE = 0.2;
+/** The phone track is longer than the wide one by the reading spans. */
+export const PHONE_TRACK_SCALE = 1 + PHONE_READ * GRID_BEAT_STARTS.length;
+
+type PhoneSegment = { beat: number; start: number; end: number; readFrom: number; motionFrom: number; motionTo: number };
+
+const PHONE_SEGMENTS: readonly PhoneSegment[] = (() => {
+  const out: PhoneSegment[] = [];
+  let u = 0;
+  GRID_BEAT_STARTS.forEach((start, beat) => {
+    const end = GRID_BEAT_STARTS[beat + 1] ?? 1;
+    out.push({ beat, start, end, readFrom: u, motionFrom: u + PHONE_READ, motionTo: u + PHONE_READ + (end - start) });
+    u += PHONE_READ + (end - start);
+  });
+  return out;
+})();
+
+export type PhoneMoment = {
+  /** Where the film is on its own timeline, the input to `gridFrameAt`. */
+  film: number;
+  /** 1 = the beat's narration is up over the picture, 0 = lowered to its strip. */
+  card: number;
+};
+
+/**
+ * On a phone, each beat's narration comes up first while the picture holds
+ * where the last beat left it; then the narration lowers to its strip and the
+ * picture plays the beat. The first beat's narration is already up, and the
+ * last one stays up into the decision.
+ */
+export function phoneMomentAt(progress: number): PhoneMoment {
+  const u = clamp01(progress) * PHONE_TRACK_SCALE;
+  const last = PHONE_SEGMENTS.length - 1;
+  const seg = PHONE_SEGMENTS.find((s) => u < s.motionTo) ?? PHONE_SEGMENTS[last];
+  if (u < seg.motionFrom) {
+    const local = (u - seg.readFrom) / PHONE_READ;
+    const rise = seg.beat === 0 ? 1 : smoothstep(local / CARD_EDGE);
+    const lower = seg.beat === last ? 1 : smoothstep((1 - local) / CARD_EDGE);
+    return { film: seg.start, card: Math.min(rise, lower) };
+  }
+  return { film: Math.min(seg.end, seg.start + (u - seg.motionFrom)), card: seg.beat === last ? 1 : 0 };
+}
+
+/** The phone track position where the film reaches `film` with the narration lowered. */
+export function phoneTrackAt(film: number): number {
+  const t = clamp01(film);
+  const seg = PHONE_SEGMENTS.find((s) => t < s.end) ?? PHONE_SEGMENTS[PHONE_SEGMENTS.length - 1];
+  return (seg.motionFrom + (t - seg.start)) / PHONE_TRACK_SCALE;
+}
+
+/** The phone track position in the middle of a beat's reading span. */
+export function phoneReadAt(beat: number): number {
+  const seg = PHONE_SEGMENTS[Math.max(0, Math.min(PHONE_SEGMENTS.length - 1, beat))];
+  return (seg.readFrom + PHONE_READ / 2) / PHONE_TRACK_SCALE;
 }
 
 /** Where the featured hour sits in the year-of-hours field, world pixels. */

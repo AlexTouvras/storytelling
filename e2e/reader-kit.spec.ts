@@ -9,7 +9,8 @@ const STORIES = [
   { slug: "when-rates-rise", track: "rate-film", at: 0.25, beat: "1", term: "buffer", terms: 8, kind: "modelled" },
   { slug: "where-should-the-cutoff-sit", track: "cutoff-film", at: 0.22, beat: "2", term: "pd", terms: 13, kind: "modelled" },
   { slug: "where-should-the-recovery-time-sit", track: "recovery-film", at: 0.66, beat: "7", term: "recovery-margin", terms: 8, kind: "calculated" },
-  { slug: "how-much-fast-reserve", track: "grid-film", at: 0.3, beat: "1", term: "trip", terms: 9, kind: "observed" },
+  // 0.195 is inside beat 1 on a laptop and inside beat 1's reading span on a phone (`phoneReadAt`).
+  { slug: "how-much-fast-reserve", track: "grid-film", at: 0.195, beat: "1", term: "trip", terms: 9, kind: "observed" },
 ] as const;
 
 async function scrubTo(page: Page, track: string, at: number) {

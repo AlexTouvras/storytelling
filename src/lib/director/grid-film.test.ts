@@ -4,13 +4,17 @@ import {
   GRID_HOLDS,
   GRID_POSES,
   GRID_RUNS,
-  PHONE_COPY_GAP,
+  GRID_BEAT_STARTS,
+  PHONE_STRIP,
   WIDE_MIN,
   fieldPoint,
   gridBeatAt,
   gridFrameAt,
   gridLayout,
   gridRunAt,
+  phoneMomentAt,
+  phoneReadAt,
+  phoneTrackAt,
 } from "@/lib/director/grid-film";
 import { GRID_BEATS } from "@/components/film/grid-copy";
 import { gridFilmData } from "@/components/film/grid-film-data";
@@ -60,25 +64,22 @@ describe("grid film timeline", () => {
 });
 
 describe("grid layout", () => {
-  it("keeps the picture right of the narration on a laptop and above it on a phone", () => {
+  it("keeps the picture right of the narration on a laptop", () => {
     const laptop = gridLayout({ width: 1280, height: 800 });
     expect(laptop.screen.x - laptop.machine.width / 2).toBeGreaterThan(0.38 * 1280);
-    const phone = gridLayout({ width: 390, height: 844 });
-    expect(phone.screen.y + phone.machine.height / 2).toBeLessThan(0.58 * 844);
-    expect(phone.chart.y + phone.chart.height + phone.screen.y).toBeLessThanOrEqual(0.56 * 844 + 1);
   });
 
-  it("ends the phone picture above the tallest beat's narration", () => {
-    const vp = { width: 360, height: 740 };
-    const phone = gridLayout(vp, 380);
-    expect(phone.pictureBottom).toBeCloseTo(740 - 380 - PHONE_COPY_GAP);
-    const low = (r: { y: number; height: number }) => phone.screen.y + r.y + r.height;
-    expect(low(phone.machine) + 36).toBeLessThanOrEqual(phone.pictureBottom + 0.5);
-    expect(low(phone.chart)).toBeLessThanOrEqual(phone.pictureBottom);
-    expect(low(phone.trace)).toBeLessThanOrEqual(phone.pictureBottom);
-    expect(phone.field.y + phone.field.height).toBeLessThanOrEqual(phone.pictureBottom);
-    expect(gridLayout(vp, 700).pictureBottom).toBeCloseTo(0.36 * 740);
-    expect(gridLayout(vp, 0).pictureBottom).toBeCloseTo(0.56 * 740);
+  it("gives the phone picture the whole screen above the narration strip", () => {
+    for (const vp of [{ width: 360, height: 740 }, { width: 390, height: 844 }, { width: 412, height: 780 }]) {
+      const phone = gridLayout(vp);
+      expect(phone.pictureBottom).toBeLessThanOrEqual(vp.height - PHONE_STRIP);
+      const low = (r: { y: number; height: number }) => phone.screen.y + r.y + r.height;
+      expect(low(phone.machine) + 36).toBeLessThanOrEqual(phone.pictureBottom + 0.5);
+      expect(low(phone.chart)).toBeLessThanOrEqual(phone.pictureBottom);
+      expect(low(phone.trace)).toBeLessThanOrEqual(phone.pictureBottom);
+      expect(phone.field.y + phone.field.height).toBeLessThanOrEqual(phone.pictureBottom);
+      expect(phone.machine.width).toBeGreaterThanOrEqual(0.85 * vp.width);
+    }
   });
 
   it("switches to the side-by-side layout where the narration moves into its column", () => {
@@ -106,5 +107,43 @@ describe("grid layout", () => {
     expect(p.x).toBeLessThan(field.x + field.width);
     expect(p.y).toBeGreaterThan(field.y);
     expect(p.y).toBeLessThan(field.y + field.height);
+  });
+});
+
+describe("phone reading schedule", () => {
+  it("raises each beat's narration while the picture holds, then lowers it for the beat to play", () => {
+    GRID_BEAT_STARTS.forEach((start, beat) => {
+      const read = phoneMomentAt(phoneReadAt(beat));
+      expect(read.card, `beat ${beat}`).toBe(1);
+      expect(read.film).toBe(start);
+      expect(gridBeatAt(read.film)).toBe(beat);
+    });
+    const mid = (GRID_BEAT_STARTS[2] + GRID_BEAT_STARTS[3]) / 2;
+    expect(phoneMomentAt(phoneTrackAt(mid))).toEqual({ film: expect.closeTo(mid, 6), card: 0 });
+  });
+
+  it("never runs the film backwards, and reaches both ends", () => {
+    let last = -1;
+    for (let q = 0; q <= 1.0000001; q += 0.001) {
+      const { film } = phoneMomentAt(q);
+      expect(film).toBeGreaterThanOrEqual(last);
+      last = film;
+    }
+    expect(phoneMomentAt(0)).toEqual({ film: 0, card: 1 });
+    expect(phoneMomentAt(1).film).toBeCloseTo(1, 9);
+    expect(phoneMomentAt(1).card).toBe(1);
+  });
+
+  it("keeps the narration down whenever the picture is moving", () => {
+    for (let q = 0; q < 0.999; q += 0.0005) {
+      const a = phoneMomentAt(q);
+      const b = phoneMomentAt(q + 0.0005);
+      const moving = b.film > a.film && !GRID_BEAT_STARTS.includes(b.film);
+      if (moving && gridBeatAt(b.film) < GRID_BEAT_STARTS.length - 1) expect(b.card, `at ${q.toFixed(4)}`).toBe(0);
+    }
+  });
+
+  it("maps a film moment to the track and back", () => {
+    for (const t of [0.05, 0.2, 0.31, 0.5, 0.7, 0.9]) expect(phoneMomentAt(phoneTrackAt(t)).film).toBeCloseTo(t, 6);
   });
 });

@@ -3,7 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 const FILM = "/stories/how-much-fast-reserve/film";
 const METHOD = "/stories/how-much-fast-reserve/method";
 
-async function scrubTo(page: Page, at: number) {
+async function scrollTrack(page: Page, at: number) {
   await page.evaluate((at) => {
     document.documentElement.style.scrollBehavior = "auto";
     const el = document.querySelector("[data-testid='grid-film']");
@@ -12,6 +12,18 @@ async function scrubTo(page: Page, at: number) {
     window.scrollTo(0, el.offsetTop + total * at);
   }, at);
   await page.waitForTimeout(250);
+}
+
+/** Scroll to a moment on the film's own timeline, with the phone narration lowered. */
+async function scrubTo(page: Page, film: number) {
+  await page.waitForFunction(() => Boolean(window.__gridFilm));
+  await scrollTrack(page, await page.evaluate((film) => window.__gridFilm!.trackAt(film), film));
+}
+
+/** Scroll to where a beat's narration is up to read. */
+async function scrubToRead(page: Page, beat: number) {
+  await page.waitForFunction(() => Boolean(window.__gridFilm));
+  await scrollTrack(page, await page.evaluate((beat) => window.__gridFilm!.readAt(beat), beat));
 }
 
 test.describe("when the spinning stops film", () => {
@@ -30,7 +42,7 @@ test.describe("when the spinning stops film", () => {
 
   test("a term opens its definition in place, in the beat that teaches it", async ({ page }) => {
     await page.goto(FILM);
-    await scrubTo(page, 0.3);
+    await scrubToRead(page, 1);
     await expect(page.getByTestId("film-stage")).toHaveAttribute("data-beat", "1");
     const trip = page.getByTestId("term-button").and(page.locator("[data-term='trip']"));
     await expect(trip).toHaveAttribute("aria-expanded", "false");
@@ -47,7 +59,7 @@ test.describe("when the spinning stops film", () => {
 
   test("the terms drawer lists every term and closes on Escape", async ({ page }) => {
     await page.goto(FILM);
-    await scrubTo(page, 0.08);
+    await scrubToRead(page, 0);
     const toggle = page.getByTestId("terms-toggle");
     await toggle.click();
     const drawer = page.getByTestId("terms-drawer");
@@ -61,7 +73,7 @@ test.describe("when the spinning stops film", () => {
 
   test("each beat's label links to its entry on the method page", async ({ page }) => {
     await page.goto(FILM);
-    await scrubTo(page, 0.67);
+    await scrubToRead(page, 3);
     await expect(page.getByTestId("film-stage")).toHaveAttribute("data-beat", "3");
     const badge = page.getByTestId("beat-badge").first();
     await expect(badge).toHaveText(/modelled/i);
@@ -155,31 +167,42 @@ test.describe("when the spinning stops film", () => {
 test.describe("when the spinning stops film, on a small phone", () => {
   test.use({ viewport: { width: 360, height: 740 } });
 
-  test("no beat's narration runs into the picture", async ({ page }) => {
+  const PICTURE = ["machine", "legend-caption", "model-chart", "trace-panel"];
+
+  async function shown(page: Page) {
+    return page.evaluate((ids) => {
+      const card = document.querySelector("[data-testid='beat-copy']") as HTMLElement;
+      const boxes = ids
+        .map((id) => document.querySelector(`[data-testid='${id}']`) as HTMLElement | null)
+        .filter((el): el is HTMLElement => {
+          if (!el) return false;
+          for (let node: HTMLElement | null = el; node; node = node.parentElement) {
+            const cs = getComputedStyle(node);
+            if (cs.visibility === "hidden" || Number(cs.opacity) < 0.05) return false;
+          }
+          return true;
+        })
+        .map((el) => ({ id: el.dataset.testid, bottom: el.getBoundingClientRect().bottom }));
+      return { card: card.dataset.card, cardTop: card.getBoundingClientRect().top, height: window.innerHeight, boxes };
+    }, PICTURE);
+  }
+
+  test("each beat's narration comes up to read, then lowers to its strip while the picture plays", async ({ page }) => {
     await page.goto(FILM);
-    for (const at of [0.3, 0.5, 0.57, 0.6, 0.62, 0.7, 0.8, 0.93]) {
-      await scrubTo(page, at);
+    for (const beat of [1, 2, 3, 4]) {
+      await scrubToRead(page, beat);
+      const read = await shown(page);
+      expect(read.card, `beat ${beat} read`).toBe("up");
+      await expect(page.getByTestId("film-stage")).toHaveAttribute("data-beat", String(beat));
+      await expect(page.getByTestId("beat-copy").locator("h2")).toBeInViewport({ ratio: 1 });
+    }
+    for (const film of [0.3, 0.5, 0.57, 0.6, 0.62, 0.7, 0.8, 0.93]) {
+      await scrubTo(page, film);
       await page.waitForTimeout(150);
-      const boxes = await page.evaluate(() => {
-        const copyTop = document.querySelector("[data-testid='beat-copy']")!.getBoundingClientRect().top;
-        const shown = ["machine", "legend-caption", "model-chart", "trace-panel"]
-          .map((id) => document.querySelector(`[data-testid='${id}']`) as HTMLElement | null)
-          .filter((el): el is HTMLElement => {
-            if (!el) return false;
-            let node: HTMLElement | null = el;
-            while (node) {
-              const cs = getComputedStyle(node);
-              if (cs.visibility === "hidden" || Number(cs.opacity) < 0.05) return false;
-              node = node.parentElement;
-            }
-            return true;
-          })
-          .map((el) => ({ id: el.dataset.testid, bottom: el.getBoundingClientRect().bottom }));
-        return { copyTop, shown };
-      });
-      for (const box of boxes.shown) {
-        expect(box.bottom, `${box.id} at ${at}`).toBeLessThanOrEqual(boxes.copyTop);
-      }
+      const play = await shown(page);
+      expect(play.card, `card at ${film}`).toBe("down");
+      expect(play.height - play.cardTop, `strip at ${film}`).toBeLessThanOrEqual(56);
+      for (const box of play.boxes) expect(box.bottom, `${box.id} at ${film}`).toBeLessThanOrEqual(play.cardTop);
     }
   });
 });

@@ -10,11 +10,16 @@ import { openOpacity, openScale } from "@/lib/director/household-transition";
 import {
   FIELD_RANGE,
   GRID_RUNS,
-  PHONE_COPY_GAP,
+  PHONE_STRIP,
+  PHONE_TRACK_SCALE,
   fieldPoint,
   gridFrameAt,
   gridLayout,
+  GRID_BEAT_STARTS,
   gridRunAt,
+  phoneMomentAt,
+  phoneReadAt,
+  phoneTrackAt,
   type GridFrame,
   type GridLayout,
   type Rect,
@@ -27,7 +32,7 @@ import { TermText } from "@/components/reader/TermText";
 import { TermsDrawer } from "@/components/reader/TermsDrawer";
 import { KindBadge } from "@/components/reader/KindBadge";
 import { OrientationCard } from "@/components/reader/OrientationCard";
-import { KIND_INFO, methodHref } from "@/lib/reader/kinds";
+import { methodHref } from "@/lib/reader/kinds";
 import type { GridCopy, GridDecision } from "@/components/film/grid-copy";
 import type { StoryReader } from "@/stories/schemas/manifest";
 
@@ -63,13 +68,18 @@ const RING_WORLD = 5;
 const RING_SHARE = 0.375;
 const TRACE_TOP_HZ = 50.06;
 const CHART = { t: 20, lo: 48.6, hi: 50.05 } as const;
-/** The narration's distance from the stage's bottom edge on a phone (`bottom-8`), px. */
-const COPY_BOTTOM = 32;
+/** Track length on a wide screen; a phone's adds the reading spans. */
+const TRACK_VH = 1300;
 
 declare global {
   interface Window {
     __gridFilm?: {
+      /** Where the film is on its own timeline. */
       progress: () => number;
+      /** Track progress that shows `film` with the phone narration lowered (identity on a wide screen). */
+      trackAt: (film: number) => number;
+      /** Track progress where a beat's narration is up to read. */
+      readAt: (beat: number) => number;
       trigger: () => TriggerState;
       run: () => number;
       fires: () => number;
@@ -143,10 +153,11 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
   const reducedRef = useRef(reduced);
   const [beat, setBeat] = useState(0);
   const [viewport, setViewport] = useState({ width: 1280, height: 800, dpr: 1 });
-  const measureRef = useRef<HTMLDivElement>(null);
-  const [copyReserve, setCopyReserve] = useState(0);
+  const copyRef = useRef<HTMLDivElement>(null);
+  const copyHeight = useRef(0);
+  const stripHeight = useRef(PHONE_STRIP);
 
-  const layout = useMemo(() => gridLayout(viewport, copyReserve), [viewport, copyReserve]);
+  const layout = useMemo(() => gridLayout(viewport), [viewport]);
   const dot = useMemo(
     () => fieldPoint(layout.field, data.featuredHour, data.hours.length, data.featuredGWs, FIELD_RANGE),
     [layout.field, data.featuredHour, data.hours.length, data.featuredGWs],
@@ -174,18 +185,18 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
   }, []);
 
   useEffect(() => {
-    const box = measureRef.current;
-    if (!box) return;
-    const blocks = Array.from(box.children) as HTMLElement[];
+    const card = copyRef.current;
+    if (!card) return;
     const measure = () => {
-      const tallest = Math.max(0, ...blocks.map((b) => b.offsetHeight));
-      setCopyReserve(tallest ? Math.ceil(tallest) + COPY_BOTTOM : 0);
+      copyHeight.current = card.offsetHeight;
+      const row = card.querySelector<HTMLElement>("[data-strip]");
+      stripHeight.current = row ? Math.min(PHONE_STRIP, row.offsetTop + row.offsetHeight + 6) : PHONE_STRIP;
     };
-    measure();
     const observer = new ResizeObserver(measure);
-    blocks.forEach((b) => observer.observe(b));
+    measure();
+    observer.observe(card);
     return () => observer.disconnect();
-  }, [copy]);
+  }, []);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -204,7 +215,8 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
     const points = data.hours.map((gws, i) => fieldPoint(lay.field, i, data.hours.length, gws, FIELD_RANGE));
 
     let raf = 0;
-    let last = trackProgress(track);
+    const momentAt = (progress: number) => (lay.wide ? { film: progress, card: 1 } : phoneMomentAt(progress));
+    let last = momentAt(trackProgress(track)).film;
     let trigger: TriggerState = "armed";
     let run = -1;
     let fires = 0;
@@ -256,13 +268,15 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       const reducedNow = reducedRef.current;
-      const progress = trackProgress(track);
+      const moment = momentAt(trackProgress(track));
+      const progress = moment.film;
       const f = gridFrameAt(progress, reducedNow);
+      const card = reducedNow ? (moment.card >= 0.5 ? 1 : 0) : moment.card;
       const time = (now - started) / 1000;
       const life = reducedNow ? 0 : 1;
 
       // One camera: wide on the year, or held on the featured hour.
-      const creep = cameraCreep(time, f.hold, life);
+      const creep = cameraCreep(time, Math.max(f.hold, lay.wide ? 0 : card), life);
       const on = { focus: dot, zoom: lay.zoom, screen: lay.screen };
       const shot = blendShots(wideShotOn(dot), on, f.focus);
       shot.zoom /= creep.span;
@@ -270,6 +284,14 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
       camera = cameraFor(shot);
       applyCamera(container, camera);
       detail.style.transform = `translate3d(${dot.x}px, ${dot.y}px, 0) scale(${1 / lay.zoom})`;
+
+      // On a phone the narration is up to read, or lowered to its strip while the picture plays.
+      const copyEl = copyRef.current;
+      if (copyEl) {
+        const drop = lay.wide ? 0 : (1 - card) * Math.max(0, copyHeight.current - stripHeight.current);
+        copyEl.style.transform = lay.wide ? "" : `translate3d(0, ${drop.toFixed(1)}px, 0)`;
+        copyEl.dataset.card = card > 0.99 ? "up" : card < 0.01 ? "down" : "moving";
+      }
 
       // The observed trace, folding into its hour.
       const traceEl = traceRef.current;
@@ -394,6 +416,12 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
 
     window.__gridFilm = {
       progress: () => last,
+      trackAt: (film: number) => (lay.wide ? film : phoneTrackAt(film)),
+      readAt: (beat: number) => {
+        if (!lay.wide) return phoneReadAt(beat);
+        const starts = GRID_BEAT_STARTS;
+        return (starts[beat] + (starts[beat + 1] ?? 1)) / 2;
+      },
       trigger: () => trigger,
       run: () => run,
       fires: () => fires,
@@ -451,7 +479,12 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
           <OrientationCard slug={slug} orientation={reader.orientation} className="mt-10" />
         </section>
 
-        <div ref={trackRef} data-testid="grid-film" className="relative h-[1300vh]">
+        <div
+          ref={trackRef}
+          data-testid="grid-film"
+          className="relative h-[var(--track-phone)] lg:h-[var(--track-wide)]"
+          style={{ "--track-phone": `${Math.round(TRACK_VH * PHONE_TRACK_SCALE)}vh`, "--track-wide": `${TRACK_VH}vh` } as React.CSSProperties}
+        >
           <div
             ref={stageRef}
             data-testid="film-stage"
@@ -560,29 +593,19 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
 
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 lg:hidden"
-              style={{
-                top: Math.max(0, layout.scrimTop),
-                background: `linear-gradient(to bottom, oklch(var(--void) / 0), oklch(var(--void) / 0.94) ${PHONE_COPY_GAP}px, oklch(var(--void)))`,
-              }}
-            />
-            <div
-              aria-hidden
               className="pointer-events-none absolute inset-y-0 left-0 hidden w-[42%] bg-gradient-to-r from-void via-void/85 to-transparent lg:block"
             />
 
             <div
+              ref={copyRef}
               data-testid="beat-copy"
-              className="pointer-events-none absolute inset-x-5 bottom-8 max-w-xl lg:inset-x-auto lg:bottom-auto lg:left-10 lg:top-1/2 lg:w-[32%] lg:-translate-y-1/2"
+              data-card="up"
+              className="pointer-events-none absolute inset-x-0 bottom-0 bg-void px-5 pb-8 pt-4 lg:inset-x-auto lg:bottom-auto lg:left-10 lg:top-1/2 lg:w-[32%] lg:-translate-y-1/2 lg:bg-transparent lg:p-0"
             >
-              <BeatCopy copy={beatCopy} beat={beat} slug={slug} />
-            </div>
-            <div ref={measureRef} aria-hidden inert className="invisible absolute inset-x-0 top-0 h-0 overflow-hidden lg:hidden">
-              {copy.map((c, i) => (
-                <div key={i} data-measure-beat={i} className="absolute inset-x-5 top-0 max-w-xl">
-                  <BeatCopy copy={c} beat={i} slug={slug} measure />
-                </div>
-              ))}
+              <div aria-hidden className="absolute inset-x-0 bottom-full h-6 bg-gradient-to-t from-void to-transparent lg:hidden" />
+              <div className="max-w-xl">
+                <BeatCopy copy={beatCopy} beat={beat} slug={slug} />
+              </div>
             </div>
           </div>
         </div>
@@ -593,41 +616,19 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
   );
 }
 
-/**
- * One beat's narration. `measure` renders the same boxes without links, term
- * buttons or test ids, for the invisible copy the phone layout is sized from.
- */
-function BeatCopy({ copy, beat, slug, measure = false }: { copy: GridCopy; beat: number; slug: string; measure?: boolean }) {
-  const Title = measure ? "div" : "h2";
-  const paragraphs = "mt-3 space-y-2 text-sm leading-relaxed text-white/70 md:text-base";
+/** One beat's narration: kicker and label first, so they are what stays on the phone strip. */
+function BeatCopy({ copy, beat, slug }: { copy: GridCopy; beat: number; slug: string }) {
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3">
+      <div data-strip className="flex flex-wrap items-center gap-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/75">{copy.kicker}</p>
-        {measure ? (
-          <span className="rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em]">
-            {KIND_INFO[copy.kind].label}
-          </span>
-        ) : (
-          <KindBadge kind={copy.kind} slug={slug} />
-        )}
+        <KindBadge kind={copy.kind} slug={slug} />
       </div>
-      <Title className="mt-2 font-display text-2xl font-semibold leading-[1.08] tracking-[-0.03em] md:text-3xl">{copy.title}</Title>
-      {measure ? (
-        <div className={paragraphs}>
-          {copy.paragraphs.map((p) => (
-            <p key={p.slice(0, 32)}>{p}</p>
-          ))}
-        </div>
-      ) : (
-        <TermText paragraphs={copy.paragraphs} beat={beat} className={paragraphs} />
-      )}
+      <h2 className="mt-2 font-display text-2xl font-semibold leading-[1.08] tracking-[-0.03em] md:text-3xl">{copy.title}</h2>
+      <TermText paragraphs={copy.paragraphs} beat={beat} className="mt-3 space-y-2 text-sm leading-relaxed text-white/70 md:text-base" />
       {copy.figure ? (
         <p className="mt-4">
-          <span
-            data-testid={measure ? undefined : "hero-figure"}
-            className="font-display text-4xl font-semibold tracking-[-0.04em] text-neon-cyan md:text-5xl"
-          >
+          <span data-testid="hero-figure" className="font-display text-4xl font-semibold tracking-[-0.04em] text-neon-cyan md:text-5xl">
             {copy.figure}
           </span>
           {copy.figureNote ? (
@@ -636,10 +637,7 @@ function BeatCopy({ copy, beat, slug, measure = false }: { copy: GridCopy; beat:
         </p>
       ) : null}
       {copy.caveat ? (
-        <p
-          data-testid={measure ? undefined : "beat-caveat"}
-          className="mt-3 border-l border-white/15 pl-3 text-xs leading-relaxed text-white/45"
-        >
+        <p data-testid="beat-caveat" className="mt-3 border-l border-white/15 pl-3 text-xs leading-relaxed text-white/45">
           {copy.caveat}
         </p>
       ) : null}
