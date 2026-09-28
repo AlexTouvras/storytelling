@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { buildDelayField } from "@/lib/sim/delay-field";
 import { RecoveryFilm } from "@/components/film/RecoveryFilm";
+import { loadStoryManifest } from "@/lib/loadStory";
+
+const SLUG = "where-should-the-recovery-time-sit";
 
 export const metadata: Metadata = {
   title: "Why Don't Delays Die?",
@@ -9,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default function RecoveryFilmPage() {
+  const manifest = loadStoryManifest(SLUG);
+  if (!manifest.reader) throw new Error(`${SLUG} needs a reader block`);
   const model = buildDelayField();
-  return <RecoveryFilm model={model} />;
+  return <RecoveryFilm slug={SLUG} reader={manifest.reader} model={model} />;
 }

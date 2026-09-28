@@ -56,7 +56,7 @@
     {
       "id": "counterfactual-floor",
       "label": "Re-laying existing minutes leaves commuter lines at 75–81%, where long-distance already sits today",
-      "kind": "hypothetical",
+      "kind": "modelled",
       "note": "Modelled replay: one allocation rule at five frozen strengths with journey time conserved to 0.00 min. Not an optimiser — on six of seven lines pushing harder is not better. 3 of 4 commuter lines cannot reach even the worst long-distance line's current figure."
     }
   ],
@@ -73,6 +73,90 @@
   ],
   "methodology": "Directed film scrubbing a seeded field in which one mark is one train at one stop, placed by position in the run against minutes late. Every published figure is read out of the frozen evidence pack: 365 days of Fintraffic Digitraffic arrivals, 395,094 passenger runs and 5,272,722 timetable rows, 91% carrying an actual time. Late means 5+ minutes at a stop on a run that was not cancelled. A leg is (from station, to station, service type) — pooling service types on a shared leg was an error, because the same track is scheduled differently for commuter and long-distance trains. A line is a modal route signature over operated stop sequences, with expresses absorbed as subsequences. Recovery margin is median scheduled leg run time minus the 5th percentile of observed, computed inside one timetable period, because the timetable is re-cut roughly annually and a boundary can move a leg by 8.5 minutes. Survival and seasonality use the whole year. The counterfactual re-lays each line's existing padding toward the legs where delay survives, at five frozen strengths, conserving journey time; the zero-strength replay reproduces measured carry-over exactly. Marks are illustrative and interpolate continuously; printed figures snap to a frozen variant.",
   "limitations": "Cause attribution covers ~1% of rows, so the film can say a delay survived a leg and mostly not why — no beat answers the title with a cause. The technical minimum run time is a 5th-percentile proxy rather than an engineering figure; the finding does not rest on it, since the negative-margin legs beat their schedule on 0% of runs. Samples thin beyond about four stops. Margin predicting survival is an association measured across legs, not a controlled experiment. Margin describes one timetable period. Lines separate when their recovery margin differs and not otherwise, so the picker is recognition and must not rank lines by quality. The counterfactual is arithmetic on observed delays, not an operational plan, and margin sized on a median day is undersized on the days that matter. Finland only; no capacity, rolling-stock, crew or cost model. Not affiliated with, and not endorsed by, Fintraffic or any operator.",
+  "reader": {
+    "orientation": "Trains run late, and a late train often stays late stop after stop. This story follows a year of Finnish arrivals down to one line and one train, and asks where a timetable should keep its spare minutes so that a delay dies out.",
+    "beats": [
+      "A year of arrivals",
+      "One lane",
+      "One train",
+      "It carries",
+      "Every late train",
+      "Two services",
+      "A year of it",
+      "Where the slack is",
+      "Your line",
+      "Move the budget",
+      "What it costs"
+    ],
+    "terms": [
+      {
+        "id": "late",
+        "word": "late",
+        "technical": "5+ minutes behind schedule",
+        "definition": "Five minutes or more behind the timetable at a stop, on a train that was not cancelled.",
+        "beat": 2
+      },
+      {
+        "id": "survival",
+        "word": "survival",
+        "forms": [
+          "carry-over"
+        ],
+        "technical": "delay survival rate",
+        "definition": "The share of late arrivals still late at the next stop. The film also calls it carry-over.",
+        "beat": 4
+      },
+      {
+        "id": "leg",
+        "word": "leg",
+        "technical": "stop pair",
+        "definition": "The stretch of track between two stops a train calls at, for one type of service.",
+        "beat": 7
+      },
+      {
+        "id": "recovery-margin",
+        "word": "recovery margin",
+        "forms": [
+          "margin"
+        ],
+        "technical": "padding; schedule slack",
+        "definition": "Spare minutes in the timetable: the scheduled time for a leg minus the time its fastest runs take. A late train can win them back.",
+        "beat": 7
+      },
+      {
+        "id": "floor",
+        "word": "floor",
+        "technical": "5th-percentile run time",
+        "definition": "The time the fastest runs on a leg take: the 5th percentile of the period's run times. A proxy, not an engineering minimum.",
+        "beat": 7
+      },
+      {
+        "id": "rho",
+        "word": "ρ",
+        "technical": "Spearman rank correlation",
+        "definition": "How closely two rankings agree, from −1 to 1. Negative here means legs with more margin have less survival.",
+        "beat": 7
+      },
+      {
+        "id": "strength",
+        "word": "strength",
+        "technical": "allocation strength",
+        "definition": "How far the minutes are moved toward the legs where delay survives: 0 is today's timetable, 1 the full shift. Five strengths are frozen.",
+        "beat": 9
+      },
+      {
+        "id": "replay",
+        "word": "replay",
+        "technical": "counterfactual replay",
+        "definition": "The year's measured delays run again through a timetable with the minutes moved. A what-if on this data, not an operating plan.",
+        "beat": 9
+      }
+    ]
+  },
+  "method": {
+    "pack": "data/figures/where-should-the-recovery-time-sit.v1.json",
+    "spec": "docs/decision-specs/rail-recovery-time.md"
+  },
   "a11y": {
     "alt": "Interactive film of a year of Finnish rail arrivals, narrowing from the network to one line and one train, then to the recovery margin on each leg",
     "reducedMotionNote": "With reduced motion, camera poses snap without smooth interpolation and marks stop breathing. A skip link jumps to the decision section, and the beat narration is announced in a live region."

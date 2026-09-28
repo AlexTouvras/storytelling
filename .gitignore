@@ -50,3 +50,6 @@ next-env.d.ts
 .state/HYGIENE.md
 
 tmp-verify/
+
+# python
+__pycache__/

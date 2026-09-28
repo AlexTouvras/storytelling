@@ -25,8 +25,29 @@
 - [x] **Gate 1** — a real `.riv` renders in the app beside a data canvas, trigger/bool inputs drive its state machine, unmount frees it (`/lab/rive`, `e2e/rive-gates.spec.ts`)
 - [x] **Gate 2** — data point → camera FOCUS → Rive household opens on the same anchor → shock trigger → closes into the same dot → PULLBACK → the book reprices; reverses, no stacked fires under scrubbing, reduced motion cuts and settles (`/lab/transition`)
 - [x] **Human review at Gate 2** — approved 2026-09-27 on PR #8
-- [ ] Decide Rive state-machine inputs vs data binding (runtime deprecates inputs) before a second illustration
-- [ ] Phase 3: flagship story on the transition (Decision Spec first)
+- [x] Decide Rive state-machine inputs vs data binding: **inputs** for the grid. The story shows two hours, not a continuum, so bools cover it and the writer needs no data-binding objects. Revisit only if an illustration needs a continuous value (the runtime deprecates inputs in favour of data binding)
+- [x] Round F topic search (human declined the spec's three suggestions): six new-domain candidates scored with a new **I** (illustration necessity) dimension; `fingrid-grid-inertia` verified on June 2026 10 Hz data. `docs/DATASET_CATALOGUE.md`
+- [x] Phase 3: human picked `fingrid-grid-inertia` (2026-09-27)
+- [x] Decision Spec draft — `docs/decision-specs/grid-inertia-fast-reserve.md` (six beats; published TSO figures; year scan of 10 Hz events; one-bus model fitted to the published design points, shape only)
+- [x] **Human sign-off on the Decision Spec**: read from the human's "Continue" on the draft (2026-09-27); recorded in the Spec's status so it can be objected to
+- [x] One-bus frequency model with calibration tests — `src/lib/sim/grid-frequency.ts` (hits the two TSO design points within 0.05 Hz, misses Ørum's 20 GWs by about half; shape only)
+- [x] Keyless evidence pack v0 (partial), since superseded by v1
+- [x] Grid illustration — `src/illustrations/grid.ts` → `grid.riv`, lab `/lab/grid`, `e2e/grid-illustration.spec.ts`
+- [x] Fingrid key received (pasted in chat 2026-09-28, used for the session only); 260 (2020-01 → 2026-07), 276 (2020-01 → 2026-07) and 278 (window) pulled via `scripts/fetch-fingrid.py`; each event paired with its hour's inertia
+- [x] Scan fixed (gaps held, not read as 50 Hz) and events classified by shape: 19 trips of 33 falls
+- [x] Evidence pack v1 — `data/figures/how-much-fast-reserve.v1.json`; yearly low-inertia counts within 6% of the published KPIs; FFR by kinetic-energy band
+- [x] Model checked on the 19 trips — `src/lib/sim/grid-validation.ts`: nadir timing right, depth 1.7× conservative (design case)
+- [ ] Human: add `FINGRID_API_KEY` as a Cloud Agents secret for future runs (and consider rotating the one pasted in chat)
+- [ ] Human: note the Spec's "since sign-off" changes (19 trips, seasonal cluster partly explained, 2026 step change in low-inertia hours)
+- [x] Reader orientation and method page specified (human proposed, 2026-09-28) — Spec sections *Reader orientation* and *Method page*: orientation card, terms taught at first use (no glossary wall), illustration legend at beat 2, kind badges linked to a pack-generated method page
+- [x] Phase 3: build the flagship story on the director — `GridFilm` at `/stories/how-much-fast-reserve/film`: one held camera on the trip's hour, the machine opening out of it, three Rive runs against the modelled chart, pullback to 8,760 hours, the decision. `e2e/grid-film.spec.ts`
+- [x] Engine (Layer 1): orientation card, term buttons (`<button aria-expanded>`, keyboard + touch), Terms drawer, kind badges — story-agnostic, terms and copy per story; term-order test
+- [x] Method route `/stories/[slug]/method`, unlisted, every figure generated from the pack; `/method/evidence.json` download
+- [x] Retrofit orientation + method pages to the three existing films — hand-written method boxes replaced by generated method pages; copy moved out of client components so the term check reads what renders
+- [x] Make the reader kit a requirement: `validate:stories` rejects a reference story without `reader` + `method`, locked decision 14 in the story-engine rule, `docs/READER_KIT.md`, `e2e/reader-kit.spec.ts` on all four films
+- [x] Human: approve the grid film for listing — approved 2026-09-28; slug in `LISTED_SLUGS`, landing links `/film` (`e2e/grid-film.spec.ts` asserts it). Reaches prod when PRs #8 and #9 merge
+- [ ] Human: review the retrofitted terms and orientation cards on the three older films — some beat copy was reworded so a term is not used before it is taught (cut-off beats 0, 1, 2, 4, 5; rates title card; recovery beat 9)
+- [ ] Rates pack `calibration.notes` says the thin line is "<10% residual income"; the model and film use 6%. The pack is frozen, so fix it at the next re-freeze
 - [ ] Phase 4–5: regression + polish; documentation last
 
 ## Next (Orbit live — first topic shipped)

@@ -1,5 +1,6 @@
 import pack from "../../../data/figures/where-should-the-recovery-time-sit.v1.json";
 import { BUDGET_STRENGTHS, recoveryVariantIndex } from "@/components/film/recovery-frame";
+import type { EvidenceKind } from "@/lib/reader/kinds";
 
 /**
  * Narration for *Why don't delays die?*, one entry per beat.
@@ -9,8 +10,6 @@ import { BUDGET_STRENGTHS, recoveryVariantIndex } from "@/components/film/recove
  * `kind` is the badge the beat must carry; the Spec forbids an unlabelled figure
  * that looks like a network fact.
  */
-export type EvidenceKind = "observed" | "calculated" | "modelled" | "illustrative";
-
 export type RecoveryCopy = {
   kicker: string;
   title: string;
@@ -273,7 +272,7 @@ export function recoveryCopyFor(beat: number, context: CopyContext = {}): Recove
         paragraphs: [
           `Take this line's existing padding and re-lay it toward the legs where delay survives. Journey time is conserved exactly — ${variant.journey_time_change_min.toFixed(2)} minutes changed.`,
           strength === 0
-            ? `At rest the replay reproduces what was measured: ${pct(now.curve[0].share, 1)} at the next stop. Scrub to move minutes.`
+            ? `At zero strength the replay reproduces what was measured: ${pct(now.curve[0].share, 1)} at the next stop. Scrub to move minutes.`
             : `At ${strength.toFixed(2)} strength: ${pct(variant.curve[0].share, 1)} at the next stop, ${variant.legs_made_tighter} legs tightened and ${variant.legs_made_slacker} slackened, largest single shift ${mins(variant.max_shift_min, 1)}.`,
         ],
         figure: pct(variant.curve[0].share, 1),
@@ -319,6 +318,11 @@ export function recoveryCopyFor(beat: number, context: CopyContext = {}): Recove
 }
 
 export const RECOVERY_BEATS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
+
+/** The narration at rest: the focus line, before the reader moves the budget. */
+export function recoveryNarration(): RecoveryCopy[] {
+  return RECOVERY_BEATS.map((beat) => recoveryCopyFor(beat));
+}
 
 export const RECOVERY_ATTRIBUTION = pack.source.attribution;
 export const RECOVERY_LIMITATIONS = pack.limitations;

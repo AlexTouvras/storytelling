@@ -120,13 +120,13 @@
     {
       "id": "sim-base",
       "label": "Calibrated illustrative book v2: n=2000, seed 42, 35% floating, +300bp floaters, thin <6% income → thin balance 27.8%→33.3%, new thin 5.5%, 90.4% from bottom tercile, floating∩thin 21.0% (rhyme-check vs WP 3053 DSTI>40% 26→33%)",
-      "kind": "calculated",
+      "kind": "modelled",
       "note": "src/lib/sim/rate-buffer-book.ts + calibration.ts"
     },
     {
       "id": "sim-sensitivity",
       "label": "At +300bp, new thin balance 3.4% / 5.5% / 7.9% for floating 20% / 35% / 50%",
-      "kind": "calculated"
+      "kind": "modelled"
     },
     {
       "id": "ces-housing-10-2",
@@ -141,7 +141,7 @@
     {
       "id": "wp3053-dsti",
       "label": "WP 3053: median DSTI +6 pp; share DSTI>40% 26%→33%",
-      "kind": "calculated"
+      "kind": "published"
     },
     {
       "id": "ces-late-mortgage",
@@ -182,6 +182,80 @@
   ],
   "methodology": "Seven-act decision story. Teaching acts use a cash-flow identity. Book and intersection acts use a deterministic TypeScript simulation (seed 42): amortising payments, floater-only +300bp, thin buffer <6% of income (calibrated v2 so thin-balance shares rhyme with WP 3053 DSTI>40% 26%→33% without equating the metrics). The floating×thin share is withheld until Act 5 so the reader filters to it. Reality check quotes ECB CES, sector accounts, and WP 3053. Reproduce: npx tsx scripts/run-rate-buffer-sim.ts · calibrate: npx tsx scripts/calibrate-rate-buffer.ts",
   "limitations": "Calibrated illustrative book — not a live portfolio and not HFCS microdata. Thin-buffer threshold is a teaching cut moment-matched to published DSTI-stress intensification, not a regulatory definition. WP 3053 figures are simulations. CES expectations are not defaults. Country and fixed/adjustable mix are hidden in euro-area averages. Not investment or credit advice.",
+  "reader": {
+    "orientation": "When interest rates go up, some households feel it in their monthly payment and some do not. You will follow one mortgage, then a modelled book of 2,000, and find the loans a lender should watch first. Published European figures check the direction.",
+    "beats": [
+      "Title",
+      "One loan",
+      "The shock",
+      "The book",
+      "Fixed and floating",
+      "The sleeve",
+      "The cut"
+    ],
+    "terms": [
+      {
+        "id": "floating",
+        "word": "floating",
+        "technical": "adjustable-rate mortgage",
+        "definition": "A mortgage whose interest rate resets when market rates move. A fixed one keeps its rate, so its payment does not change.",
+        "beat": 1
+      },
+      {
+        "id": "buffer",
+        "word": "buffer",
+        "technical": "residual income",
+        "definition": "What is left of monthly income after essentials and the mortgage payment. It is the cash that absorbs a higher payment.",
+        "beat": 1
+      },
+      {
+        "id": "basis-point",
+        "word": "basis point",
+        "technical": "bp",
+        "definition": "A hundredth of a percentage point. 300 basis points is three percentage points on the loan's rate.",
+        "beat": 2
+      },
+      {
+        "id": "coupon",
+        "word": "coupon",
+        "technical": "contract interest rate",
+        "definition": "The interest rate the loan pays. On a floating loan it moves with market rates.",
+        "beat": 2
+      },
+      {
+        "id": "amortising",
+        "word": "amortising",
+        "technical": "annuity repayment",
+        "definition": "Repaid in equal monthly payments that cover the interest and part of the balance, so the loan is gone at the end of its term.",
+        "beat": 3
+      },
+      {
+        "id": "seed",
+        "word": "seed",
+        "technical": "random seed",
+        "definition": "The starting number for the random generator. The same seed draws the same 2,000 loans every time, so the picture can be replayed.",
+        "beat": 3
+      },
+      {
+        "id": "thin",
+        "word": "thin",
+        "technical": "residual income under 6% of income",
+        "definition": "Less than 6% of income left after essentials and the mortgage. A teaching line for this story, not a regulatory definition.",
+        "beat": 4
+      },
+      {
+        "id": "sleeve",
+        "word": "sleeve",
+        "technical": "floating ∩ thin",
+        "definition": "The balances that are both floating and thin: their payment can still rise and there is little room left to absorb it.",
+        "beat": 5
+      }
+    ]
+  },
+  "method": {
+    "pack": "data/figures/when-rates-rise.v2.json",
+    "spec": "docs/reference-story-spec.md"
+  },
   "a11y": {
     "alt": "Interactive decision story that unfolds a mechanism before revealing the floating thin-buffer sleeve: rate-payment-buffer spine, causal chain, three borrowers, 2,000-loan field, animated filter to the sleeve, evidence board with counterpoint, and a portfolio cut restating the discovered sleeve.",
     "reducedMotionNote": "The sticky panel updates as each act crosses the scroll trigger. Filter animations snap under reduced motion. Methodology and sources appear at the end of the page."

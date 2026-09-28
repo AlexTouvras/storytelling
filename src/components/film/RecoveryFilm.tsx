@@ -4,17 +4,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { DelayFieldModel } from "@/lib/sim/delay-field";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import { recoveryBeatAt, recoveryFrameAt } from "@/components/film/recovery-frame";
-import {
-  RECOVERY_ATTRIBUTION,
-  RECOVERY_LIMITATIONS,
-  recoveryCopyFor,
-} from "@/components/film/recovery-copy";
+import { RECOVERY_ATTRIBUTION, recoveryCopyFor } from "@/components/film/recovery-copy";
 import type { DelayDrawContext } from "@/components/film/draw-delays";
 import { DelayField } from "@/components/film/DelayField";
 import { SeasonPanel } from "@/components/film/SeasonPanel";
+import { ReaderShell } from "@/components/reader/ReaderShell";
+import { TermText } from "@/components/reader/TermText";
+import { KindBadge } from "@/components/reader/KindBadge";
+import { OrientationCard } from "@/components/reader/OrientationCard";
+import { MethodLink } from "@/components/reader/MethodLink";
+import type { StoryReader } from "@/stories/schemas/manifest";
 import pack from "../../../data/figures/where-should-the-recovery-time-sit.v1.json";
 
 type Props = {
+  slug: string;
+  reader: StoryReader;
   model: DelayFieldModel;
 };
 
@@ -22,14 +26,7 @@ function clamp01(n: number) {
   return n < 0 ? 0 : n > 1 ? 1 : n;
 }
 
-const BADGE_LABEL = {
-  observed: "observed",
-  calculated: "calculated",
-  modelled: "modelled",
-  illustrative: "illustrative",
-} as const;
-
-export function RecoveryFilm({ model }: Props) {
+export function RecoveryFilm({ slug, reader, model }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
   const reduced = usePrefersReducedMotion();
@@ -158,7 +155,7 @@ export function RecoveryFilm({ model }: Props) {
   }, [copy.kicker, copy.title, copy.paragraphs]);
 
   return (
-    <div className="bg-void text-white">
+    <ReaderShell slug={slug} reader={reader} beat={beat} className="bg-void text-white">
       <a
         href="#the-margin"
         className="focus-ring sr-only left-4 top-20 z-50 bg-void px-3 py-2 font-mono text-xs uppercase tracking-wider text-white focus:not-sr-only focus:fixed"
@@ -191,6 +188,7 @@ export function RecoveryFilm({ model }: Props) {
             figure comes from the frozen evidence pack and carries its own label.
           </p>
         </div>
+        <OrientationCard slug={slug} orientation={reader.orientation} className="mt-12" />
       </section>
 
       <div ref={trackRef} data-testid="recovery-film" className="relative h-[1400vh]">
@@ -283,23 +281,16 @@ export function RecoveryFilm({ model }: Props) {
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/75">
                     {copy.kicker}
                   </p>
-                  {copy.kind ? (
-                    <span
-                      data-testid="beat-badge"
-                      className="rounded-full border border-white/20 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-white/55"
-                    >
-                      {BADGE_LABEL[copy.kind]}
-                    </span>
-                  ) : null}
+                  {copy.kind ? <KindBadge kind={copy.kind} slug={slug} /> : null}
                 </div>
                 <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em] text-white md:text-3xl">
                   {copy.title}
                 </h2>
-                <div className="mt-3 space-y-2 text-sm leading-relaxed text-white/65 md:text-base">
-                  {copy.paragraphs.map((paragraph) => (
-                    <p key={paragraph.slice(0, 28)}>{paragraph}</p>
-                  ))}
-                </div>
+                <TermText
+                  paragraphs={copy.paragraphs}
+                  beat={beat}
+                  className="mt-3 space-y-2 text-sm leading-relaxed text-white/65 md:text-base"
+                />
                 {copy.caveat ? (
                   <p
                     data-testid="beat-caveat"
@@ -346,28 +337,10 @@ export function RecoveryFilm({ model }: Props) {
         </div>
       </section>
 
-      <details className="mx-auto max-w-3xl px-5 pb-28 text-sm text-white/55">
-        <summary className="cursor-pointer font-mono text-[11px] uppercase tracking-[0.16em] text-white/40">
-          Method, limits and attribution
-        </summary>
-        <ul className="mt-4 list-disc space-y-2 pl-5 leading-relaxed">
-          {RECOVERY_LIMITATIONS.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-          <li>{RECOVERY_ATTRIBUTION}</li>
-          <li>
-            Not affiliated with, and not endorsed by, Fintraffic or any operator.
-          </li>
-          <li>
-            Decision Spec:{" "}
-            <code className="text-white/70">docs/decision-specs/rail-recovery-time.md</code>
-          </li>
-          <li>
-            Evidence frozen {pack.generated} · {pack.id} · window{" "}
-            {pack.method.window.first} → {pack.method.window.last}
-          </li>
-        </ul>
-      </details>
-    </div>
+      <p data-testid="attribution" className="mx-auto max-w-3xl px-5 pb-6 text-sm leading-relaxed text-white/45">
+        {RECOVERY_ATTRIBUTION}. Not affiliated with, and not endorsed by, Fintraffic or any operator.
+      </p>
+      <MethodLink slug={slug} label="Method, limits and every line's tables" />
+    </ReaderShell>
   );
 }

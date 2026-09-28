@@ -9,6 +9,8 @@ import {
   ATMOSPHERE_INTENSITIES,
   isAtmosphereMotifId,
 } from "@/stories/schemas/atmosphereAllowlist";
+import { EVIDENCE_KINDS } from "@/lib/reader/kinds";
+import { orientationProblems } from "@/lib/reader/terms";
 
 /**
  * Allow-listed visual IDs — registry keys, not free-form component names.
@@ -62,8 +64,53 @@ export const DataRefSchema = z
   .object({
     id: z.string().min(1),
     label: z.string().min(1),
-    kind: z.enum(["observed", "calculated", "illustrative", "hypothetical"]),
+    kind: z.enum(EVIDENCE_KINDS),
     note: z.string().optional(),
+  })
+  .strict();
+
+export const TermSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "term id must be kebab-case"),
+    word: z.string().min(1),
+    forms: z.array(z.string().min(1)).optional(),
+    technical: z.string().min(1),
+    definition: z.string().min(1).max(220, "a definition is one line"),
+    beat: z.number().int().min(0),
+  })
+  .strict();
+
+/** Labels on an illustration the first time it opens, and the caption that stays. */
+export const LegendSchema = z
+  .object({
+    beat: z.number().int().min(0),
+    labels: z.array(z.string().min(1)).min(1).max(4, "at most four legend labels"),
+    caption: z.string().min(1),
+  })
+  .strict();
+
+/**
+ * What a reader needs before they reason with the story: a short orientation,
+ * the film's beats by name, the terms each beat teaches, and a legend for any
+ * illustration that is not self-explanatory.
+ */
+export const ReaderSchema = z
+  .object({
+    orientation: z.string().min(1),
+    beats: z.array(z.string().min(1)).min(1),
+    terms: z.array(TermSchema).min(1),
+    legend: LegendSchema.optional(),
+  })
+  .strict();
+
+/** Where the method page gets its figures and where the reasoning is written down. */
+export const MethodRefSchema = z
+  .object({
+    pack: z.string().regex(/^data\/figures\/[a-z0-9.-]+\.json$/, "pack must be a file in data/figures/"),
+    // The first reference story's Spec predates docs/decision-specs/ and is linked from the rules.
+    spec: z
+      .string()
+      .regex(/^docs\/(decision-specs\/)?[a-z0-9-]+\.md$/, "spec must be a Decision Spec in docs/decision-specs/"),
   })
   .strict();
 
@@ -119,9 +166,54 @@ export const StoryManifestSchema = z
     methodology: z.string().min(1),
     limitations: z.string().min(1),
     a11y: A11ySchema,
+    reader: ReaderSchema.optional(),
+    method: MethodRefSchema.optional(),
   })
   .strict()
   .superRefine((manifest, ctx) => {
+    if (manifest.meta.role === "reference") {
+      if (!manifest.reader) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["reader"],
+          message: "a reference story needs a reader block: orientation, beats and the terms each beat teaches",
+        });
+      }
+      if (!manifest.method) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["method"],
+          message: "a reference story needs a method block naming its evidence pack and Decision Spec",
+        });
+      }
+    }
+    const reader = manifest.reader;
+    if (reader) {
+      for (const problem of orientationProblems(reader.orientation, reader.terms)) {
+        ctx.addIssue({ code: "custom", path: ["reader", "orientation"], message: problem });
+      }
+      const ids = new Set<string>();
+      for (const [ti, term] of reader.terms.entries()) {
+        if (ids.has(term.id)) {
+          ctx.addIssue({ code: "custom", path: ["reader", "terms", ti, "id"], message: `duplicate term "${term.id}"` });
+        }
+        ids.add(term.id);
+        if (term.beat >= reader.beats.length) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["reader", "terms", ti, "beat"],
+            message: `beat ${term.beat} is past the last beat (${reader.beats.length - 1})`,
+          });
+        }
+      }
+      if (reader.legend && reader.legend.beat >= reader.beats.length) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["reader", "legend", "beat"],
+          message: `beat ${reader.legend.beat} is past the last beat (${reader.beats.length - 1})`,
+        });
+      }
+    }
     if (
       manifest.meta.atmosphere &&
       !isAtmosphereMotifId(manifest.meta.atmosphere.motifId)
@@ -161,6 +253,9 @@ export type VisualState = z.infer<typeof VisualStateSchema>;
 export type TemplateId = z.infer<typeof TemplateIdSchema>;
 export type StoryHero = z.infer<typeof StoryHeroSchema>;
 export type StoryAtmosphere = z.infer<typeof AtmosphereSchema>;
+export type StoryReader = z.infer<typeof ReaderSchema>;
+export type StoryTerm = z.infer<typeof TermSchema>;
+export type StoryMethodRef = z.infer<typeof MethodRefSchema>;
 
 export function parseStoryManifest(data: unknown): StoryManifest {
   return StoryManifestSchema.parse(data);
