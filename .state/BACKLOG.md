@@ -39,7 +39,11 @@
 - [x] Model checked on the 19 trips — `src/lib/sim/grid-validation.ts`: nadir timing right, depth 1.7× conservative (design case)
 - [ ] Human: add `FINGRID_API_KEY` as a Cloud Agents secret for future runs (and consider rotating the one pasted in chat)
 - [ ] Human: note the Spec's "since sign-off" changes (19 trips, seasonal cluster partly explained, 2026 step change in low-inertia hours)
+- [x] Reader orientation and method page specified (human proposed, 2026-09-28) — Spec sections *Reader orientation* and *Method page*: orientation card, terms taught at first use (no glossary wall), illustration legend at beat 2, kind badges linked to a pack-generated method page
 - [ ] Phase 3: build the flagship story on the director (only the infrastructure the story demands)
+- [ ] Engine (Layer 1): orientation card, term buttons (`<button aria-expanded>`, keyboard + touch), Terms drawer, kind badges — story-agnostic, terms and copy per story; term-order test
+- [ ] Method route `/stories/how-much-fast-reserve/method`, unlisted, every figure generated from `how-much-fast-reserve.v1.json`; downloadable pack
+- [ ] Retrofit orientation + method pages to the three existing films (their method boxes are hand-written today)
 - [ ] Phase 4–5: regression + polish; documentation last
 
 ## Next (Orbit live — first topic shipped)

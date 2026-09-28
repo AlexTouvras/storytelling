@@ -155,6 +155,55 @@ Following the v3 pipeline: for each insight, what must the reader understand, an
 
 ---
 
+## Reader orientation: terms and the illustration
+
+Proposed 2026-09-28 by the human: a reader must understand the terms and the illustration before they are asked to reason with them. That is the aim. **But not with a glossary wall before the film:** it would delay the hook and front-load words the reader has no use for yet. Instead, four pieces:
+
+1. **Orientation card**, after the title and before beat 0. About 40 words, with no term the reader has to learn:
+   > The Nordic grid is one machine turning at 50 turns a second. When a power plant drops out, it slows. This story is about how far it slows, why that depends on the hour, and what the grid buys to stop it.
+
+   It adds one line on how to read the film ("scroll to move; underlined words explain themselves; badges say where each number comes from"), and a link to the method page.
+2. **One name per thing, taught where it is first needed.** The film speaks plain words and shows the technical name once, for experts:
+
+| Film word | Technical name (shown once) | Plain definition | First needed |
+|---|---|---|---|
+| frequency, 50 Hz | system frequency | How fast every generator in the Nordic grid turns, all in step. 50 Hz is normal | beat 0 |
+| trip | loss of generation | A power plant or import link disconnecting without warning | beat 1 |
+| lowest point | nadir | How far the frequency falls before the grid catches it | beat 1 |
+| the floor | frequency limit after the reference incident | 49.0 Hz: the lowest the operators allow after the largest trip. Below 48.8 Hz, customers are disconnected automatically | beat 1 |
+| spinning mass | inertia; kinetic energy, GWs | Energy stored in the turning generators. The more there is, the slower the fall | beat 2 |
+| slower reserve | FCR-D | Plants that ramp up over several seconds once the frequency drops below 49.9 Hz | beat 2 |
+| light hour | low-inertia hour | An hour with less spinning mass, usually windy or sunny with few large thermal plants running; below 150 GWs in the operators' terms | beat 3 |
+| fast reserve | Fast Frequency Reserve, FFR | Reserve that switches on within about a second, at 49.7, 49.6 or 49.5 Hz | beat 3 |
+| the largest trip | reference incident | The biggest single loss the grid is designed for: 1,450 MW | beat 3 |
+
+   - In the narration, a term's first use is a **term button**: underlined, it opens a one-line definition in place. It is a real `<button>` with `aria-expanded`, it works by keyboard and touch (not hover-only), and it has no motion under reduced motion.
+   - A **Terms** drawer, reachable from the film chrome at any point, lists every term with its definition and the beat it belongs to.
+   - A test fails if the narration uses a listed term before the beat that teaches it, or uses a technical name without its film word.
+3. **An illustration legend, the first time the machine opens** (beat 2). Annotation-layer labels, at most four, and they fade after the beat: *each wheel is spinning generators* · *violet: the plant that trips* · *dial: frequency, with the floor* · *cyan: fast reserve* (from beat 3). One persistent caption: *Illustration. The wheels' slow-down is exaggerated; the dial is to scale.*
+4. **Kind badges explained once.** The orientation card's reading line and the Terms drawer both carry the key: observed · calculated · published · modelled · illustrative. Each badge on screen links to its entry on the method page.
+
+## Method page (optional depth)
+
+The human also proposed optional documentation for anyone who wants the data, the schema, the calculations and the analysis. Agreed. It is a **separate, linked page**, not a longer end box: readers who want it get a real document, and the film stays short.
+
+- **Route:** `/stories/how-much-fast-reserve/method`, unlisted like the film. Linked from the orientation card, the end of the film, and every kind badge.
+- **Generated from the pack, not typed.** Every figure is formatted out of `how-much-fast-reserve.v1.json` and the model modules (the "narration reads the pack" pattern), so a re-freeze moves the page with the data. The page shows the pack's `generated` date and version.
+- **Sections:**
+  1. **The decision.** Question, claim, takeaway, and what we do not claim, from this Spec.
+  2. **Data sources.** Each Fingrid dataset and published report: licence, link, window, coverage and gaps. Also the time-zone note (the archive is Finnish local time, the API is UTC).
+  3. **Pipeline.** `fetch-fingrid.py` → `scan-grid-events.py` → classify → `freeze-grid-inertia.py` → `grid-frequency.ts` → `grid-validation.ts`, with the commands to reproduce it and where the key goes.
+  4. **Events.** The filter, the detector, the class rule with a small example trace per class, and all 33 events in one table: time, class, depth, time to lowest point, kinetic energy, estimated loss.
+  5. **Hours and fast reserve.** Our yearly counts beside the published KPIs, and FFR bought by inertia band.
+  6. **The model.** The swing equation and every parameter; the calibration points and the one it misses; the check against the 19 trips (timing right, 1.7× deeper), and what that means for how the film uses it.
+  7. **Schema.** Every top-level block of the pack: what it holds, its `kind`, its source. A link to download the pack JSON.
+  8. **Limitations.** The pack's list, verbatim.
+- **Not** a notebook, not interactive analysis, not a second story. Tables and at most three small static charts.
+
+**Engine consequence (Layer 1):** the orientation card, term buttons, Terms drawer, kind badges and method route are story-agnostic. Build them once for this film, with the terms, sections and copy supplied per story. Then retrofit the three existing films, whose method boxes today are hand-written paragraphs (backlog).
+
+---
+
 ## Illustration brief (Rive)
 
 Built as `src/illustrations/grid.ts` → `grid.riv`, one artboard, **Grid**:
@@ -202,3 +251,5 @@ New `visualId`s go through `SceneRenderer` only when implementing.
 - [x] Model checked against observed events with their hour's kinetic energy (timing right; depth 1.7× conservative)
 - [x] Evidence pack frozen with kind tags (v1)
 - [ ] Beat list stable enough to write narration and visual states
+- [ ] Orientation card, term list and illustration legend written; term-order test passes
+- [ ] Method page generated from the pack, linked from the film and every kind badge
