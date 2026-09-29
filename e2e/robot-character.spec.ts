@@ -20,6 +20,7 @@ async function open(page: Page) {
   await expect(page.getByTestId("rive-robot").locator("canvas")).toBeVisible();
   await expect(page.getByTestId("rive-states")).toHaveText("idle");
   await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
+  await expect(page.getByTestId("robot-lines").locator("li")).toHaveCount(6);
 }
 
 /** A control below the card scrolls the canvas off a phone, and the runtime stops advancing while it is offscreen. */

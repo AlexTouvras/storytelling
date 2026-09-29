@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RiveLayer, type RiveLayerHandle } from "@/components/director/RiveLayer";
 import { ROBOT_RIV_URL } from "@/components/director/rive-assets";
-import { ROBOT, ROBOT_ACCENTS, ROBOT_MODES, type RobotMode } from "@/illustrations/robot";
+import { ROBOT, ROBOT_ACCENTS, ROBOT_LINES, ROBOT_MODES, type RobotMode } from "@/illustrations/robot";
 import { argb } from "@/lib/rive/riv-writer";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 
@@ -23,7 +23,6 @@ export function RobotLab() {
   const [energy, setEnergy] = useState<number>(ROBOT.defaults.energy);
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [accent, setAccent] = useState<string>(ROBOT_ACCENTS[0].id);
-  const [line, setLine] = useState<string>(ROBOT.defaults.line);
   const [states, setStates] = useState<string[]>([]);
   const [readback, setReadback] = useState({ hover: false, reacting: false, presence: "" });
 
@@ -93,10 +92,6 @@ export function RobotLab() {
     rive.current?.setColor(ROBOT.props.accent, argb(r, g, b));
     settle();
   };
-  const chooseLine = (value: string) => {
-    setLine(value);
-    rive.current?.setString(ROBOT.props.line, value);
-  };
   const poke = () => {
     rive.current?.fire(ROBOT.props.poke);
     settle();
@@ -112,9 +107,10 @@ export function RobotLab() {
         A character for the AI field card
       </h1>
       <p className="mt-4 max-w-2xl text-white/65">
-        <code>robot.riv</code> introduces the card, then a tap tucks it into the corner; tap again and
-        it comes back. Point at it and the eyes follow; the accent is the homepage colour of a field
-        card. Chrome, not evidence.
+        <code>robot.riv</code> opens with a short judgement about when to hand a step to AI, then
+        swaps in a new one every few seconds. A tap tucks it into the corner; tap again and it comes
+        back. Point at it and the eyes follow; the accent is the homepage colour of a field card.
+        Chrome, not evidence.
       </p>
 
       <div className="mt-10 grid gap-8 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
@@ -217,17 +213,14 @@ export function RobotLab() {
             </div>
           </fieldset>
 
-          <label className="block max-w-md">
-            <span className={label}>Bubble</span>
-            <input
-              type="text"
-              value={line}
-              disabled={!ready}
-              data-testid="robot-line"
-              className="focus-ring mt-2 block w-full border border-white/20 bg-transparent px-3 py-2 text-white/80"
-              onChange={(e) => chooseLine(e.target.value)}
-            />
-          </label>
+          <div className="max-w-md">
+            <p className={label}>What it says, in turn</p>
+            <ol data-testid="robot-lines" className="mt-2 list-decimal space-y-1 pl-4 text-[12px] normal-case tracking-normal text-white/70">
+              {ROBOT_LINES.map((words) => (
+                <li key={words}>{words}</li>
+              ))}
+            </ol>
+          </div>
 
           <div className="flex flex-wrap gap-2 uppercase tracking-[0.14em]">
             <button
@@ -250,7 +243,6 @@ export function RobotLab() {
                 setEnergy(ROBOT.defaults.energy);
                 setLook({ x: 0, y: 0 });
                 setAccent(ROBOT_ACCENTS[0].id);
-                setLine(ROBOT.defaults.line);
                 if (reduced) {
                   rive.current?.fire(ROBOT.props.settle);
                   settle();

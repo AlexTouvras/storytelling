@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PROP, TYPE, decodeRiv } from "@/lib/rive/riv-writer";
-import { ROBOT, ROBOT_MODES, buildRobot, robotEyePose } from "@/illustrations/robot";
+import { ROBOT, ROBOT_LINES, ROBOT_MODES, buildRobot, robotEyePose } from "@/illustrations/robot";
 
 const font = new Uint8Array(readFileSync(join(process.cwd(), "src/illustrations/fonts/Inter-subset.ttf")));
 
@@ -57,8 +57,9 @@ describe("robot.riv", () => {
     expect(types).toEqual(expect.arrayContaining([0, 1, 2, 4]));
   });
 
-  it("carries the introduction, the font and a bone chain", () => {
-    expect(names(TYPE.textValueRun, "runText")).toContain(ROBOT.defaults.line);
+  it("carries every bubble line, the font and a bone chain", () => {
+    // Drawables encode back-to-front, so the first line in the rotation is last in the file.
+    expect(names(TYPE.textValueRun, "runText")).toEqual([...ROBOT_LINES].reverse());
     expect(names(TYPE.fontAsset, "assetName")).toEqual(["Inter"]);
     const bytes = objects.find((o) => o.type === TYPE.fileAssetContents)!.props.get(key("assetBytes")) as number[];
     expect(bytes.length).toBe(font.byteLength);

@@ -56,7 +56,7 @@ export const ROBOT = {
     showing: "showing",
     /** Written by the machine: true while the hop plays. */
     reacting: "reacting",
-    /** String. The bubble's line; a card replaces the introduction. */
+    /** String. Replaces the first bubble line. The rest of the rotation is baked in. */
     line: "line",
     /** Written by the machine, and not one of `reports`: arriving, present, tucking, parked, returning. */
     presence: "presence",
@@ -68,9 +68,23 @@ export const ROBOT = {
   defaults: {
     mode: "idle" as RobotMode,
     energy: 60,
-    line: "Hi — this card is when to use AI. Tap me and I'll tuck into the corner.",
+    line: "This card is when to hand a step to AI, and when to keep it.",
   },
 } as const;
+
+/**
+ * What the bubble says, in order, while the robot is out. Each line is a
+ * judgement about handing work to AI, not a measured result. The first one is
+ * also the `line` default, so a card can replace the opener.
+ */
+export const ROBOT_LINES = [
+  ROBOT.defaults.line,
+  "Hand it over when you do it often and a miss is easy to catch.",
+  "Keep the step when you cannot tell a good answer from a bad one.",
+  "A model can be wrong. Leave a person on the check.",
+  "One prompt should not run the whole job. Split it into steps.",
+  "Tap me and I'll wait in the corner.",
+] as const;
 
 /**
  * Homepage field-card colours, sRGB from the site's neon tokens. The accent
@@ -433,18 +447,21 @@ export function buildRobot(font: Uint8Array): Uint8Array {
     fill: ink(8, 14, 28, 0.94),
     stroke: { color: cyan(0.9), thickness: 1.5 },
   });
-  const said = ab.text({
-    name: "bubble line",
-    x: -76,
-    y: -32,
-    parent: bubble,
-    width: 152,
-    text: ROBOT.defaults.line,
-    fontSize: 13,
-    color: argb(227, 232, 242),
-    align: "center",
-  });
-  ab.bind(said.run, "text", line);
+  const said = ROBOT_LINES.map((words, i) =>
+    ab.text({
+      name: `bubble line ${i}`,
+      x: -76,
+      y: -32,
+      parent: bubble,
+      width: 152,
+      text: words,
+      fontSize: 13,
+      color: argb(227, 232, 242),
+      align: "center",
+      opacity: i === 0 ? 1 : 0,
+    }),
+  );
+  ab.bind(said[0].run, "text", line);
 
   // Invisible, and parented to the rig so a tap still lands once it has shrunk into the corner.
   const touch = ab.rect({ name: "touch", x: 0, y: 196, parent: float, width: 250, height: 330, cornerRadius: 60, fill: argb(0, 0, 0, 0) });
@@ -694,6 +711,36 @@ export function buildRobot(font: Uint8Array): Uint8Array {
   presenceLayer.transition(sParked, sReturning, { conditions: [{ vmTrigger: poke }] });
   presenceLayer.transition(sReturning, sPresent, { conditions: [], exitAtPercent: 100 });
   presenceLayer.transition(presenceLayer.any, sPresent, { conditions: [{ vmTrigger: settle }] });
+
+  // A new line every few seconds. The bubble group hides all of them while tucked.
+  const SLOT = 360;
+  const FADE = 24;
+  const lineCycle = ab.animation("lines", ROBOT_LINES.length * SLOT, "loop");
+  said.forEach((one, i) => {
+    const start = i * SLOT;
+    const end = start + SLOT;
+    const total = ROBOT_LINES.length * SLOT;
+    const keys: Key[] =
+      i === 0
+        ? [
+            [0, 1, "hold"],
+            [end - FADE, 1, ease],
+            [end, 0, "hold"],
+            [total - FADE, 0, ease],
+            [total, 1],
+          ]
+        : [
+            [0, 0, "hold"],
+            [start, 0, ease],
+            [start + FADE, 1, "hold"],
+            [end - FADE, 1, ease],
+            [Math.min(end, total), 0],
+          ];
+    if (i !== 0 && end < total) keys.push([total, 0]);
+    lineCycle.key(one.text, "opacity", keys);
+  });
+  const linesLayer = sm.layer("lines");
+  linesLayer.transition(linesLayer.entry, linesLayer.play(lineCycle));
 
   // Gaze: the pointer moves a target; the eyes copy a share of its offset, clamped
   // to the visor. The hover layer owns the constraint's strength, so when the

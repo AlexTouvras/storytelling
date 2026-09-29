@@ -61,6 +61,7 @@
 - [x] Migrate `grid.riv` and `household.riv` to data binding; `RiveLayer` on the view model; e2e fails on Rive deprecation warnings
 - [x] `/lab/robot` with a mock field card, `e2e/robot-character.spec.ts`
 - [x] Human: design review of the robot — friendly helper; homepage neon plus each field card's colour; appears with an introduction, tap tucks to the lower right, tap again returns; text bubble, no sound; skeletons for later. Shipped on `robot.riv` / `/lab/robot`
+- [x] Bubble rotates through six short judgements about handing a step to AI (`ROBOT_LINES`), baked into `robot.riv`
 - [ ] Place the robot on the real AI field card (Orbit side; this repo only ships the `.riv` and `RiveLayer`)
 - [x] Writer: text runs, embedded fonts, root/child bones, skin/tendon/weight. The robot's waving arm is a rigid bone chain. Skin deformation is in the writer (tendon matrix = rest world transform; weight index 0 is the runtime identity bone)
 - [ ] Nested artboards, if a story needs a reusable part. Not earned yet
