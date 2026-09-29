@@ -86,13 +86,16 @@ describe("grid.riv", () => {
     expect(Buffer.compare(committed, Buffer.from(buildGrid(values)))).toBe(0);
   });
 
-  it("carries the state machine and inputs the director drives", () => {
+  it("carries the state machine and the view model the director drives, and no inputs", () => {
     const { objects } = decodeRiv(new Uint8Array(committed));
     const machine = objects.find((o) => o.type === TYPE.stateMachine)!;
     expect(machine.props.get(key("animName"))).toBe(GRID.stateMachine);
-    const names = (type: number) => objects.filter((o) => o.type === type).map((o) => o.props.get(key("smName")));
-    expect(names(TYPE.smTrigger)).toEqual([GRID.inputs.trip]);
-    expect(names(TYPE.smBool)).toEqual([GRID.inputs.tripped, GRID.inputs.light, GRID.inputs.reserve]);
+    const names = (type: number) => objects.filter((o) => o.type === type).map((o) => o.props.get(key("vmName")));
+    expect(names(TYPE.viewModel)).toEqual([GRID.viewModel]);
+    expect(names(TYPE.vmPropertyTrigger)).toEqual([GRID.props.trip]);
+    expect(names(TYPE.vmPropertyBoolean)).toEqual([GRID.props.tripped, GRID.props.light, GRID.props.reserve]);
+    expect(names(TYPE.vmPropertyEnumCustom)).toEqual([...GRID.reports]);
+    expect(objects.some((o) => o.type === TYPE.smTrigger || o.type === TYPE.smBool)).toBe(false);
     const artboard = objects.find((o) => o.type === TYPE.artboard)!;
     expect(artboard.props.get(key("name"))).toBe(GRID.name);
   });

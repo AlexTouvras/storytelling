@@ -380,8 +380,8 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
         const index = gridRunAt(progress);
         const current = GRID_RUNS[index];
         const inputs = () => {
-          rive.setBool(GRID.inputs.light, current.light);
-          rive.setBool(GRID.inputs.reserve, current.reserve);
+          rive.setBool(GRID.props.light, current.light);
+          rive.setBool(GRID.props.reserve, current.reserve);
         };
         if (index !== run) {
           rive.reset();
@@ -392,10 +392,10 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
         }
         const action = reconcileTrigger(current.cue, last, progress, trigger, { visible, reduced: reducedNow });
         if (action === "fire") {
-          rive.fire(GRID.inputs.trip);
+          rive.fire(GRID.props.trip);
           fires++;
         } else if (action === "settle") {
-          rive.setBool(GRID.inputs.tripped, true);
+          rive.setBool(GRID.props.tripped, true);
           quiet();
         } else if (action === "reset") {
           rive.reset();
@@ -551,6 +551,7 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
                     src={GRID_RIV_URL}
                     artboard={GRID}
                     stateMachine={GRID.stateMachine}
+                    reports={GRID.reports}
                     pixelRatio={viewport.dpr}
                     className="absolute inset-0"
                     testId="grid-layer"

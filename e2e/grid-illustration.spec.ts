@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const KNOWN = [/deprecated/i, /software WebGL/i, /GroupMarkerNotSet/i, /React DevTools/i];
+const KNOWN = [/software WebGL/i, /GroupMarkerNotSet/i, /React DevTools/i];
 
 test("grid.riv loads and plays each variant of the trip", async ({ page }) => {
   const problems: string[] = [];

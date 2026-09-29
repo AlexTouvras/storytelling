@@ -22,14 +22,17 @@ import { argb } from "@/lib/rive/riv-writer";
 export const HOUSEHOLD = {
   name: "Household",
   stateMachine: "Household",
+  viewModel: "Household",
   width: 400,
   height: 400,
-  inputs: {
+  props: {
     /** Trigger: the coupon reprices and the mechanism plays. */
     shock: "shock",
-    /** Bool: jump straight to the strained end state, no animation. */
+    /** Boolean: jump straight to the strained end state, no animation. */
     constrained: "constrained",
   },
+  /** Enums the machine writes as each layer changes state: what it is showing. */
+  reports: ["buffer", "flow"],
   /** Length of the shock animation, so the director can caption its end. */
   shockSeconds: 1.8,
 } as const;
@@ -216,25 +219,29 @@ export function buildHousehold(values: HouseholdValues): Uint8Array {
   const flowCalm = flow("flow calm", 72);
   const flowStrained = flow("flow strained", 48);
 
-  const sm = ab.stateMachine(HOUSEHOLD.stateMachine);
-  const shockInput = sm.trigger(HOUSEHOLD.inputs.shock);
-  const constrained = sm.bool(HOUSEHOLD.inputs.constrained);
+  const vm = ab.viewModel(HOUSEHOLD.viewModel);
+  const shockProp = vm.trigger(HOUSEHOLD.props.shock);
+  const constrained = vm.boolean(HOUSEHOLD.props.constrained);
 
-  const main = sm.layer("buffer");
+  const sm = ab.stateMachine(HOUSEHOLD.stateMachine);
+  const [bufferReport, flowReport] = HOUSEHOLD.reports;
+  const main = sm.layer(bufferReport);
   const sCalm = main.play(calm);
   const sShock = main.play(shock);
   const sStrained = main.play(strained);
   main.transition(main.entry, sCalm);
-  main.transition(sCalm, sShock, { conditions: [{ trigger: shockInput }] });
-  main.transition(sCalm, sStrained, { conditions: [{ bool: constrained, equals: true }] });
+  main.transition(sCalm, sShock, { conditions: [{ vmTrigger: shockProp }] });
+  main.transition(sCalm, sStrained, { conditions: [{ vm: constrained, value: true }] });
   main.transition(sShock, sStrained, { conditions: [], exitAtPercent: 100 });
+  main.report(vm.enum(bufferReport, main.stateNames()));
 
-  const drops = sm.layer("flow");
+  const drops = sm.layer(flowReport);
   const fCalm = drops.play(flowCalm);
   const fStrained = drops.play(flowStrained);
   drops.transition(drops.entry, fCalm);
-  drops.transition(fCalm, fStrained, { conditions: [{ trigger: shockInput }] });
-  drops.transition(fCalm, fStrained, { conditions: [{ bool: constrained, equals: true }] });
+  drops.transition(fCalm, fStrained, { conditions: [{ vmTrigger: shockProp }] });
+  drops.transition(fCalm, fStrained, { conditions: [{ vm: constrained, value: true }] });
+  drops.report(vm.enum(flowReport, drops.stateNames()));
 
   return ab.encode(0x1d0d);
 }

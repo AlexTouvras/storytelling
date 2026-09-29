@@ -230,10 +230,10 @@ export function TransitionScene({ model }: Props) {
           reduced: reducedNow,
         });
         if (action === "fire") {
-          rive.fire(HOUSEHOLD.inputs.shock);
+          rive.fire(HOUSEHOLD.props.shock);
           fires++;
         } else if (action === "settle") {
-          rive.setBool(HOUSEHOLD.inputs.constrained, true);
+          rive.setBool(HOUSEHOLD.props.constrained, true);
           quiet();
         } else if (action === "reset") {
           rive.reset();
@@ -318,6 +318,7 @@ export function TransitionScene({ model }: Props) {
                 src={HOUSEHOLD_RIV_URL}
                 artboard={HOUSEHOLD}
                 stateMachine={HOUSEHOLD.stateMachine}
+                reports={HOUSEHOLD.reports}
                 pixelRatio={riveRatio}
                 className="h-full w-full"
                 testId="household-layer"
