@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+/** Public path. Orbit serves `/stories/*`; `/lab/*` never reaches the website. */
 export default function AiFieldCardPage() {
   return <AiFieldCard />;
 }

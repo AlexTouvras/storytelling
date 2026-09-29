@@ -64,6 +64,7 @@
 - [x] Bubble rotates through six short judgements about handing a step to AI (`ROBOT_LINES`), baked into `robot.riv`
 - [x] Robot on the live Agentic AI field card at `/lab/ai-card`: the card stays in its own page, the robot is screen chrome over it, a tap tucks to the lower right. Publishing that into `agentic-ai-field-card` itself needs a push this repo's token cannot make
 - [ ] Publish the robot into `AlexTouvras/agentic-ai-field-card` (the Pages URL). Prepared locally; push was denied for this run
+- [ ] Merge `/stories/ai-card` so Orbit's next sync puts the robot on alextouvras.com (the live site 404s every `/lab/*` route)
 - [x] Writer: text runs, embedded fonts, root/child bones, skin/tendon/weight. The robot's waving arm is a rigid bone chain. Skin deformation is in the writer (tendon matrix = rest world transform; weight index 0 is the runtime identity bone)
 - [ ] Nested artboards, if a story needs a reusable part. Not earned yet
 
