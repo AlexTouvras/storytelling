@@ -4,13 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { DelayFieldModel } from "@/lib/sim/delay-field";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import { recoveryBeatAt, recoveryFrameAt } from "@/components/film/recovery-frame";
+import { FilmSubtitleBar } from "@/components/film/FilmSubtitle";
 import { RECOVERY_ATTRIBUTION, recoveryCopyFor } from "@/components/film/recovery-copy";
 import type { DelayDrawContext } from "@/components/film/draw-delays";
 import { DelayField } from "@/components/film/DelayField";
 import { SeasonPanel } from "@/components/film/SeasonPanel";
 import { ReaderShell } from "@/components/reader/ReaderShell";
-import { TermText } from "@/components/reader/TermText";
-import { KindBadge } from "@/components/reader/KindBadge";
 import { OrientationCard } from "@/components/reader/OrientationCard";
 import { MethodLink } from "@/components/reader/MethodLink";
 import type { StoryReader } from "@/stories/schemas/manifest";
@@ -268,54 +267,19 @@ export function RecoveryFilm({ slug, reader, model }: Props) {
             </div>
           ) : null}
 
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-void via-void/90 to-transparent px-5 pb-10 pt-28 md:px-10"
-            style={{ opacity: body }}
-          >
-            <div
-              ref={copyRef}
-              className="mx-auto flex w-full max-w-5xl flex-col gap-6 md:flex-row md:items-end md:justify-between"
-            >
-              <div data-testid="beat-copy" className="max-w-xl">
-                <div className="flex items-center gap-3">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/75">
-                    {copy.kicker}
-                  </p>
-                  {copy.kind ? <KindBadge kind={copy.kind} slug={slug} /> : null}
-                </div>
-                <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em] text-white md:text-3xl">
-                  {copy.title}
-                </h2>
-                <TermText
-                  paragraphs={copy.paragraphs}
-                  beat={beat}
-                  className="mt-3 space-y-2 text-sm leading-relaxed text-white/65 md:text-base"
-                />
-                {copy.caveat ? (
-                  <p
-                    data-testid="beat-caveat"
-                    className="mt-3 border-l border-white/15 pl-3 text-xs leading-relaxed text-white/45"
-                  >
-                    {copy.caveat}
-                  </p>
-                ) : null}
-              </div>
-              {copy.figure ? (
-                <div className="shrink-0 md:text-right">
-                  <p
-                    data-testid="hero-figure"
-                    className="font-display text-5xl font-semibold tracking-[-0.04em] text-neon-cyan md:text-6xl"
-                  >
-                    {copy.figure}
-                  </p>
-                  {copy.figureNote ? (
-                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">
-                      {copy.figureNote}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
+          <div style={{ opacity: body }}>
+            <FilmSubtitleBar
+              barRef={copyRef}
+              kicker={copy.kicker}
+              title={copy.title}
+              paragraphs={copy.paragraphs}
+              beat={beat}
+              slug={slug}
+              kind={copy.kind}
+              figure={copy.figure}
+              figureNote={copy.figureNote}
+              caveat={copy.caveat}
+            />
           </div>
         </div>
       </div>

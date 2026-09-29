@@ -51,6 +51,10 @@
 - [x] Grid film reader fixes (2026-09-28): the axis opens to the floor before the fall; the pullback holds the trip's hour on screen (`wideShotOn`); the phone picture ends above the tallest beat's text, with the caption and chart cross-fading in turn. e2e guards for each
 - [x] Grid film on phones: narration and picture take turns (text first on a solid card, then the full-size picture plays; kicker + label strip stays). Reader asked 2026-09-28 not to shrink the graph for the text. e2e on a 360×740 phone
 - [ ] Phase 4–5: regression + polish; documentation last
+- [x] **Human pick for the next flagship story** — `ngsim-phantom-wave`, locked 2026-09-29. Spec draft: `docs/decision-specs/where-should-the-speed-be-held.md`
+- [ ] Human sign-off on that Spec (Question, Claim, Takeaway, limitations, and the two cinematic choices). "Continue" accepts the side-view cars and the daylight road as proposed
+- [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
+- [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 
 ## Rive: cinematic illustrations (2026-09-29)
 

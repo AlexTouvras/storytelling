@@ -28,11 +28,11 @@ import { GRID, gridGeometry, type GridValues } from "@/illustrations/grid";
 import { RiveLayer, type RiveLayerHandle } from "@/components/director/RiveLayer";
 import { GRID_RIV_URL } from "@/components/director/rive-assets";
 import { ReaderProvider } from "@/components/reader/ReaderContext";
-import { TermText } from "@/components/reader/TermText";
 import { TermsDrawer } from "@/components/reader/TermsDrawer";
 import { KindBadge } from "@/components/reader/KindBadge";
 import { OrientationCard } from "@/components/reader/OrientationCard";
 import { methodHref } from "@/lib/reader/kinds";
+import { FilmSubtitle } from "@/components/film/FilmSubtitle";
 import type { GridCopy, GridDecision } from "@/components/film/grid-copy";
 import type { StoryReader } from "@/stories/schemas/manifest";
 
@@ -339,8 +339,11 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
         box.style.opacity = String(openA);
         box.style.visibility = openA > 0.001 ? "visible" : "hidden";
       }
-      // On a phone the chart takes the space under the machine, where its caption sat: the caption leaves before the chart arrives.
-      if (captionRef.current) captionRef.current.style.opacity = lay.wide ? "1" : String(clamp01(1 - 2 * f.split));
+      // The caption sits with the machine. On a phone the chart takes the space under it, so the caption leaves before the chart arrives.
+      if (captionRef.current) {
+        const withMachine = lay.wide ? 1 : clamp01(1 - 2 * f.split);
+        captionRef.current.style.opacity = String(openA * withMachine);
+      }
       legendRef.current?.setAttribute("opacity", f.legend.toFixed(3));
       legendReserveRef.current?.setAttribute("opacity", f.legendReserve.toFixed(3));
 
@@ -491,6 +494,16 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
             data-beat="0"
             className="sticky top-0 h-dvh overflow-hidden"
           >
+            {legend ? (
+              <p
+                ref={captionRef}
+                data-testid="legend-caption"
+                className="pointer-events-none absolute inset-x-8 top-20 z-10 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-white/45"
+                style={{ opacity: 0 }}
+              >
+                {legend.caption}
+              </p>
+            ) : null}
             <div ref={cameraRef} data-testid="camera" className="absolute inset-0">
               <canvas ref={fieldCanvasRef} aria-hidden className="absolute inset-0 h-full w-full" />
               <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
@@ -570,15 +583,6 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
                       ) : null}
                     </svg>
                   ) : null}
-                  {legend ? (
-                    <p
-                      ref={captionRef}
-                      data-testid="legend-caption"
-                      className="absolute inset-x-0 top-full mt-1 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-white/45"
-                    >
-                      {legend.caption}
-                    </p>
-                  ) : null}
                 </div>
 
                 <div
@@ -592,20 +596,26 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
               </div>
             </div>
 
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 left-0 hidden w-[42%] bg-gradient-to-r from-void via-void/85 to-transparent lg:block"
-            />
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-void via-void/80 to-transparent" />
 
             <div
               ref={copyRef}
               data-testid="beat-copy"
               data-card="up"
-              className="pointer-events-none absolute inset-x-0 bottom-0 bg-void px-5 pb-8 pt-4 lg:inset-x-auto lg:bottom-auto lg:left-10 lg:top-1/2 lg:w-[32%] lg:-translate-y-1/2 lg:bg-transparent lg:p-0"
+              className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-5"
             >
-              <div aria-hidden className="absolute inset-x-0 bottom-full h-6 bg-gradient-to-t from-void to-transparent lg:hidden" />
-              <div className="max-w-xl">
-                <BeatCopy copy={beatCopy} beat={beat} slug={slug} />
+              <div className="pointer-events-auto">
+                <FilmSubtitle
+                  kicker={beatCopy.kicker}
+                  title={beatCopy.title}
+                  paragraphs={beatCopy.paragraphs}
+                  beat={beat}
+                  slug={slug}
+                  kind={beatCopy.kind}
+                  figure={beatCopy.figure}
+                  figureNote={beatCopy.figureNote}
+                  caveat={beatCopy.caveat}
+                />
               </div>
             </div>
           </div>
@@ -614,35 +624,6 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
         <DecisionSection slug={slug} decision={decision} />
       </div>
     </ReaderProvider>
-  );
-}
-
-/** One beat's narration: kicker and label first, so they are what stays on the phone strip. */
-function BeatCopy({ copy, beat, slug }: { copy: GridCopy; beat: number; slug: string }) {
-  return (
-    <>
-      <div data-strip className="flex flex-wrap items-center gap-3">
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/75">{copy.kicker}</p>
-        <KindBadge kind={copy.kind} slug={slug} />
-      </div>
-      <h2 className="mt-2 font-display text-2xl font-semibold leading-[1.08] tracking-[-0.03em] md:text-3xl">{copy.title}</h2>
-      <TermText paragraphs={copy.paragraphs} beat={beat} className="mt-3 space-y-2 text-sm leading-relaxed text-white/70 md:text-base" />
-      {copy.figure ? (
-        <p className="mt-4">
-          <span data-testid="hero-figure" className="font-display text-4xl font-semibold tracking-[-0.04em] text-neon-cyan md:text-5xl">
-            {copy.figure}
-          </span>
-          {copy.figureNote ? (
-            <span className="ml-3 font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">{copy.figureNote}</span>
-          ) : null}
-        </p>
-      ) : null}
-      {copy.caveat ? (
-        <p data-testid="beat-caveat" className="mt-3 border-l border-white/15 pl-3 text-xs leading-relaxed text-white/45">
-          {copy.caveat}
-        </p>
-      ) : null}
-    </>
   );
 }
 

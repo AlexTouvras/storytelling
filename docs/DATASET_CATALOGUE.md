@@ -465,6 +465,93 @@ approved 2026-09-27. The year scan (2025-08 → 2026-07), classified by shape an
 energy, found 19 trips, 13 of them April to September, the deepest at 49.65 Hz; it is in the Spec.
 (An earlier keyless count of 33 read data gaps as 50 Hz and did not separate transients.)
 
+## Round G: the story after the grid film (2026-09-29)
+
+The grid film shipped. It proved a data point can open into a built object (a shaft of wheels, a dial,
+a reserve block) and close back into the same dot. The audience for that decision is a reserve planner.
+The ask for the next story is the other way around: a question a wide audience already has a body memory
+of, told with the same data-to-illustration move, and still one mechanism. Story 3's verdict stands — ten
+acts cannot be followed.
+
+No new scoring axis. `flagship_sum` is the Round F sum. The audience test is the reason for the search,
+not a number added to favor a pick.
+
+| id | source | D | V | A | X | E | score_sum | C | I | flagship_sum |
+|----|--------|--:|--:|--:|--:|--:|----------:|--:|--:|-------------:|
+| `ngsim-phantom-wave` | [NGSIM vehicle trajectories](https://data.transportation.gov/Automobiles/Next-Generation-Simulation-NGSIM-Vehicle-Trajector/8ect-6jqj), FHWA, CC BY-SA 3.0 | 4 | 5 | 4 | 5 | 4 | **22** | **5 (measured)** | 5 | **32** |
+| `bullwhip-inventories` | unchanged from Round F | 3 | 4 | 4 | 5 | 4 | 20 | 5 | 4 | 29 |
+| `nhs-exit-block` | unchanged from Round F | 5 | 4 | 4 | 3 | 3 | 19 | 4 | 5 | 28 |
+
+**Recommend `ngsim-phantom-wave`.** *Why is the road ahead already moving?*
+
+You are stopped. A few hundred feet ahead, traffic is rolling. There is no crash in front of you and no
+lane closure. One driver brakes a little, and a little late. The driver behind brakes more. That extra
+braking walks upstream, against the traffic, as a pocket of slow cars. The cars that were at the front
+of it are already gone. The jam is the pocket, not a blockage.
+
+The decision-maker is a highway operator. The cut is: add a lane, which treats the jam as a shortage of
+space, or hold speeds smoother so the pocket is never born. A variable speed limit is the lever they
+actually set. This file does not contain one, so the film can show the mechanism and must not claim the
+lever worked here.
+
+The illustration is the point of the story. An average-speed chart of this morning is a single low
+number. The picture has to be the cars. The population stays on the canvas, one mark each, the same way
+the loan book stays a field. One mark opens into a short illustrated beat — the gap ahead, the brake,
+the car behind answering late — and closes back into the same mark. The camera then pulls out and the
+pocket is seen walking backward through the others. That is the grid film's open-the-dot move, with many
+bodies instead of one machine. The speed field is the honest reading. The illustration may enlarge the
+brake, the way the grid film enlarges the wheel slowdown, and it may not be where a number is read.
+
+Five beats, and then stop:
+
+1. You are stopped. The road ahead is moving.
+2. One car brakes a little late. The car behind brakes more.
+3. Pull back. The slow pocket walks backward. Faster cars are on both sides of it.
+4. This morning, measured.
+5. The decision. Another lane adds space the pocket does not use. Smoothing the speed is the lever. This
+   file does not contain that lever.
+
+The *why* title is fenced the way the rail title is. The film answers it structurally. It does not
+explain why that particular driver braked.
+
+### Verification of `ngsim-phantom-wave` (2026-09-29)
+
+- **Access.** The SODA API answered without a key: `data.transportation.gov/resource/8ect-6jqj.json`.
+  US-101 is 4,802,933 rows, `global_time` 1118846979700–1118849752200 (about 46 minutes on 15 June
+  2005). `local_y` runs to about 2,100 ft in the direction of travel, so upstream is the smaller
+  coordinate. Licence on the data.gov record is CC BY-SA 3.0.
+- **The pocket is real, and it walks upstream.** Lane 2, first 15 minutes, speeds averaged in 100-ft by
+  10-second cells. Three pockets cross the section against the traffic. From 240 s to 300 s the slowest
+  cell moves from 800 ft to the upstream end, and the speed there falls from about 19 mph to about 9 mph.
+  The downstream end (2,100 ft) stays at 45–48 mph for that whole minute. About 800 ft in 60 seconds is
+  about 9 mph against the flow. A second pocket does the same from 360 s to 420 s (about 900 ft, down to
+  about 8 mph, downstream end still in the forties), and a third from 460 s to 520 s. Faster traffic sits
+  on both sides of the pocket, so this is not a queue stacked against an obstacle at the downstream end
+  of the section.
+- **The rest of the morning, checked the same day.** Lanes 1–5 average about 19–23 mph over the whole
+  recording, so this is already a slow morning. In five-minute bands the downstream end (beyond 1,700 ft)
+  holds near 40 mph for the first ten minutes while the upstream end (under 500 ft) sits near 22. By
+  fifteen minutes the two ends have met near 19 mph, and they stay together. The pocket is the opening
+  window, not the whole recording. A coarser pass finds the upstream walk on lanes 1–3, clearest in the
+  first nine minutes; lanes 4 and 5 do not cross under that rule. Lanes 6–8 are short ramp lanes inside
+  the section.
+- **Still not shown.** An incident just outside the cameras. A wave speed finer than about 9 mph. What a
+  variable speed limit would have done — none was operating. Whether the entrance caused the pocket.
+  I-24 MOTION is a different road and needs an account; it is not this pack.
+
+**Not re-scored.** `nhs-exit-block` is the story to pick if the stake should be a person in a waiting
+room: the wait shows up at the front door and is caused by a ward that will not empty, so the
+illustration is a place rather than a chart. Its statistics page responded on this date. The workbooks
+were not opened, so Round F's 28 stands. `bullwhip-inventories` remains the fully open fallback (Census
+through FRED, public domain). A national monthly ratio does not need a cinematic object the way a
+braking car does, the decision-maker is generic, and the mechanism is another lag after the rail film.
+One FRED response succeeded and a later download timed out, so the 2021–2023 amplification was not
+recomputed.
+
+**Picked (human, 2026-09-29):** `ngsim-phantom-wave`. Decision Spec draft:
+[`docs/decision-specs/where-should-the-speed-be-held.md`](./decision-specs/where-should-the-speed-be-held.md).
+The pack is NGSIM US-101. I-24 is out of scope for v1.
+
 ---
 
 ## Candidates

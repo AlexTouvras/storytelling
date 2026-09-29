@@ -9,10 +9,9 @@ import { CashColumn, CashMeter } from "@/components/film/CashColumn";
 import { Instrument } from "@/components/film/Instrument";
 import { EvidenceBoard } from "@/components/film/EvidenceBoard";
 import { eur, lerp, pct } from "@/components/film/format";
+import { FilmSubtitleBar } from "@/components/film/FilmSubtitle";
 import { rateCopyFor } from "@/components/film/rate-copy";
 import { ReaderShell } from "@/components/reader/ReaderShell";
-import { TermText } from "@/components/reader/TermText";
-import { KindBadge } from "@/components/reader/KindBadge";
 import { OrientationCard } from "@/components/reader/OrientationCard";
 import { MethodLink } from "@/components/reader/MethodLink";
 import type { StoryReader } from "@/stories/schemas/manifest";
@@ -180,50 +179,41 @@ export function RateFilm({ slug, reader, model }: Props) {
             <div className="mt-12 h-14 w-px bg-gradient-to-b from-white/80 to-transparent" />
           </div>
 
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-[52%] bg-gradient-to-b from-void from-25% via-void/95 to-transparent md:hidden"
-            style={{ opacity: body }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 hidden w-[min(100%,38rem)] bg-gradient-to-r from-void from-[22%] via-void/95 to-transparent md:block"
-            style={{ opacity: body }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-void via-void/85 to-transparent"
-            style={{ opacity: body }}
-          />
-
-          <div
-            className="pointer-events-none absolute left-5 right-5 top-20 max-w-md md:left-10 md:top-24"
-            style={{ opacity: body }}
-          >
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/80">
-                {copy.kicker}
-              </p>
-              {copy.kind ? <KindBadge kind={copy.kind} slug={slug} /> : null}
-            </div>
-            <h2 className="mt-3 font-display text-[clamp(1.7rem,3vw,2.7rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-white">
-              {copy.title}
-            </h2>
-            <div data-testid="beat-copy">
-              <TermText
-                paragraphs={copy.paragraphs}
-                beat={beat}
-                className="mt-3 max-w-md space-y-3 text-sm leading-relaxed text-white/70 md:text-[15px]"
-              />
-            </div>
-            {showCash ? (
-              <CashMeter
-                className="max-w-sm md:hidden"
-                income={featured.incomeMonthly}
-                essentials={featured.essentialsMonthly}
-                payment={payment}
-              />
-            ) : null}
+          <div style={{ opacity: body }}>
+            <FilmSubtitleBar
+              kicker={copy.kicker}
+              title={copy.title}
+              paragraphs={copy.paragraphs}
+              beat={beat}
+              slug={slug}
+              kind={copy.kind}
+              figure={figure.value}
+              figureNote={figure.unit}
+              extra={
+                <>
+                  {showCash ? (
+                    <CashMeter
+                      className="mx-auto mt-3 max-w-sm md:hidden"
+                      income={featured.incomeMonthly}
+                      essentials={featured.essentialsMonthly}
+                      payment={payment}
+                    />
+                  ) : null}
+                  {frame.cut > 0.04 ? (
+                    <div className="mx-auto mt-3 w-full max-w-sm" style={{ opacity: frame.cut }} data-testid="cut-bar">
+                      <div className="flex h-2 overflow-hidden">
+                        <div className="h-full bg-white/25" style={{ width: pct(rest) }} />
+                        <div className="h-full bg-neon-violet" style={{ width: pct(sleeve) }} />
+                      </div>
+                      <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">
+                        <span>Outside {pct(rest)}</span>
+                        <span className="text-neon-violet">Watch {pct(sleeve)}</span>
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              }
+            />
           </div>
 
           {showCash ? (
@@ -239,45 +229,9 @@ export function RateFilm({ slug, reader, model }: Props) {
             </div>
           ) : null}
 
-          <div
-            className="pointer-events-none absolute inset-x-5 bottom-6 flex flex-col gap-5 md:inset-x-10 md:flex-row md:items-end md:justify-between"
-            style={{ opacity: body }}
-          >
-            <p data-testid="hero-figure">
-              <span
-                className={
-                  figure.value.length > 8
-                    ? `block font-mono text-[clamp(2.1rem,5.2vw,4.4rem)] leading-none tracking-[-0.04em] ${beat <= 2 && buffer < 180 ? "text-neon-violet" : "text-white"}`
-                    : `block font-mono text-[clamp(3.2rem,8vw,6.6rem)] leading-none tracking-[-0.05em] ${beat <= 2 && buffer < 180 ? "text-neon-violet" : "text-white"}`
-                }
-              >
-                {figure.value}
-              </span>
-              <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
-                {figure.unit}
-              </span>
-            </p>
-            {frame.cut > 0.04 ? (
-              <div
-                className="md:w-[min(46%,420px)]"
-                style={{ opacity: frame.cut }}
-                data-testid="cut-bar"
-              >
-                <div className="flex h-2.5 overflow-hidden">
-                  <div className="h-full bg-white/25" style={{ width: pct(rest) }} />
-                  <div className="h-full bg-neon-violet" style={{ width: pct(sleeve) }} />
-                </div>
-                <div className="mt-2 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">
-                  <span>Outside {pct(rest)}</span>
-                  <span className="text-neon-violet">Watch {pct(sleeve)}</span>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
           {beat >= 3 ? (
             <p
-              className="pointer-events-none absolute bottom-28 right-5 hidden font-mono text-[10px] uppercase tracking-[0.16em] text-white/35 md:block"
+              className="pointer-events-none absolute right-5 top-24 hidden font-mono text-[10px] uppercase tracking-[0.16em] text-white/35 md:block"
               style={{ opacity: body * (1 - frame.cut) }}
             >
               <span className="mr-3 inline-block h-1.5 w-1.5 rounded-full bg-neon-cyan" />

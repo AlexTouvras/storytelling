@@ -6,6 +6,7 @@ import {
   GRID_RUNS,
   GRID_BEAT_STARTS,
   PHONE_STRIP,
+  SUBTITLE_BAND,
   WIDE_MIN,
   fieldPoint,
   gridBeatAt,
@@ -64,9 +65,13 @@ describe("grid film timeline", () => {
 });
 
 describe("grid layout", () => {
-  it("keeps the picture right of the narration on a laptop", () => {
+  it("gives the picture the frame above the subtitle on a laptop", () => {
     const laptop = gridLayout({ width: 1280, height: 800 });
-    expect(laptop.screen.x - laptop.machine.width / 2).toBeGreaterThan(0.38 * 1280);
+    expect(laptop.pictureBottom).toBeLessThanOrEqual(800 - SUBTITLE_BAND);
+    expect(laptop.screen.x).toBeGreaterThan(0.4 * 1280);
+    expect(laptop.screen.x).toBeLessThan(0.6 * 1280);
+    expect(laptop.field.width).toBeGreaterThan(0.7 * 1280);
+    expect(laptop.field.y + laptop.field.height).toBeLessThanOrEqual(laptop.pictureBottom);
   });
 
   it("gives the phone picture the whole screen above the narration strip", () => {
