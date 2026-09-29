@@ -2,7 +2,7 @@
 
 > Catalogue pick: `ngsim-phantom-wave`, Round G (flagship_sum 32 of 35). **Topic locked by the human 2026-09-29** ("lock in on this one").
 > **Status:** signed off 2026-09-29. The human's "OK go" is read as Continue: Question, Claim, Takeaway, limitations, and the two cinematic choices (side view of three cars; daylight, no weather). Recorded so it can be objected to.
-> **Built:** the one-screen card, the frozen pack `data/figures/where-should-the-speed-be-held.v1.json`, the replay, and the five-beat film at `/stories/where-should-the-speed-be-held/film`. Unlisted. Listing is still the publish gate.
+> **Built:** the one-screen card, the frozen pack `data/figures/where-should-the-speed-be-held.v1.json`, the replay, and the five-beat film at `/stories/where-should-the-speed-be-held/film`. Listed 2026-09-29 and unlisted the same day. The film stays at its route. The index does not link it.
 > **Since sign-off, from the pack:** the walk is 800 ft at 9.1 mph. The opened car is 928, at 840 ft and 15.3 mph; its acceleration at that instant is positive, so the lamp on the road is off and the side view is the mechanism. Lane 7 is the entrance, lane 8 the exit, lane 6 the lane between them, from where those vehicles go. The coarser rule counts two crossings, on lanes 2 and 3, both in the first nine minutes. Lanes 1, 4 and 5 do not meet it. The replay walks the slow cell back at 8.0 mph and leaves the far end near 48; it slows the cell to about 6 mph against a measured 11, so that depth is not quoted as a measurement. A road lamp is on only below −3 ft/s², because the sign of acceleration lights most of the road. Lane 6 is labelled "lane" on the picture; the pack still calls it auxiliary. Forbidding a harder brake stops the pocket walking. The 20–46 minute bands are not flat teens: the far end does not return to 40.
 > **Film title:** *Why is the road ahead already moving?*
 > **Slug:** `where-should-the-speed-be-held`. The slug keeps the decision.
@@ -238,4 +238,4 @@ No new `visualId` until implementation shows the mark field cannot do beats 0, 2
 - [x] Beat list stable enough to write narration and visual states (five beats)
 - [x] Orientation card, four terms, illustration legend
 - [x] Method page generated from the pack
-- [x] Human approved listing (2026-09-29, "List it next"); slug in `LISTED_SLUGS`, the landing links the film
+- [ ] Human approves listing again. Listed 2026-09-29 ("List it next") and unlisted the same day ("revert the story publish"). The slug is out of `LISTED_SLUGS`
