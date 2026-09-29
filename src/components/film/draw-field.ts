@@ -1,5 +1,6 @@
 import { FIELD_CUTOFF, shareAt, type FieldModel } from "@/lib/sim/book-field";
 import type { FilmFrame } from "@/components/film/frame";
+import { picturePlot } from "@/components/film/subtitles";
 import {
   arrival,
   cameraCreep,
@@ -55,8 +56,7 @@ function projectY(
   const mid = (LOG_MIN + LOG_MAX) / 2;
   const yCenter = mid + (Math.log10(featuredBalance) - mid) * frame.focusY;
   const spanY = (LOG_MAX - LOG_MIN) * (1 - frame.focusY * 0.82) + 0.08 * frame.focusY;
-  const plotTop = height * 0.14;
-  const plotH = height * 0.68;
+  const { top: plotTop, height: plotH } = picturePlot(height);
   const t = (logB - (yCenter - spanY / 2)) / spanY;
   return plotTop + (1 - t) * plotH;
 }
@@ -116,8 +116,7 @@ export function drawField(
   // The rule is drawn top-down, then the wash spreads back from it.
   const drawn = smoothstep(frame.line / 0.55);
   if (drawn > 0.01 && lineX > -20 && lineX < width + 20) {
-    const plotTop = height * 0.14;
-    const plotH = height * 0.68;
+    const { top: plotTop, height: plotH } = picturePlot(height);
     const washW = Math.max(0, lineX - width * 0.07) * smoothstep((frame.line - 0.3) / 0.5);
     ctx.fillStyle = rgba(VIOLET, 0.09 * frame.line);
     ctx.fillRect(lineX - washW, plotTop, washW, plotH);

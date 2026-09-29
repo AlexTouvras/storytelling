@@ -18,7 +18,10 @@
 
 import { checkCueTable, holdAt, type TriggerCue } from "@/components/film/cue-table";
 import { clamp01, lerp, smoothstep } from "@/components/film/craft";
+import { SUBTITLE_BAND } from "@/components/film/subtitles";
 import type { Point, Size } from "@/lib/director/camera";
+
+export { SUBTITLE_BAND };
 
 export type GridPose = {
   at: number;
@@ -222,17 +225,16 @@ function centred(cx: number, cy: number, width: number, height: number): Rect {
 
 /** Matches the `lg` breakpoint. Below it, words and picture take turns. */
 export const WIDE_MIN = 1024;
-/** What stays of the phone narration while the picture plays: its kicker and label, px from the bottom edge. */
+/** What a phone used to keep of the narration while the picture played. The subtitle now stays, so the picture stops at `SUBTITLE_BAND` on every width. */
 export const PHONE_STRIP = 52;
-/** Room left under the picture for the subtitle band on a wide screen. */
-export const SUBTITLE_BAND = 108;
 /** Room under the phone machine for its two-line legend caption, px; kept above too, so the machine stays centred on its hour. */
 const PHONE_CAPTION = 36;
 
 /**
- * The words are a subtitle at the bottom, so the picture takes the frame above
- * that band on every width. On a phone the subtitle and the picture still take
- * turns (`phoneMomentAt`): the picture is never shrunk to make room for a paragraph.
+ * The words are a two-line subtitle at the bottom, so the picture takes the
+ * frame above that band on every width. On a phone the picture still holds
+ * while a beat's first line is read (`phoneMomentAt`); it is not covered by
+ * the words, and it is not shrunk to fit a paragraph.
  */
 export function gridLayout(viewport: Size): GridLayout {
   const { width: W, height: H } = viewport;
@@ -261,8 +263,8 @@ export function gridLayout(viewport: Size): GridLayout {
       field: { x: 0.08 * W, y: top + 0.08 * span, width: 0.84 * W, height: span * 0.72 },
     };
   }
-  const top = 0.08 * H;
-  const bottom = H - PHONE_STRIP - 12;
+  const top = 0.06 * H;
+  const bottom = H - SUBTITLE_BAND;
   const span = bottom - top;
   const screen = { x: W / 2, y: (top + bottom) / 2 };
   const side = Math.min(0.88 * W, span - 2 * PHONE_CAPTION);

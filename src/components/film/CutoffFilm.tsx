@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { AppFieldModel } from "@/lib/sim/app-field";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
-import { cutoffBeatAt, cutoffFrameAt } from "@/components/film/cutoff-frame";
+import { cutoffBeatAt, cutoffFrameAt, CUTOFF_BEAT_STARTS } from "@/components/film/cutoff-frame";
+import { beatLocal, cueIndex, subtitleCues } from "@/components/film/subtitles";
 import { AppField } from "@/components/film/AppField";
 import { CutoffInstrument } from "@/components/film/CutoffInstrument";
 import { CutoffEvidenceBoard } from "@/components/film/CutoffEvidenceBoard";
@@ -66,6 +67,8 @@ export function CutoffFilm({ slug, reader, model }: Props) {
   const frame = cutoffFrameAt(progress, reduced);
   const beat = cutoffBeatAt(progress);
   const copy = cutoffCopyFor(beat);
+  const cues = subtitleCues(copy.paragraphs);
+  const cue = cueIndex(beatLocal(progress, CUTOFF_BEAT_STARTS), cues.length);
   const titleCard = cutoffCopyFor(0);
   const figure = cutoffFigureFor(beat);
   const intro = clamp01(1 - progress / 0.08);
@@ -75,8 +78,10 @@ export function CutoffFilm({ slug, reader, model }: Props) {
     const node = document.getElementById("film-status");
     if (!node) return;
     const spoken = cutoffCopyFor(beat);
-    node.textContent = `${spoken.kicker}. ${spoken.title} ${spoken.paragraphs.join(" ")}`;
-  }, [beat]);
+    const lines = subtitleCues(spoken.paragraphs);
+    const line = lines[cueIndex(beatLocal(progress, CUTOFF_BEAT_STARTS), lines.length)] ?? "";
+    node.textContent = `${spoken.title}. ${line}`;
+  }, [beat, progress]);
 
   return (
     <ReaderShell slug={slug} reader={reader} beat={beat} className="bg-void text-white">
@@ -172,6 +177,7 @@ export function CutoffFilm({ slug, reader, model }: Props) {
               kicker={copy.kicker}
               title={copy.title}
               paragraphs={copy.paragraphs}
+              cue={cue}
               beat={beat}
               slug={slug}
               kind={copy.kind}

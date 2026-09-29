@@ -6,6 +6,7 @@ import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import { cameraCreep, clamp01, lerp } from "@/components/film/craft";
 import { nextTriggerState, reconcileTrigger, type TriggerState } from "@/components/film/cue-table";
 import { FilmSubtitle } from "@/components/film/FilmSubtitle";
+import { beatLocal, cueIndex, firstCueAt, subtitleCues } from "@/components/film/subtitles";
 import type { JamCopy, JamDecision } from "@/components/film/jam-copy";
 import type { JamCloud, JamFilmData, JamMark } from "@/components/film/jam-film-data";
 import { CARS } from "@/illustrations/cars";
@@ -15,7 +16,6 @@ import { applyCamera, blendShots, cameraFor, wideShotOn, worldToViewport, type C
 import { openOpacity, openScale } from "@/lib/director/household-transition";
 import {
   BRAKE_CUE,
-  PHONE_STRIP,
   PHONE_TRACK_SCALE,
   TRACK_VH,
   feetY,
@@ -121,12 +121,10 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
   const riveRef = useRef<RiveLayerHandle>(null);
   const legendRef = useRef<HTMLDivElement>(null);
   const rampsRef = useRef<HTMLDivElement>(null);
-  const copyRef = useRef<HTMLDivElement>(null);
-  const copyHeight = useRef(0);
-  const stripHeight = useRef(PHONE_STRIP);
   const reduced = usePrefersReducedMotion();
   const reducedRef = useRef(reduced);
   const [beat, setBeat] = useState(0);
+  const [cue, setCue] = useState(0);
   const [viewport, setViewport] = useState({ width: 1280, height: 800, dpr: 1 });
 
   const layout = useMemo(() => jamLayout(viewport), [viewport]);
@@ -152,20 +150,6 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
   }, []);
 
   useEffect(() => {
-    const card = copyRef.current;
-    if (!card) return;
-    const measure = () => {
-      copyHeight.current = card.offsetHeight;
-      const row = card.querySelector<HTMLElement>("[data-strip]");
-      stripHeight.current = row ? Math.min(PHONE_STRIP, row.offsetTop + row.offsetHeight + 6) : PHONE_STRIP;
-    };
-    const observer = new ResizeObserver(measure);
-    measure();
-    observer.observe(card);
-    return () => observer.disconnect();
-  }, [beat]);
-
-  useEffect(() => {
     const track = trackRef.current;
     const stage = stageRef.current;
     const container = cameraRef.current;
@@ -185,6 +169,8 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
     let trigger: TriggerState = "armed";
     let camera: CameraState = { x: 0, y: 0, zoom: 1 };
     let lastBeat = -1;
+    let lastCue = -1;
+    const cueCounts = copy.map((beatCopy) => subtitleCues(beatCopy.paragraphs).length);
     let quietTimer = 0;
     const started = performance.now();
 
@@ -360,11 +346,10 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
         });
       }
 
-      const copyEl = copyRef.current;
-      if (copyEl) {
-        const drop = lay.wide ? 0 : (1 - card) * Math.max(0, copyHeight.current - stripHeight.current);
-        copyEl.style.transform = lay.wide ? "" : `translate3d(0, ${drop.toFixed(1)}px, 0)`;
-        copyEl.dataset.card = card > 0.99 ? "up" : card < 0.01 ? "down" : "moving";
+      const nextCue = cueIndex(beatLocal(progress, JAM_BEAT_STARTS), cueCounts[frame.beat] ?? 1);
+      if (nextCue !== lastCue) {
+        lastCue = nextCue;
+        setCue(nextCue);
       }
 
       const rive = riveRef.current;
@@ -399,7 +384,8 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
       readAt: (beatIndex: number) => {
         if (!lay.wide) return phoneReadAt(beatIndex);
         const starts = JAM_BEAT_STARTS;
-        return (starts[beatIndex] + (starts[beatIndex + 1] ?? 1)) / 2;
+        const start = starts[beatIndex] ?? 0;
+        return firstCueAt(start, starts[beatIndex + 1] ?? 1, cueCounts[beatIndex] ?? 1);
       },
       trigger: () => trigger,
     };
@@ -409,7 +395,7 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
       window.clearTimeout(quietTimer);
       delete window.__jamFilm;
     };
-  }, [layout, viewport, data]);
+  }, [layout, viewport, data, copy]);
 
   const beatCopy = copy[beat] ?? copy[0];
   const legend = reader.legend;
@@ -425,7 +411,7 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
           Skip to the decision
         </a>
         <p className="sr-only" aria-live="polite">
-          {beatCopy.title}. {beatCopy.paragraphs[0]}
+          {beatCopy.title}. {subtitleCues(beatCopy.paragraphs)[cue] ?? ""}
         </p>
 
         <section className="mx-auto max-w-3xl px-5 pb-16 pt-28 md:pt-36">
@@ -499,12 +485,13 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
             ) : null}
 
             <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-void via-void/80 to-transparent" />
-            <div ref={copyRef} data-testid="beat-copy" data-card="up" className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-5 max-lg:bg-void">
+            <div data-testid="beat-copy" data-card="up" className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-4">
               <div className="pointer-events-auto">
                 <FilmSubtitle
                   kicker={beatCopy.kicker}
                   title={beatCopy.title}
                   paragraphs={beatCopy.paragraphs}
+                  cue={cue}
                   beat={beat}
                   slug={slug}
                   kind={beatCopy.kind}

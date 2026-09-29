@@ -5,7 +5,6 @@ import {
   GRID_POSES,
   GRID_RUNS,
   GRID_BEAT_STARTS,
-  PHONE_STRIP,
   SUBTITLE_BAND,
   WIDE_MIN,
   fieldPoint,
@@ -74,10 +73,10 @@ describe("grid layout", () => {
     expect(laptop.field.y + laptop.field.height).toBeLessThanOrEqual(laptop.pictureBottom);
   });
 
-  it("gives the phone picture the whole screen above the narration strip", () => {
+  it("gives the phone picture the whole screen above the subtitle", () => {
     for (const vp of [{ width: 360, height: 740 }, { width: 390, height: 844 }, { width: 412, height: 780 }]) {
       const phone = gridLayout(vp);
-      expect(phone.pictureBottom).toBeLessThanOrEqual(vp.height - PHONE_STRIP);
+      expect(phone.pictureBottom).toBeLessThanOrEqual(vp.height - SUBTITLE_BAND);
       const low = (r: { y: number; height: number }) => phone.screen.y + r.y + r.height;
       expect(low(phone.machine) + 36).toBeLessThanOrEqual(phone.pictureBottom + 0.5);
       expect(low(phone.chart)).toBeLessThanOrEqual(phone.pictureBottom);

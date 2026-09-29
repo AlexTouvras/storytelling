@@ -187,7 +187,7 @@ test.describe("when the spinning stops film, on a small phone", () => {
     }, PICTURE);
   }
 
-  test("each beat's narration comes up to read, then lowers to its strip while the picture plays", async ({ page }) => {
+  test("the subtitle stays at the bottom and the picture plays above it", async ({ page }) => {
     await page.goto(FILM);
     for (const beat of [1, 2, 3, 4]) {
       await scrubToRead(page, beat);
@@ -195,14 +195,17 @@ test.describe("when the spinning stops film, on a small phone", () => {
       expect(read.card, `beat ${beat} read`).toBe("up");
       await expect(page.getByTestId("film-stage")).toHaveAttribute("data-beat", String(beat));
       await expect(page.getByTestId("beat-copy").locator("h2")).toBeInViewport({ ratio: 1 });
+      await expect(page.getByTestId("subtitle-line")).toBeInViewport({ ratio: 1 });
+      const line = await page.getByTestId("subtitle-line").innerText();
+      expect(line.length, `beat ${beat} line`).toBeLessThanOrEqual(80);
     }
     for (const film of [0.3, 0.5, 0.57, 0.6, 0.62, 0.7, 0.8, 0.93]) {
       await scrubTo(page, film);
       await page.waitForTimeout(150);
       const play = await shown(page);
-      expect(play.card, `card at ${film}`).toBe("down");
-      expect(play.height - play.cardTop, `strip at ${film}`).toBeLessThanOrEqual(56);
-      for (const box of play.boxes) expect(box.bottom, `${box.id} at ${film}`).toBeLessThanOrEqual(play.cardTop);
+      expect(play.card, `card at ${film}`).toBe("up");
+      expect(play.height - play.cardTop, `subtitle at ${film}`).toBeLessThanOrEqual(170);
+      for (const box of play.boxes) expect(box.bottom, `${box.id} at ${film}`).toBeLessThanOrEqual(play.cardTop + 40);
     }
   });
 });

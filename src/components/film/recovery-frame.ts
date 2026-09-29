@@ -1,5 +1,6 @@
 import { clamp01, lerp, smoothstep } from "@/components/film/craft";
 import { checkCueTable, holdAt } from "@/components/film/cue-table";
+import { beatStarts } from "@/components/film/subtitles";
 
 /**
  * Visual states for *Why don't delays die?* — ten acts plus the open.
@@ -463,6 +464,8 @@ const POSES: Pose[] = [
     decide: 1,
   },
 ];
+
+export const RECOVERY_BEAT_STARTS: readonly number[] = beatStarts(POSES);
 
 /**
  * `season`, `picker` and `decide` drive the chart and the DOM, never the canvas,

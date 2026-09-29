@@ -67,7 +67,7 @@ export function jamNarration(): JamCopy[] {
       title: "It walks back through the cars",
       kind: "calculated",
       paragraphs: [
-        `The extra braking walks back against the traffic at ${mph(walk.walk_mph)} mph. A minute later the pocket is at the back of the stretch, near ${mph(walk.to_mph)} mph, and the road ahead is still near ${mph(later.downstream_mph ?? 0)} mph.`,
+        `The pocket walks back against the traffic at ${mph(walk.walk_mph)} mph. A minute later it is at the back of the stretch, near ${mph(walk.to_mph)} mph, and the road ahead is still near ${mph(later.downstream_mph ?? 0)} mph.`,
       ],
       figure: String(mph(walk.walk_mph)),
       figureNote: "mph, back",

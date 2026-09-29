@@ -1,6 +1,7 @@
 import { type FieldPoint } from "@/lib/sim/book-field";
 import { clamp01, lerp, smoothstep } from "@/components/film/craft";
 import { checkCueTable, holdAt } from "@/components/film/cue-table";
+import { beatStarts } from "@/components/film/subtitles";
 
 export type FilmFrame = {
   beat: number;
@@ -168,6 +169,8 @@ const POSES: Pose[] = [
     focusY: 0,
   },
 ];
+
+export const RATE_BEAT_STARTS: readonly number[] = beatStarts(POSES);
 
 /** `cut` drives DOM chrome only, so it cannot rescue a still canvas. */
 export const RATE_HOLDS = checkCueTable("when-rates-rise", POSES, {
