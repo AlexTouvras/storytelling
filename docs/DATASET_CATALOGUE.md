@@ -528,13 +528,16 @@ explain why that particular driver braked.
   about 8 mph, downstream end still in the forties), and a third from 460 s to 520 s. Faster traffic sits
   on both sides of the pocket, so this is not a queue stacked against an obstacle at the downstream end
   of the section.
-- **What was not checked.** The other lanes. The rest of the 46 minutes. Whether an incident sat just
-  outside the cameras. NGSIM positions are noisy; a 100-ft cell quantises the speed of the pocket, so
-  the film must not quote a wave speed finer than "about 9 mph" until a pack freezes all three periods.
-  The 2005 morning cannot say what a variable speed limit did. I-24 MOTION's INCEPTION release (47 hours
-  in 2022, including the week a hundred automated cars were driven to damp these waves; the corridor's
-  variable speed limits went live on 20 June 2023) is the stronger pack, and it needs a free account
-  approved within a business day. Chase it after a human pick. Do not block the recommendation on it.
+- **The rest of the morning, checked the same day.** Lanes 1–5 average about 19–23 mph over the whole
+  recording, so this is already a slow morning. In five-minute bands the downstream end (beyond 1,700 ft)
+  holds near 40 mph for the first ten minutes while the upstream end (under 500 ft) sits near 22. By
+  fifteen minutes the two ends have met near 19 mph, and they stay together. The pocket is the opening
+  window, not the whole recording. A coarser pass finds the upstream walk on lanes 1–3, clearest in the
+  first nine minutes; lanes 4 and 5 do not cross under that rule. Lanes 6–8 are short ramp lanes inside
+  the section.
+- **Still not shown.** An incident just outside the cameras. A wave speed finer than about 9 mph. What a
+  variable speed limit would have done — none was operating. Whether the entrance caused the pocket.
+  I-24 MOTION is a different road and needs an account; it is not this pack.
 
 **Not re-scored.** `nhs-exit-block` is the story to pick if the stake should be a person in a waiting
 room: the wait shows up at the front door and is caused by a ward that will not empty, so the
@@ -545,7 +548,9 @@ braking car does, the decision-maker is generic, and the mechanism is another la
 One FRED response succeeded and a later download timed out, so the 2021–2023 amplification was not
 recomputed.
 
-**Not picked.** Waiting on a human. No Decision Spec until then.
+**Picked (human, 2026-09-29):** `ngsim-phantom-wave`. Decision Spec draft:
+[`docs/decision-specs/where-should-the-speed-be-held.md`](./decision-specs/where-should-the-speed-be-held.md).
+The pack is NGSIM US-101. I-24 is out of scope for v1.
 
 ---
 
