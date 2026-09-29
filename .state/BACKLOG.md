@@ -25,7 +25,7 @@
 - [x] **Gate 1** — a real `.riv` renders in the app beside a data canvas, trigger/bool inputs drive its state machine, unmount frees it (`/lab/rive`, `e2e/rive-gates.spec.ts`)
 - [x] **Gate 2** — data point → camera FOCUS → Rive household opens on the same anchor → shock trigger → closes into the same dot → PULLBACK → the book reprices; reverses, no stacked fires under scrubbing, reduced motion cuts and settles (`/lab/transition`)
 - [x] **Human review at Gate 2** — approved 2026-09-27 on PR #8
-- [x] Decide Rive state-machine inputs vs data binding: **inputs** for the grid. The story shows two hours, not a continuum, so bools cover it and the writer needs no data-binding objects. Revisit only if an illustration needs a continuous value (the runtime deprecates inputs in favour of data binding)
+- [x] Decide Rive state-machine inputs vs data binding: **inputs** for the grid. The story shows two hours, not a continuum, so bools cover it and the writer needs no data-binding objects. Revisit only if an illustration needs a continuous value (the runtime deprecates inputs in favour of data binding). **Revisited 2026-09-29:** every file is on data binding now (see *Rive: cinematic illustrations*)
 - [x] Round F topic search (human declined the spec's three suggestions): six new-domain candidates scored with a new **I** (illustration necessity) dimension; `fingrid-grid-inertia` verified on June 2026 10 Hz data. `docs/DATASET_CATALOGUE.md`
 - [x] Phase 3: human picked `fingrid-grid-inertia` (2026-09-27)
 - [x] Decision Spec draft — `docs/decision-specs/grid-inertia-fast-reserve.md` (six beats; published TSO figures; year scan of 10 Hz events; one-bus model fitted to the published design points, shape only)
@@ -51,6 +51,18 @@
 - [x] Grid film reader fixes (2026-09-28): the axis opens to the floor before the fall; the pullback holds the trip's hour on screen (`wideShotOn`); the phone picture ends above the tallest beat's text, with the caption and chart cross-fading in turn. e2e guards for each
 - [x] Grid film on phones: narration and picture take turns (text first on a solid card, then the full-size picture plays; kicker + label strip stays). Reader asked 2026-09-28 not to shrink the graph for the text. e2e on a 360×740 phone
 - [ ] Phase 4–5: regression + polish; documentation last
+
+## Rive: cinematic illustrations (2026-09-29)
+
+- [x] Writer v2: cubic paths from SVG path data, gradients, trim, clip, blend modes, translation constraints, elastic easing, vertex morphs, eased mixes
+- [x] Writer: view models, direct binds, view-model conditions, 1D blend states, pointer listeners, state actions (`onStart`, `report`)
+- [x] `scripts/rive-probe.mjs`: check a generated file in the real runtime headlessly
+- [x] AI field card character: `robot.riv` (moods morph, energy and gaze blend, hover/press handled in the file, accent colour bindable)
+- [x] Migrate `grid.riv` and `household.riv` to data binding; `RiveLayer` on the view model; e2e fails on Rive deprecation warnings
+- [x] `/lab/robot` with a mock field card, `e2e/robot-character.spec.ts`
+- [ ] Human: design review of the robot (name, personality, palette per field, card size/background, whether it "speaks") — questions in the PR
+- [ ] Place the robot on the real AI field card (Orbit side; this repo only ships the `.riv` and `RiveLayer`)
+- [ ] If a character needs soft deformation: bones + skins in the writer. If a story needs a reusable part: nested artboards. Neither earned yet
 
 ## Next (Orbit live — first topic shipped)
 
