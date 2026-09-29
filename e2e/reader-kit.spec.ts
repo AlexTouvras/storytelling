@@ -7,9 +7,9 @@ import { phoneReadAt } from "../src/lib/director/jam-film";
  * link to their label on the method page, and the method page with its pack.
  */
 const STORIES = [
-  { slug: "when-rates-rise", track: "rate-film", at: 0.25, beat: "1", term: "buffer", terms: 8, kind: "modelled" },
+  { slug: "when-rates-rise", track: "rate-film", at: 0.2, beat: "1", term: "buffer", terms: 8, kind: "modelled" },
   { slug: "where-should-the-cutoff-sit", track: "cutoff-film", at: 0.22, beat: "2", term: "pd", terms: 13, kind: "modelled" },
-  { slug: "where-should-the-recovery-time-sit", track: "recovery-film", at: 0.66, beat: "7", term: "recovery-margin", terms: 8, kind: "calculated" },
+  { slug: "where-should-the-recovery-time-sit", track: "recovery-film", at: 0.63, beat: "7", term: "recovery-margin", terms: 8, kind: "calculated" },
   // 0.195 is inside beat 1 on a laptop and inside beat 1's reading span on a phone (`phoneReadAt`).
   { slug: "how-much-fast-reserve", track: "grid-film", at: 0.195, beat: "1", term: "trip", terms: 9, kind: "observed" },
   {

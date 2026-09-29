@@ -1,5 +1,6 @@
 import { clamp01, lerp, smoothstep } from "@/components/film/craft";
 import { checkCueTable, holdAt } from "@/components/film/cue-table";
+import { beatStarts } from "@/components/film/subtitles";
 
 export type CutoffFrame = {
   beat: number;
@@ -161,6 +162,8 @@ const POSES: Pose[] = [
     cut: 1,
   },
 ];
+
+export const CUTOFF_BEAT_STARTS: readonly number[] = beatStarts(POSES);
 
 /** `frontier` and `cut` drive the chart and the DOM, never the canvas. */
 export const CUTOFF_HOLDS = checkCueTable("where-should-the-cutoff-sit", POSES, {

@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DelayFieldModel } from "@/lib/sim/delay-field";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
-import { recoveryBeatAt, recoveryFrameAt } from "@/components/film/recovery-frame";
+import { recoveryBeatAt, recoveryFrameAt, RECOVERY_BEAT_STARTS } from "@/components/film/recovery-frame";
+import { beatLocal, cueIndex, subtitleCues } from "@/components/film/subtitles";
 import { FilmSubtitleBar } from "@/components/film/FilmSubtitle";
 import { RECOVERY_ATTRIBUTION, recoveryCopyFor } from "@/components/film/recovery-copy";
 import type { DelayDrawContext } from "@/components/film/draw-delays";
@@ -55,12 +56,9 @@ export function RecoveryFilm({ slug, reader, model }: Props) {
   /**
    * Top of the narration, in stage pixels, so the canvas can stop above it.
    *
-   * The stage used to end at a fixed share of viewport height. The narration's
-   * height is roughly fixed in *pixels* — a kicker, a heading, three paragraphs —
-   * so the two collide below some viewport height, and at 1280×720 they did: the
-   * margin bars were drawn straight through "WHERE THE SLACK IS". Measuring it is
-   * the only way to know, since the height depends on which beat's copy is up and
-   * how it wrapped.
+   * The subtitle is two lines, so the stage can run down to it. A figure or a
+   * caveat still changes the height, and at 1280×720 a fixed share drew the
+   * margin bars through the words. Measuring it is the only way to know.
    *
    * Measured on resize rather than per frame, so no frame reads layout.
    */
@@ -144,14 +142,17 @@ export function RecoveryFilm({ slug, reader, model }: Props) {
     budget: frame.budget,
     lineId: model.lines[lineIndex]?.id,
   });
+  const cues = subtitleCues(copy.paragraphs);
+  const cue = cueIndex(beatLocal(progress, RECOVERY_BEAT_STARTS), cues.length);
   const intro = clamp01(1 - progress / 0.045);
   const body = clamp01((progress - 0.05) / 0.03);
 
   useEffect(() => {
     const node = document.getElementById("film-status");
     if (!node) return;
-    node.textContent = `${copy.kicker}. ${copy.title} ${copy.paragraphs.join(" ")}`;
-  }, [copy.kicker, copy.title, copy.paragraphs]);
+    const line = subtitleCues(copy.paragraphs)[cue] ?? "";
+    node.textContent = `${copy.title}. ${line}`;
+  }, [copy.title, copy.paragraphs, cue]);
 
   return (
     <ReaderShell slug={slug} reader={reader} beat={beat} className="bg-void text-white">
@@ -273,6 +274,7 @@ export function RecoveryFilm({ slug, reader, model }: Props) {
               kicker={copy.kicker}
               title={copy.title}
               paragraphs={copy.paragraphs}
+              cue={cue}
               beat={beat}
               slug={slug}
               kind={copy.kind}

@@ -59,7 +59,7 @@ function beatStrings(beat: BeatText): string[] {
   return [beat.kicker ?? "", beat.title ?? "", ...beat.paragraphs];
 }
 
-function uses(texts: readonly string[], forms: readonly string[]): boolean {
+export function uses(texts: readonly string[], forms: readonly string[]): boolean {
   if (forms.length === 0) return false;
   const pattern = formsPattern(forms);
   return texts.some((t) => {

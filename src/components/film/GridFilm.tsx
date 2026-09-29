@@ -10,7 +10,6 @@ import { openOpacity, openScale } from "@/lib/director/household-transition";
 import {
   FIELD_RANGE,
   GRID_RUNS,
-  PHONE_STRIP,
   PHONE_TRACK_SCALE,
   fieldPoint,
   gridFrameAt,
@@ -33,6 +32,7 @@ import { KindBadge } from "@/components/reader/KindBadge";
 import { OrientationCard } from "@/components/reader/OrientationCard";
 import { methodHref } from "@/lib/reader/kinds";
 import { FilmSubtitle } from "@/components/film/FilmSubtitle";
+import { beatLocal, cueIndex, firstCueAt, subtitleCues } from "@/components/film/subtitles";
 import type { GridCopy, GridDecision } from "@/components/film/grid-copy";
 import type { StoryReader } from "@/stories/schemas/manifest";
 
@@ -152,10 +152,8 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
   const reduced = usePrefersReducedMotion();
   const reducedRef = useRef(reduced);
   const [beat, setBeat] = useState(0);
+  const [cue, setCue] = useState(0);
   const [viewport, setViewport] = useState({ width: 1280, height: 800, dpr: 1 });
-  const copyRef = useRef<HTMLDivElement>(null);
-  const copyHeight = useRef(0);
-  const stripHeight = useRef(PHONE_STRIP);
 
   const layout = useMemo(() => gridLayout(viewport), [viewport]);
   const dot = useMemo(
@@ -185,20 +183,6 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
   }, []);
 
   useEffect(() => {
-    const card = copyRef.current;
-    if (!card) return;
-    const measure = () => {
-      copyHeight.current = card.offsetHeight;
-      const row = card.querySelector<HTMLElement>("[data-strip]");
-      stripHeight.current = row ? Math.min(PHONE_STRIP, row.offsetTop + row.offsetHeight + 6) : PHONE_STRIP;
-    };
-    const observer = new ResizeObserver(measure);
-    measure();
-    observer.observe(card);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
     const track = trackRef.current;
     const stage = stageRef.current;
     const container = cameraRef.current;
@@ -222,6 +206,8 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
     let fires = 0;
     let camera: CameraState = { x: 0, y: 0, zoom: 1 };
     let lastBeat = -1;
+    let lastCue = -1;
+    const cueCounts = copy.map((beatCopy) => subtitleCues(beatCopy.paragraphs).length);
     let drawnField = -1;
     let drawnReserve = -1;
     let traceKey = "";
@@ -285,12 +271,10 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
       applyCamera(container, camera);
       detail.style.transform = `translate3d(${dot.x}px, ${dot.y}px, 0) scale(${1 / lay.zoom})`;
 
-      // On a phone the narration is up to read, or lowered to its strip while the picture plays.
-      const copyEl = copyRef.current;
-      if (copyEl) {
-        const drop = lay.wide ? 0 : (1 - card) * Math.max(0, copyHeight.current - stripHeight.current);
-        copyEl.style.transform = lay.wide ? "" : `translate3d(0, ${drop.toFixed(1)}px, 0)`;
-        copyEl.dataset.card = card > 0.99 ? "up" : card < 0.01 ? "down" : "moving";
+      const nextCue = cueIndex(beatLocal(progress, GRID_BEAT_STARTS), cueCounts[f.beat] ?? 1);
+      if (nextCue !== lastCue) {
+        lastCue = nextCue;
+        setCue(nextCue);
       }
 
       // The observed trace, folding into its hour.
@@ -423,7 +407,8 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
       readAt: (beat: number) => {
         if (!lay.wide) return phoneReadAt(beat);
         const starts = GRID_BEAT_STARTS;
-        return (starts[beat] + (starts[beat + 1] ?? 1)) / 2;
+        const start = starts[beat] ?? 0;
+        return firstCueAt(start, starts[beat + 1] ?? 1, cueCounts[beat] ?? 1);
       },
       trigger: () => trigger,
       run: () => run,
@@ -436,7 +421,7 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
       window.clearTimeout(quietTimer);
       delete window.__gridFilm;
     };
-  }, [layout, viewport, dot, data]);
+  }, [layout, viewport, dot, data, copy]);
 
   const beatCopy = copy[beat] ?? copy[copy.length - 1];
   const legend = reader.legend;
@@ -451,8 +436,9 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
 
   useEffect(() => {
     const node = document.getElementById("grid-film-status");
-    if (node) node.textContent = `${beatCopy.kicker}. ${beatCopy.title} ${beatCopy.paragraphs.join(" ")}`;
-  }, [beatCopy]);
+    const line = subtitleCues(beatCopy.paragraphs)[cue] ?? "";
+    if (node) node.textContent = `${beatCopy.title}. ${line}`;
+  }, [beatCopy, cue]);
 
   return (
     <ReaderProvider kit={kit}>
@@ -599,16 +585,16 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
             <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-void via-void/80 to-transparent" />
 
             <div
-              ref={copyRef}
               data-testid="beat-copy"
               data-card="up"
-              className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-5"
+              className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-4"
             >
               <div className="pointer-events-auto">
                 <FilmSubtitle
                   kicker={beatCopy.kicker}
                   title={beatCopy.title}
                   paragraphs={beatCopy.paragraphs}
+                  cue={cue}
                   beat={beat}
                   slug={slug}
                   kind={beatCopy.kind}

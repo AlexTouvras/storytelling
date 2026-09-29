@@ -1,6 +1,7 @@
 import type { DelayFieldModel, DelayLine } from "@/lib/sim/delay-field";
 import { LATE_MIN, lateAt } from "@/lib/sim/delay-field";
 import type { RecoveryFrame } from "@/components/film/recovery-frame";
+import { SUBTITLE_BAND } from "@/components/film/subtitles";
 import {
   arrival,
   cameraCreep,
@@ -177,17 +178,12 @@ function stageOf(
   const w = width * 0.86;
   // Below the line picker, above the narration: the canvas owns the band in
   // between and nothing is drawn where copy will land.
-  const top = height * 0.13;
-  // A share of viewport height was not enough on its own. The narration is a
-  // kicker, a heading and three paragraphs, so its height is close to fixed in
-  // pixels while this floor scales — and below about 800px of viewport the two
-  // meet. At 1280×720 the margin bars were drawn straight through the kicker.
-  // `copyTop` is measured from the live layout, because how tall the copy is
-  // depends on which beat is up and how it wrapped.
-  const floor = Math.max(
-    top + MIN_STAGE_PX,
-    Math.min(height * 0.63, copyTop - COPY_CLEARANCE_PX),
-  );
+  const top = height * 0.08;
+  // The subtitle is two lines at the bottom. The stage runs down to it.
+  // `copyTop` is measured from the live layout, because a figure or a caveat
+  // still changes how tall that band is.
+  const reserved = Number.isFinite(copyTop) ? copyTop - COPY_CLEARANCE_PX : height - SUBTITLE_BAND;
+  const floor = Math.max(top + MIN_STAGE_PX, Math.min(height - 8, reserved));
   const survivalH = (floor - top) * 0.3;
   const marginH = (floor - top) * 0.19;
   // The field gets out of the survival panel's way faster than the curve arrives,

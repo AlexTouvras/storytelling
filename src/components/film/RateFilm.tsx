@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { FieldModel } from "@/lib/sim/book-field";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
-import { frameAt, beatAt } from "@/components/film/frame";
+import { frameAt, beatAt, RATE_BEAT_STARTS } from "@/components/film/frame";
+import { beatLocal, cueIndex, subtitleCues } from "@/components/film/subtitles";
 import { LoanField } from "@/components/film/LoanField";
 import { CashColumn, CashMeter } from "@/components/film/CashColumn";
 import { Instrument } from "@/components/film/Instrument";
@@ -78,6 +79,8 @@ export function RateFilm({ slug, reader, model }: Props) {
   const thinAfter = model.summary.after.thinBalanceShare;
   const rest = 1 - sleeve;
   const copy = rateCopyFor(beat, model);
+  const cues = subtitleCues(copy.paragraphs);
+  const cue = cueIndex(beatLocal(progress, RATE_BEAT_STARTS), cues.length);
   const titleCard = rateCopyFor(0, model);
   const figure = figureFor(beat, buffer, thinBefore, thinAfter, sleeve);
   const intro = clamp01(1 - progress / 0.09);
@@ -88,8 +91,10 @@ export function RateFilm({ slug, reader, model }: Props) {
     const node = document.getElementById("film-status");
     if (!node) return;
     const spoken = rateCopyFor(beat, model);
-    node.textContent = `${spoken.kicker}. ${spoken.title} ${spoken.paragraphs.join(" ")}`;
-  }, [beat, model]);
+    const lines = subtitleCues(spoken.paragraphs);
+    const line = lines[cueIndex(beatLocal(progress, RATE_BEAT_STARTS), lines.length)] ?? "";
+    node.textContent = `${spoken.title}. ${line}`;
+  }, [beat, model, progress]);
 
   return (
     <ReaderShell slug={slug} reader={reader} beat={beat} className="bg-void text-white">
@@ -184,6 +189,7 @@ export function RateFilm({ slug, reader, model }: Props) {
               kicker={copy.kicker}
               title={copy.title}
               paragraphs={copy.paragraphs}
+              cue={cue}
               beat={beat}
               slug={slug}
               kind={copy.kind}
