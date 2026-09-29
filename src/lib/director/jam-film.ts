@@ -1,8 +1,9 @@
 /**
  * Five beats for the US-101 pocket. One camera, one road, one brake.
  *
- * The picture is the cars. Words sit in the subtitle band. On a phone the
- * subtitle and the picture take turns, the same contract as the grid film.
+ * The picture is the cars. Words sit in the subtitle band, one or two lines
+ * at a time. On a phone the picture holds while the first line is read, then
+ * plays above the same band.
  */
 
 import { checkCueTable, holdAt, type Hold, type TriggerCue } from "@/components/film/cue-table";
@@ -103,14 +104,11 @@ export type JamLayout = {
 
 export { PHONE_STRIP, SUBTITLE_BAND, WIDE_MIN };
 
-/** The jam subtitle carries a figure, so the road stops above a taller band than the grid's. */
-export const JAM_SUBTITLE = 188;
-
 export function jamLayout(viewport: Size): JamLayout {
   const { width: W, height: H } = viewport;
   const wide = W >= WIDE_MIN;
-  const top = wide ? 0.06 * H : 0.07 * H;
-  const bottom = wide ? H - JAM_SUBTITLE : H - PHONE_STRIP - 12;
+  const top = wide ? 0.05 * H : 0.06 * H;
+  const bottom = H - SUBTITLE_BAND;
   const span = Math.max(120, bottom - top);
   const roadW = Math.min(wide ? 0.34 * W : 0.62 * W, 280);
   const roadH = span * 0.88;

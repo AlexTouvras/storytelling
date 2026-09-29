@@ -1,5 +1,6 @@
 import type { AppFieldModel } from "@/lib/sim/app-field";
 import type { CutoffFrame } from "@/components/film/cutoff-frame";
+import { picturePlot } from "@/components/film/subtitles";
 import {
   arrival,
   cameraCreep,
@@ -43,8 +44,7 @@ function projectY(
   featuredRow: number,
   height: number,
 ): number {
-  const plotTop = height * 0.14;
-  const plotH = height * 0.68;
+  const { top: plotTop, height: plotH } = picturePlot(height, 28);
   const y = row + (featuredRow - row) * frame.focusY;
   const span = 1 - frame.focusY * 0.75;
   const mid = 0.5 + (featuredRow - 0.5) * frame.focusY;
@@ -66,8 +66,7 @@ export function drawApps(
 ): void {
   ctx.clearRect(0, 0, width, height);
 
-  const plotTop = height * 0.14;
-  const plotH = height * 0.68;
+  const { top: plotTop, height: plotH } = picturePlot(height, 28);
   const plotL = width * 0.07;
   const plotW = width * 0.86;
 

@@ -56,6 +56,7 @@
 - [x] Freeze the US-101 pack, check the replay, and build the five-beat film at `/stories/where-should-the-speed-be-held/film` with its reader kit and method page. Unlisted
 - [x] Human approves listing the US-101 film — approved 2026-09-29 ("List it next"); slug in `LISTED_SLUGS`, landing links `/film`
 - [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
+- [x] Film words play as two-line subtitles (`subtitleCues`). The picture uses the frame above a 100px band on every width, so the active illustration is no longer squeezed by a paragraph
 - [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 
 ## Rive: cinematic illustrations (2026-09-29)
