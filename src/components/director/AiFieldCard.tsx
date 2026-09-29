@@ -38,14 +38,16 @@ export function AiFieldCard() {
   const place = useCallback((where: string) => {
     const button = hit.current;
     if (!button) return;
-    const pad = 16;
-    const vw = window.innerWidth - pad;
-    const vh = window.innerHeight - pad;
-    const scale = Math.min(vw, vh) / ROBOT.width;
+    const padTop = 80;
+    const padRight = 16;
+    const padBottom = 16;
+    const boxW = window.innerWidth - padRight;
+    const boxH = window.innerHeight - padTop - padBottom;
+    const scale = Math.min(boxW, boxH) / ROBOT.width;
     const w = ROBOT.width * scale;
     const h = ROBOT.height * scale;
-    const x = vw - w;
-    const y = vh - h;
+    const x = window.innerWidth - padRight - w;
+    const y = window.innerHeight - padBottom - h;
     const parked = where === "parked";
     const cx = parked ? 0.88 : 0.5;
     const cy = parked ? 0.76 : 0.55;
@@ -108,7 +110,7 @@ export function AiFieldCard() {
           artboard={ROBOT}
           stateMachine={ROBOT.stateMachine}
           alignment={Alignment.BottomRight}
-          className="absolute bottom-4 left-0 right-4 top-0"
+          className="absolute bottom-4 left-0 right-4 top-20"
           testId="rive-robot"
           onReady={() => setReady(true)}
         />
