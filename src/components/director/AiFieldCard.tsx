@@ -97,6 +97,7 @@ export function AiFieldCard() {
 
   return (
     <div className="fixed inset-0 bg-[#eef2f6]">
+      <style>{`body > div > header, body > div > footer { display: none !important; }`}</style>
       <iframe
         title="Agentic AI field card"
         src={CARD_URL}

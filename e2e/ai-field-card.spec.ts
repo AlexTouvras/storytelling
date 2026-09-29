@@ -13,9 +13,10 @@ function watchConsole(page: Page) {
   return problems;
 }
 
-test("the robot appears on the field card and tucks into the corner", async ({ page }) => {
+for (const path of ["/stories/ai-card", "/lab/ai-card"]) {
+test(`the robot appears on the field card and tucks into the corner (${path})`, async ({ page }) => {
   const problems = watchConsole(page);
-  await page.goto("/lab/ai-card");
+  await page.goto(path);
   await expect(page.getByTestId("field-card-frame")).toBeVisible();
   await expect(page.getByTestId("rive-robot").locator("canvas")).toBeVisible();
   await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 5000 });
@@ -26,3 +27,4 @@ test("the robot appears on the field card and tucks into the corner", async ({ p
   await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
   expect(problems).toEqual([]);
 });
+}

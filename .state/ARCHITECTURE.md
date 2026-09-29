@@ -47,7 +47,7 @@
 | Reader registries | `src/stories/reader/narration.ts` · `src/stories/method/registry.ts` | Narration per slug (for the term-order check) and method module per slug (pack, schema notes, sections). Allow-listed: the method routes exist only for registered slugs |
 | Method routes | `src/app/stories/[slug]/method/page.tsx` · `.../method/evidence.json/route.ts` | Static from `METHOD_REGISTRY`, `dynamicParams = false`; coexist with the static `<slug>/film` folders. Dev server caches `generateStaticParams`: restart it after registering a slug |
 | Film copy modules | `rate-copy.ts` · `cutoff-copy.ts` · `recovery-copy.ts` · `grid-copy.ts` in `src/components/film/` | Non-client, so the server, the validator and the tests can call them. A function exported from a `"use client"` module cannot be called from the server |
-| Engine labs | `/lab/rive` (Gate 1) · `/lab/transition` (Gate 2) · `/lab/grid` · `/lab/robot` | `noindex`, not linked from the landing |
+| Engine labs | `/lab/rive` (Gate 1) · `/lab/transition` (Gate 2) · `/lab/grid` · `/lab/robot` | `noindex`, not linked from the landing. The live site does not serve `/lab/*`. The robot on the field card is also at `/stories/ai-card`, which Orbit does serve |
 | Landing field | `src/components/storytelling/LandingField.tsx` | Product-index hero. Tight horizontal lanes, one irregular vertical thread, a zoom into a soft hole on the warp center, then a z-divide vortex whose streaks shorten into the horizon stars and galaxies. On portrait, `warpUnit` (~2× short axis) plus elliptical Y stretch fills the tall frame without emptying the sides; dust draws as additive core+halo pinpricks. Not a story template. |
 
 ## Design patterns
