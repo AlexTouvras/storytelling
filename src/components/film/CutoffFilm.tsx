@@ -8,9 +8,8 @@ import { AppField } from "@/components/film/AppField";
 import { CutoffInstrument } from "@/components/film/CutoffInstrument";
 import { CutoffEvidenceBoard } from "@/components/film/CutoffEvidenceBoard";
 import { cutoffCopyFor, cutoffFigureFor } from "@/components/film/cutoff-copy";
+import { FilmSubtitleBar } from "@/components/film/FilmSubtitle";
 import { ReaderShell } from "@/components/reader/ReaderShell";
-import { TermText } from "@/components/reader/TermText";
-import { KindBadge } from "@/components/reader/KindBadge";
 import { OrientationCard } from "@/components/reader/OrientationCard";
 import { MethodLink } from "@/components/reader/MethodLink";
 import type { StoryReader } from "@/stories/schemas/manifest";
@@ -168,36 +167,16 @@ export function CutoffFilm({ slug, reader, model }: Props) {
             <div className="mt-12 h-14 w-px bg-gradient-to-b from-white/80 to-transparent" />
           </div>
 
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-void via-void/90 to-transparent px-5 pb-10 pt-28 md:px-10"
-            style={{ opacity: body }}
-          >
-            <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 md:flex-row md:items-end md:justify-between">
-              <div data-testid="beat-copy" className="max-w-xl">
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/75">
-                    {copy.kicker}
-                  </p>
-                  {copy.kind ? <KindBadge kind={copy.kind} slug={slug} /> : null}
-                </div>
-                <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em] text-white md:text-3xl">
-                  {copy.title}
-                </h2>
-                <TermText
-                  paragraphs={copy.paragraphs}
-                  beat={beat}
-                  className="mt-3 space-y-2 text-sm leading-relaxed text-white/65 md:text-base"
-                />
-              </div>
-              {figure ? (
-                <p
-                  data-testid="hero-figure"
-                  className="font-display text-5xl font-semibold tracking-[-0.04em] text-neon-cyan md:text-6xl"
-                >
-                  {figure}
-                </p>
-              ) : null}
-            </div>
+          <div style={{ opacity: body }}>
+            <FilmSubtitleBar
+              kicker={copy.kicker}
+              title={copy.title}
+              paragraphs={copy.paragraphs}
+              beat={beat}
+              slug={slug}
+              kind={copy.kind}
+              figure={figure}
+            />
           </div>
         </div>
       </div>

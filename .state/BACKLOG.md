@@ -54,6 +54,7 @@
 - [x] **Human pick for the next flagship story** — `ngsim-phantom-wave`, locked 2026-09-29. Spec draft: `docs/decision-specs/where-should-the-speed-be-held.md`
 - [ ] Human sign-off on that Spec (Question, Claim, Takeaway, limitations, and the two cinematic choices). "Continue" accepts the side-view cars and the daylight road as proposed
 - [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
+- [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 
 ## Next (Orbit live — first topic shipped)
 

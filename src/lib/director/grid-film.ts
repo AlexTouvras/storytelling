@@ -220,43 +220,45 @@ function centred(cx: number, cy: number, width: number, height: number): Rect {
   return { x: cx - width / 2, y: cy - height / 2, width, height };
 }
 
-/** Matches the `lg` breakpoint, where the narration moves into the left column. */
+/** Matches the `lg` breakpoint. Below it, words and picture take turns. */
 export const WIDE_MIN = 1024;
 /** What stays of the phone narration while the picture plays: its kicker and label, px from the bottom edge. */
 export const PHONE_STRIP = 52;
+/** Room left under the picture for the subtitle band on a wide screen. */
+export const SUBTITLE_BAND = 108;
 /** Room under the phone machine for its two-line legend caption, px; kept above too, so the machine stays centred on its hour. */
 const PHONE_CAPTION = 36;
 
 /**
- * On a wide screen the narration sits in a left column and the picture to its
- * right. On a phone the picture takes the whole screen above the narration
- * strip: the narration and the picture take turns (`phoneMomentAt`), so the
- * picture is never shrunk to make room for the words.
+ * The words are a subtitle at the bottom, so the picture takes the frame above
+ * that band on every width. On a phone the subtitle and the picture still take
+ * turns (`phoneMomentAt`): the picture is never shrunk to make room for a paragraph.
  */
 export function gridLayout(viewport: Size): GridLayout {
   const { width: W, height: H } = viewport;
   const wide = W >= WIDE_MIN;
   if (wide) {
-    const region = { x: 0.4 * W, y: 0.08 * H, width: 0.58 * W, height: 0.84 * H };
-    const screen = { x: region.x + region.width / 2, y: region.y + region.height / 2 };
-    const side = Math.min(region.width * 0.62, region.height * 0.86);
-    const aside = Math.min(region.width * 0.5, region.height * 0.8);
-    const machineAsideCx = region.x + region.width * 0.27 - screen.x;
+    const top = 0.05 * H;
+    const bottom = H - SUBTITLE_BAND;
+    const span = bottom - top;
+    const screen = { x: W / 2, y: (top + bottom) / 2 };
+    const side = Math.min(0.42 * W, span * 0.78);
+    const aside = Math.min(0.34 * W, span * 0.62);
     return {
       wide,
-      pictureBottom: H,
+      pictureBottom: bottom,
       zoom: 6,
       screen,
-      trace: centred(0, 0, region.width * 0.94, Math.min(region.height * 0.62, 460)),
+      trace: centred(0, 0, Math.min(0.72 * W, 920), Math.min(span * 0.7, 460)),
       machine: centred(0, 0, side, side),
-      machineAside: centred(machineAsideCx, 0, aside, aside),
+      machineAside: centred(-0.22 * W, 0, aside, aside),
       chart: {
-        x: region.x + region.width * 0.56 - screen.x,
-        y: -region.height * 0.22,
-        width: region.width * 0.43,
-        height: region.height * 0.44,
+        x: 0.16 * W,
+        y: -span * 0.18,
+        width: Math.min(0.28 * W, 380),
+        height: span * 0.4,
       },
-      field: { x: region.x + 0.04 * region.width, y: 0.14 * H, width: region.width * 0.92, height: 0.64 * H },
+      field: { x: 0.08 * W, y: top + 0.08 * span, width: 0.84 * W, height: span * 0.72 },
     };
   }
   const top = 0.08 * H;
