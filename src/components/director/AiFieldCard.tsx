@@ -38,8 +38,9 @@ export function AiFieldCard() {
   const place = useCallback((where: string) => {
     const button = hit.current;
     if (!button) return;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const pad = 16;
+    const vw = window.innerWidth - pad;
+    const vh = window.innerHeight - pad;
     const scale = Math.min(vw, vh) / ROBOT.width;
     const w = ROBOT.width * scale;
     const h = ROBOT.height * scale;
@@ -107,7 +108,7 @@ export function AiFieldCard() {
           artboard={ROBOT}
           stateMachine={ROBOT.stateMachine}
           alignment={Alignment.BottomRight}
-          className="absolute inset-0"
+          className="absolute bottom-4 left-0 right-4 top-0"
           testId="rive-robot"
           onReady={() => setReady(true)}
         />

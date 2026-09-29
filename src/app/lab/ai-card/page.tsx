@@ -7,5 +7,10 @@ export const metadata: Metadata = {
 };
 
 export default function AiFieldCardPage() {
-  return <AiFieldCard />;
+  return (
+    <>
+      <style>{`body > div > header, body > div > footer { display: none !important; }`}</style>
+      <AiFieldCard />
+    </>
+  );
 }

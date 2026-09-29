@@ -55,6 +55,13 @@ type Props = {
 };
 
 function sizeBackingStore(rive: Rive, canvas: HTMLCanvasElement, ratio: number) {
+  // The runtime pins the canvas to the size it first measured. A layer that
+  // mounts before its box is laid out stays at 0×0 unless the pin is cleared.
+  const parent = canvas.parentElement?.getBoundingClientRect();
+  if (canvas.getBoundingClientRect().width < 1 && parent && parent.width > 1) {
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+  }
   const width = Math.round(canvas.offsetWidth * ratio);
   const height = Math.round(canvas.offsetHeight * ratio);
   if (width < 1 || height < 1 || (canvas.width === width && canvas.height === height)) return;
@@ -131,8 +138,16 @@ export function RiveLayer({
   }, [rive, canvas, ratio]);
 
   useEffect(() => {
+    const parent = canvas?.parentElement;
+    if (!parent) {
+      fitBackingStore();
+      return;
+    }
+    const observer = new ResizeObserver(() => fitBackingStore());
+    observer.observe(parent);
     fitBackingStore();
-  }, [fitBackingStore]);
+    return () => observer.disconnect();
+  }, [fitBackingStore, canvas]);
 
   // Observers belong to one view-model instance, and a reset binds a new one.
   const detachRef = useRef<() => void>(() => {});
