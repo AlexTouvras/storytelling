@@ -47,6 +47,8 @@ type Props = {
   className?: string;
   style?: CSSProperties;
   testId?: string;
+  /** Where the artboard sits when the layer is larger than the file. */
+  alignment?: Alignment;
   ref?: Ref<RiveLayerHandle>;
   onReady?: () => void;
   onStates?: (states: string[]) => void;
@@ -92,6 +94,7 @@ export function RiveLayer({
   className,
   style,
   testId,
+  alignment = Alignment.Center,
   ref,
   onReady,
   onStates,
@@ -105,7 +108,7 @@ export function RiveLayer({
     reportsRef.current = reports;
   }, [onReady, onStates, reports]);
 
-  const layout = useMemo(() => new Layout({ fit: Fit.Contain, alignment: Alignment.Center }), []);
+  const layout = useMemo(() => new Layout({ fit: Fit.Contain, alignment }), [alignment]);
   const { rive, RiveComponent, canvas } = useRive(
     {
       src,
