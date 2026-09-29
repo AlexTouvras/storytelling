@@ -57,6 +57,7 @@ export function RiveGate({ model }: Props) {
               src={HOUSEHOLD_RIV_URL}
               artboard={HOUSEHOLD}
               stateMachine={HOUSEHOLD.stateMachine}
+              reports={HOUSEHOLD.reports}
               className="absolute inset-0"
               testId="rive-household"
               onReady={onReady}
@@ -75,7 +76,7 @@ export function RiveGate({ model }: Props) {
           data-testid="fire-shock"
           className="focus-ring border border-neon-violet/60 px-4 py-2 text-neon-violet disabled:opacity-40"
           disabled={!mounted || !ready}
-          onClick={() => note(rive.current?.fire(HOUSEHOLD.inputs.shock) ? "fired shock" : "shock not ready")}
+          onClick={() => note(rive.current?.fire(HOUSEHOLD.props.shock) ? "fired shock" : "shock not ready")}
         >
           Fire shock
         </button>
@@ -85,7 +86,7 @@ export function RiveGate({ model }: Props) {
           className="focus-ring border border-white/30 px-4 py-2 text-white/80 disabled:opacity-40"
           disabled={!mounted || !ready}
           onClick={() =>
-            note(rive.current?.setBool(HOUSEHOLD.inputs.constrained, true) ? "set constrained" : "not ready")
+            note(rive.current?.setBool(HOUSEHOLD.props.constrained, true) ? "set constrained" : "not ready")
           }
         >
           Jump to end state

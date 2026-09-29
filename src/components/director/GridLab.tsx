@@ -28,8 +28,8 @@ export function GridLab({ values }: Props) {
   const onStates = useCallback((s: string[]) => setStates(s), []);
 
   const apply = (nextLight: boolean, nextReserve: boolean) => {
-    rive.current?.setBool(GRID.inputs.light, nextLight);
-    rive.current?.setBool(GRID.inputs.reserve, nextReserve);
+    rive.current?.setBool(GRID.props.light, nextLight);
+    rive.current?.setBool(GRID.props.reserve, nextReserve);
   };
 
   const rows = Object.values(values.variants);
@@ -54,6 +54,7 @@ export function GridLab({ values }: Props) {
             src={GRID_RIV_URL}
             artboard={GRID}
             stateMachine={GRID.stateMachine}
+            reports={GRID.reports}
             className="absolute inset-0"
             testId="rive-grid"
             onReady={onReady}
@@ -90,7 +91,7 @@ export function GridLab({ values }: Props) {
           data-testid="fire-trip"
           className={`${button} border-neon-violet/60 text-neon-violet`}
           disabled={!ready}
-          onClick={() => note(rive.current?.fire(GRID.inputs.trip) ? "fired trip" : "trip not ready")}
+          onClick={() => note(rive.current?.fire(GRID.props.trip) ? "fired trip" : "trip not ready")}
         >
           Trip
         </button>
@@ -127,7 +128,7 @@ export function GridLab({ values }: Props) {
           data-testid="set-tripped"
           className={`${button} border-white/30 text-white/80`}
           disabled={!ready}
-          onClick={() => note(rive.current?.setBool(GRID.inputs.tripped, true) ? "jumped to end" : "not ready")}
+          onClick={() => note(rive.current?.setBool(GRID.props.tripped, true) ? "jumped to end" : "not ready")}
         >
           Jump to end state
         </button>

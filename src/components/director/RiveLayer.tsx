@@ -1,33 +1,36 @@
 "use client";
 
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, type CSSProperties, type Ref } from "react";
-import {
-  Alignment,
-  EventType,
-  Fit,
-  Layout,
-  StateMachineInputType,
-  useRive,
-  type Event as RiveEvent,
-  type Rive,
-} from "@rive-app/react-canvas";
+import { Alignment, Fit, Layout, useRive, type Rive, type ViewModelInstance } from "@rive-app/react-canvas";
 import { artboardToLocal, localToViewport, type Anchor, type LocalBox } from "@/lib/director/anchors";
 import { configureRiveRuntime } from "@/components/director/rive-assets";
 
 configureRiveRuntime();
 
+/**
+ * Everything goes through the file's view model (data binding). State-machine
+ * inputs and state-change events are deprecated in the runtime, so neither is
+ * used: a file reports its state by writing enums from state actions.
+ */
 export type RiveLayerHandle = {
   isReady(): boolean;
-  /** Fires a trigger input. Returns false if the file is not loaded yet. */
-  fire(input: string): boolean;
-  setBool(input: string, value: boolean): boolean;
-  /** Back to the entry state with every input at its default. */
+  /** Fires a trigger property. Returns false if the file is not loaded or has no such trigger. */
+  fire(prop: string): boolean;
+  setBool(prop: string, value: boolean): boolean;
+  setNumber(prop: string, value: number): boolean;
+  /** Sets an enum property by value name. */
+  setEnum(prop: string, value: string): boolean;
+  /** Sets a colour property, 0xAARRGGBB. */
+  setColor(prop: string, argb: number): boolean;
+  /** Reads a view-model value back: what a listener or a state action wrote. */
+  read(prop: string): string | number | boolean | null;
+  /** Back to the entry state with a fresh default view-model instance. */
   reset(): boolean;
   play(): void;
   pause(): void;
   /** A box in artboard units → viewport CSS pixels, through the camera. */
   getAnchor(box: LocalBox): Anchor | null;
-  /** State names the machine last reported, for tests and captions. */
+  /** The current values of the `reports` enums, for tests and captions. */
   states(): string[];
 };
 
@@ -35,6 +38,8 @@ type Props = {
   src: string;
   artboard: { name: string; width: number; height: number };
   stateMachine: string;
+  /** Enum properties the machine writes as it changes state; read back by `states()`. */
+  reports?: readonly string[];
   /** Backing-store pixel ratio. Raise it when a camera will scale the layer up. */
   pixelRatio?: number;
   className?: string;
@@ -55,15 +60,32 @@ function sizeBackingStore(rive: Rive, canvas: HTMLCanvasElement, ratio: number) 
   rive.drawFrame();
 }
 
+function boundInstance(rive: Rive | null): ViewModelInstance | null {
+  try {
+    return rive?.viewModelInstance ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function readReports(vm: ViewModelInstance | null, reports: readonly string[]): string[] {
+  if (!vm) return [];
+  return reports.flatMap((name) => {
+    const value = vm.enum(name)?.value;
+    return value ? [value] : [];
+  });
+}
+
 /**
  * A Rive illustration as a layer: the React runtime owns loading, drawing and
- * cleanup; this component only exposes inputs and an anchor lookup. No adapter
- * contract, no keep-alive — mounting is cheap and unmounting frees it.
+ * cleanup; this component only exposes the view model and an anchor lookup. No
+ * adapter contract, no keep-alive — mounting is cheap and unmounting frees it.
  */
 export function RiveLayer({
   src,
   artboard,
   stateMachine,
+  reports = [],
   pixelRatio,
   className,
   style,
@@ -72,13 +94,14 @@ export function RiveLayer({
   onReady,
   onStates,
 }: Props) {
-  const statesRef = useRef<string[]>([]);
   const onReadyRef = useRef(onReady);
   const onStatesRef = useRef(onStates);
+  const reportsRef = useRef(reports);
   useEffect(() => {
     onReadyRef.current = onReady;
     onStatesRef.current = onStates;
-  }, [onReady, onStates]);
+    reportsRef.current = reports;
+  }, [onReady, onStates, reports]);
 
   const layout = useMemo(() => new Layout({ fit: Fit.Contain, alignment: Alignment.Center }), []);
   const { rive, RiveComponent, canvas } = useRive(
@@ -87,14 +110,9 @@ export function RiveLayer({
       artboard: artboard.name,
       stateMachine,
       autoplay: true,
+      autoBind: true,
       layout,
       onLoad: () => onReadyRef.current?.(),
-      onStateChange: (event: RiveEvent) => {
-        const data = event.data;
-        const names = Array.isArray(data) ? data.map(String) : [];
-        statesRef.current = names;
-        onStatesRef.current?.(names);
-      },
     },
     pixelRatio ? { customDevicePixelRatio: pixelRatio } : undefined,
   );
@@ -111,40 +129,89 @@ export function RiveLayer({
     fitBackingStore();
   }, [fitBackingStore]);
 
+  // Observers belong to one view-model instance, and a reset binds a new one.
+  const detachRef = useRef<() => void>(() => {});
+  const observe = useCallback(() => {
+    detachRef.current();
+    const vm = boundInstance(rive);
+    const emit = () => onStatesRef.current?.(readReports(boundInstance(rive), reportsRef.current));
+    const watched = reportsRef.current.flatMap((name) => {
+      const prop = vm?.enum(name);
+      return prop ? [prop] : [];
+    });
+    for (const prop of watched) prop.on(emit);
+    detachRef.current = () => {
+      for (const prop of watched) prop.off(emit);
+    };
+    emit();
+  }, [rive]);
+
   useEffect(() => {
     if (!rive) return;
-    const onStop = () => {
-      statesRef.current = [];
+    observe();
+    return () => {
+      detachRef.current();
+      detachRef.current = () => {};
     };
-    rive.on(EventType.Stop, onStop);
-    return () => rive.off(EventType.Stop, onStop);
-  }, [rive]);
+  }, [rive, observe]);
 
   useImperativeHandle(
     ref,
     (): RiveLayerHandle => {
-      const input = (name: string) =>
-        rive?.stateMachineInputs(stateMachine)?.find((i) => i.name === name) ?? null;
+      const set = (apply: (vm: ViewModelInstance) => boolean) => {
+        const vm = boundInstance(rive);
+        if (!vm || !apply(vm)) return false;
+        rive?.play();
+        return true;
+      };
       return {
-        isReady: () => !!rive && !!rive.stateMachineInputs(stateMachine),
-        fire(name) {
-          const i = input(name);
-          if (!i || i.type !== StateMachineInputType.Trigger) return false;
-          i.fire();
-          rive?.play();
-          return true;
-        },
-        setBool(name, value) {
-          const i = input(name);
-          if (!i || i.type !== StateMachineInputType.Boolean) return false;
-          i.value = value;
-          rive?.play();
-          return true;
+        isReady: () => !!boundInstance(rive),
+        fire: (name) =>
+          set((vm) => {
+            const p = vm.trigger(name);
+            p?.trigger();
+            return !!p;
+          }),
+        setBool: (name, value) =>
+          set((vm) => {
+            const p = vm.boolean(name);
+            if (p) p.value = value;
+            return !!p;
+          }),
+        setNumber: (name, value) =>
+          set((vm) => {
+            const p = vm.number(name);
+            if (p) p.value = value;
+            return !!p;
+          }),
+        setEnum: (name, value) =>
+          set((vm) => {
+            const p = vm.enum(name);
+            if (!p || !p.values.includes(value)) return false;
+            p.value = value;
+            return true;
+          }),
+        setColor: (name, argb) =>
+          set((vm) => {
+            const p = vm.color(name);
+            if (p) p.value = argb;
+            return !!p;
+          }),
+        read(name) {
+          const vm = boundInstance(rive);
+          const type = vm?.properties.find((p) => p.name === name)?.type as string | undefined;
+          if (!vm || !type) return null;
+          if (type === "enumType") return vm.enum(name)?.value ?? null;
+          if (type === "boolean") return vm.boolean(name)?.value ?? null;
+          if (type === "number") return vm.number(name)?.value ?? null;
+          if (type === "color") return vm.color(name)?.value ?? null;
+          return null;
         },
         reset() {
           if (!rive) return false;
-          rive.reset({ artboard: artboard.name, stateMachine, autoplay: true });
-          statesRef.current = [];
+          detachRef.current();
+          rive.reset({ artboard: artboard.name, stateMachine, autoplay: true, autoBind: true });
+          observe();
           return true;
         },
         play() {
@@ -159,10 +226,10 @@ export function RiveLayer({
           const local = artboardToLocal(box, artboard, layoutSize);
           return localToViewport(local, canvas.getBoundingClientRect(), layoutSize);
         },
-        states: () => statesRef.current,
+        states: () => readReports(boundInstance(rive), reportsRef.current),
       };
     },
-    [rive, canvas, stateMachine, artboard, fitBackingStore],
+    [rive, canvas, stateMachine, artboard, fitBackingStore, observe],
   );
 
   return (

@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
-/** Console noise the Rive runtime prints on every load; anything else is a failure. */
-const KNOWN = [/deprecated/i, /software WebGL/i, /GroupMarkerNotSet/i, /React DevTools/i];
+/** Console noise headless Chromium prints on every load; anything else, a Rive deprecation included, is a failure. */
+const KNOWN = [/software WebGL/i, /GroupMarkerNotSet/i, /React DevTools/i];
 
 function watchConsole(page: Page) {
   const problems: string[] = [];
