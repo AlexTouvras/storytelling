@@ -8,7 +8,7 @@ import { nextTriggerState, reconcileTrigger, type TriggerState } from "@/compone
 import { FilmSubtitle } from "@/components/film/FilmSubtitle";
 import type { JamCopy, JamDecision } from "@/components/film/jam-copy";
 import type { JamCloud, JamFilmData, JamMark } from "@/components/film/jam-film-data";
-import { CARS } from "@/illustrations/cars";
+import { CARS, carsGeometry } from "@/illustrations/cars";
 import { RiveLayer, type RiveLayerHandle } from "@/components/director/RiveLayer";
 import { CARS_RIV_URL } from "@/components/director/rive-assets";
 import { applyCamera, blendShots, cameraFor, wideShotOn, worldToViewport, type CameraState } from "@/lib/director/camera";
@@ -316,13 +316,13 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
         const left = screen.x - boxW / 2;
         const top = screen.y - boxH / 2;
         const right = left + boxW;
-        const bottom = top + boxH;
         const roomRight = vp.width - right > 168;
+        const anchors = carsGeometry();
         const spots = roomRight
           ? [
-              { x: left + boxW * (318 / CARS.width), y: top - 14, transform: "translate(-50%, -100%)" },
-              { x: right + 16, y: top + boxH * (92 / CARS.height), transform: "translate(0, -50%)" },
-              { x: left + boxW * (78 / CARS.width), y: bottom + 14, transform: "translate(-50%, 0)" },
+              { x: left + boxW * (anchors.leadLamp.x / CARS.width), y: top + boxH * (anchors.leadLamp.y / CARS.height) - 14, transform: "translate(-50%, -100%)" },
+              { x: left + boxW * (anchors.gap.x / CARS.width), y: top + boxH * (anchors.gap.y / CARS.height), transform: "translate(-50%, -120%)" },
+              { x: left + boxW * (anchors.thirdLamp.x / CARS.width), y: top + boxH * (anchors.thirdLamp.y / CARS.height) + 14, transform: "translate(-50%, 0)" },
             ]
           : [0, 1, 2].map((i) => ({
               x: Math.max(12, left),
@@ -371,9 +371,9 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
       if (rive?.isReady()) {
         const visible = frame.open > 0.35;
         const action = reconcileTrigger(BRAKE_CUE, last, progress, trigger, { visible, reduced: reducedNow });
-        if (action === "fire") rive.fire(CARS.inputs.brake);
+        if (action === "fire") rive.fire(CARS.props.brake);
         else if (action === "settle") {
-          rive.setBool(CARS.inputs.braked, true);
+          rive.setBool(CARS.props.braked, true);
           quiet();
         } else if (action === "reset") {
           rive.reset();

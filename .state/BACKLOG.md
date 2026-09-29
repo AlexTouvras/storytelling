@@ -57,6 +57,8 @@
 - [x] Human approves listing the US-101 film — approved 2026-09-29 ("List it next"); slug in `LISTED_SLUGS`, landing links `/film`
 - [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
 - [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
+- [x] Diagnose why the pictures stay charts, and rebuild the US-101 side view as cars (`docs/CINEMATIC_GAP.md`, `cars.riv` on the view model)
+- [ ] **Next cinematic shot: a uniform-scale window of the freeway.** Bodies at one scale, lamps at the tail, speed painted on the body. Not sprites on the lane-index chart, and not the data-storytelling skill (that skill's visuals are charts). See `docs/CINEMATIC_GAP.md`
 
 ## Rive: cinematic illustrations (2026-09-29)
 

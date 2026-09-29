@@ -191,11 +191,15 @@ Overhead, looking along the stretch, `local_y` running away from the reader so "
 
 ### The opened cars (Rive)
 
-Built from code, as `grid.riv` was. One artboard, three cars in side view, no person, no cabin, no face. Inputs are a trigger `brake` and a bool `braked` that jumps to the end state, the same input surface as the grid, because this beat is one event and not a continuum. The continuum of speeds stays on the canvas.
+Built from code, as `grid.riv` was. One artboard, three cars in side view, no person, no cabin interior, no face. The file's view model is a trigger `brake` and a bool `braked` that jumps to the end state — the same surface the director already drives. The continuum of speeds stays on the canvas.
 
 The lead car's lamp comes on. The second lamp follows, later. The third follows later and reads fuller, which is the exaggeration: a real brake difference of a few miles per hour would not read across a diagram, and the caption says the brake is enlarged. The gap between the cars closes. Wheels slow. Nothing in the artboard is a chart.
 
 The camera drops onto the featured mark (FOCUS), the side view opens on that mark (MORPH), the trigger fires, and the view closes back into the mark before the pullback. Scrubbing reverses it, as Gate 2 required.
+
+### Revision 2026-09-29 — the opened cars were not cars
+
+The first build drew each car as a rounded rectangle, a glass rectangle and one wheel. That is the chart's vocabulary at a larger size, and it is why the beat did not read. `docs/CINEMATIC_GAP.md` records the cause and the systems that already do this job. The side view is now a depiction (shell, cabin, two wheels, a tail lamp), driven by the view model, the same surface as the other illustrations. The road marks stay marks: lane index and feet are not one scale, so a vehicle sprite there would be a stretched chart. The next shot, not this one, is a uniform-scale window of the freeway.
 
 ### Closed 2026-09-29
 
