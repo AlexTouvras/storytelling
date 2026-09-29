@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { buildField } from "@/lib/sim/book-field";
 import { buildHousehold, householdValues } from "@/illustrations/household";
 import { buildGrid, gridValues } from "@/illustrations/grid";
+import { buildRobot } from "@/illustrations/robot";
 
 const check = process.argv.includes("--check");
 const dir = join(process.cwd(), "src", "illustrations");
@@ -16,6 +17,7 @@ const featured = buildField().featured;
 const files: Array<[string, Uint8Array, string]> = [
   ["household.riv", buildHousehold(householdValues(featured)), `for loan ${featured.id}`],
   ["grid.riv", buildGrid(gridValues()), "from the grid frequency model"],
+  ["robot.riv", buildRobot(), "the AI field card character"],
 ];
 
 let stale = 0;
