@@ -199,7 +199,7 @@ The camera drops onto the featured mark (FOCUS), the side view opens on that mar
 
 ### Revision 2026-09-29 — the opened cars were not cars
 
-The first build drew each car as a rounded rectangle, a glass rectangle and one wheel. That is the chart's vocabulary at a larger size, and it is why the beat did not read. `docs/CINEMATIC_GAP.md` records the cause and the systems that already do this job. The side view is now a depiction (shell, cabin, two wheels, a tail lamp), driven by the view model, the same surface as the other illustrations. The road marks stay marks: lane index and feet are not one scale, so a vehicle sprite there would be a stretched chart. The next shot, not this one, is a uniform-scale window of the freeway.
+The first build drew each car as a rounded rectangle, a glass rectangle and one wheel. That is the chart's vocabulary at a larger size, and it is why the beat did not read. `docs/CINEMATIC_GAP.md` records the cause and the systems that already do this job. The side view is now a depiction (shell, cabin, two wheels, a tail lamp), driven by the view model, the same surface as the other illustrations. The road marks stay marks: lane index and feet are not one scale, so a vehicle sprite there would be a stretched chart. The next shot is a uniform-scale window of the freeway. The next order is the cinematic spine in `docs/CINEMATIC_GAP.md`: the walk speed is the reveal, after the brake has been watched. Neither is signed. The question on this page stays the question.
 
 ### Closed 2026-09-29
 

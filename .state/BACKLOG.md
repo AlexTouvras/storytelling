@@ -58,7 +58,7 @@
 - [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
 - [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 - [x] Diagnose why the pictures stay charts, and rebuild the US-101 side view as cars (`docs/CINEMATIC_GAP.md`, `cars.riv` on the view model)
-- [ ] **Next cinematic shot: a uniform-scale window of the freeway.** Bodies at one scale, lamps at the tail, speed painted on the body. Not sprites on the lane-index chart, and not the data-storytelling skill (that skill's visuals are charts). See `docs/CINEMATIC_GAP.md`
+- [ ] **Next cinematic shot: a uniform-scale window of the freeway, ordered as a cinematic spine.** Bodies at one scale, lamps at the tail, speed painted on the body. The pack's walk speed is the reveal, after the brake has been watched. Sprites do not go on the lane-index chart. The executive-deck skill is not the reference; the journalism examples in `docs/CINEMATIC_GAP.md` are. The signed question stays until a person reopens it.
 
 ## Rive: cinematic illustrations (2026-09-29)
 
