@@ -50,6 +50,15 @@ export function cueIndex(local: number, count: number): number {
   return Math.min(count - 1, Math.floor(x * count));
 }
 
+/**
+ * Film progress at the middle of a beat's first subtitle. That is the line
+ * where a term taught in the beat is on screen.
+ */
+export function firstCueAt(start: number, end: number, count: number): number {
+  const n = Math.max(1, count);
+  return start + ((end - start) * 0.5) / n;
+}
+
 function sentences(paragraph: string): string[] {
   return paragraph
     .split(/(?<=[.!?])\s+/)
@@ -85,6 +94,39 @@ function packWords(text: string): string[] {
   return cues;
 }
 
+/** Pieces of a long sentence, split after a comma or similar, keeping the mark. */
+function clauses(sentence: string): string[] {
+  return sentence
+    .split(/(?<=[,;:—–])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+/**
+ * A long sentence, packed so a cue ends on a phrase when it can. A clause
+ * that is still longer than two lines falls back to word boundaries.
+ */
+function packClauses(sentence: string): string[] {
+  const cues: string[] = [];
+  let current = "";
+  const flush = () => {
+    if (current) cues.push(current);
+    current = "";
+  };
+  for (const bit of clauses(sentence)) {
+    if (bit.length > LINE * 2) {
+      flush();
+      cues.push(...packWords(bit));
+      continue;
+    }
+    const next = current ? `${current} ${bit}` : bit;
+    if (current && next.length > LINE * 2) flush();
+    current = current ? `${current} ${bit}` : bit;
+  }
+  flush();
+  return cues;
+}
+
 /**
  * The lines a beat speaks, in order. A sentence that fits in two lines is one
  * cue, so a term taught at the start of a sentence stays with that sentence.
@@ -94,7 +136,7 @@ export function subtitleCues(paragraphs: readonly string[]): string[] {
   for (const paragraph of paragraphs) {
     for (const sentence of sentences(paragraph)) {
       if (sentence.length <= LINE * 2) cues.push(sentence);
-      else cues.push(...packWords(sentence));
+      else cues.push(...packClauses(sentence));
     }
   }
   return cues.length > 0 ? cues : [""];

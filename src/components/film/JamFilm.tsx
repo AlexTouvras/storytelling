@@ -6,7 +6,7 @@ import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import { cameraCreep, clamp01, lerp } from "@/components/film/craft";
 import { nextTriggerState, reconcileTrigger, type TriggerState } from "@/components/film/cue-table";
 import { FilmSubtitle } from "@/components/film/FilmSubtitle";
-import { beatLocal, cueIndex, subtitleCues } from "@/components/film/subtitles";
+import { beatLocal, cueIndex, firstCueAt, subtitleCues } from "@/components/film/subtitles";
 import type { JamCopy, JamDecision } from "@/components/film/jam-copy";
 import type { JamCloud, JamFilmData, JamMark } from "@/components/film/jam-film-data";
 import { CARS } from "@/illustrations/cars";
@@ -384,7 +384,8 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
       readAt: (beatIndex: number) => {
         if (!lay.wide) return phoneReadAt(beatIndex);
         const starts = JAM_BEAT_STARTS;
-        return (starts[beatIndex] + (starts[beatIndex + 1] ?? 1)) / 2;
+        const start = starts[beatIndex] ?? 0;
+        return firstCueAt(start, starts[beatIndex + 1] ?? 1, cueCounts[beatIndex] ?? 1);
       },
       trigger: () => trigger,
     };

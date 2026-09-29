@@ -32,7 +32,7 @@ import { KindBadge } from "@/components/reader/KindBadge";
 import { OrientationCard } from "@/components/reader/OrientationCard";
 import { methodHref } from "@/lib/reader/kinds";
 import { FilmSubtitle } from "@/components/film/FilmSubtitle";
-import { beatLocal, cueIndex, subtitleCues } from "@/components/film/subtitles";
+import { beatLocal, cueIndex, firstCueAt, subtitleCues } from "@/components/film/subtitles";
 import type { GridCopy, GridDecision } from "@/components/film/grid-copy";
 import type { StoryReader } from "@/stories/schemas/manifest";
 
@@ -407,7 +407,8 @@ export function GridFilm({ slug, reader, copy, decision, data, values }: Props) 
       readAt: (beat: number) => {
         if (!lay.wide) return phoneReadAt(beat);
         const starts = GRID_BEAT_STARTS;
-        return (starts[beat] + (starts[beat + 1] ?? 1)) / 2;
+        const start = starts[beat] ?? 0;
+        return firstCueAt(start, starts[beat + 1] ?? 1, cueCounts[beat] ?? 1);
       },
       trigger: () => trigger,
       run: () => run,

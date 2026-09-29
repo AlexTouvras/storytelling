@@ -11,7 +11,7 @@ import { CUTOFF_BEAT_STARTS } from "@/components/film/cutoff-frame";
 import { RECOVERY_BEAT_STARTS } from "@/components/film/recovery-frame";
 import { GRID_BEAT_STARTS } from "@/lib/director/grid-film";
 import { JAM_BEAT_STARTS, phoneReadAt } from "@/lib/director/jam-film";
-import { beatLocal, cueIndex, picturePlot, subtitleCues, SUBTITLE_BAND } from "@/components/film/subtitles";
+import { beatLocal, cueIndex, firstCueAt, picturePlot, subtitleCues, SUBTITLE_BAND } from "@/components/film/subtitles";
 
 describe("subtitle cues", () => {
   it("keeps each cue to two lines and does not drop words", () => {
@@ -24,6 +24,15 @@ describe("subtitle cues", () => {
     expect(cues[1]).toBe("A second that is also short.");
     for (const cue of cues) expect(cue.length).toBeLessThanOrEqual(36 * 2);
     expect(cues.join(" ").replace(/\s+/g, " ")).toBe(paragraphs.join(" ").replace(/\s+/g, " "));
+  });
+
+  it("breaks a long sentence on a comma instead of mid-phrase", () => {
+    const cues = subtitleCues([
+      "A minute later it is at the back of the stretch, near 11 mph, and the road ahead is still near 40 mph.",
+    ]);
+    expect(cues[0]).toBe("A minute later it is at the back of the stretch, near 11 mph,");
+    expect(cues.at(-1)).toMatch(/^and the road ahead/);
+    for (const cue of cues) expect(cue.length).toBeLessThanOrEqual(36 * 2);
   });
 
   it("steps through the cues of a beat and holds the last one at the end", () => {
@@ -64,6 +73,16 @@ const TERMS: Record<string, Term[]> = {
   "where-should-the-speed-be-held": jam.reader.terms,
 };
 
+describe("the opening subtitle is where a beat's first term is taught", () => {
+  it("lands the grid's trip line at the start of its beat", () => {
+    const beats = NARRATION["how-much-fast-reserve"]();
+    const cues = subtitleCues(beats[1].paragraphs);
+    const at = firstCueAt(GRID_BEAT_STARTS[1], GRID_BEAT_STARTS[2], cues.length);
+    const cue = cues[cueIndex(beatLocal(at, GRID_BEAT_STARTS), cues.length)];
+    expect(cue).toMatch(/\btrip\b/i);
+  });
+});
+
 describe("subtitle cues still teach the term the reader-kit opens", () => {
   for (const row of TAUGHT) {
     it(`${row.slug} at ${row.at} shows ${row.term}`, () => {
@@ -71,8 +90,8 @@ describe("subtitle cues still teach the term the reader-kit opens", () => {
       const term = TERMS[row.slug].find((t) => t.id === row.term);
       expect(term).toBeTruthy();
       const cues = subtitleCues(beats[row.beat].paragraphs);
-      const cue = cues[cueIndex(beatLocal(row.at, row.starts), cues.length)];
       const pattern = new RegExp(filmForms(term!).map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "i");
+      const cue = cues[cueIndex(beatLocal(row.at, row.starts), cues.length)];
       expect(cue, cues.join(" | ")).toMatch(pattern);
     });
   }
