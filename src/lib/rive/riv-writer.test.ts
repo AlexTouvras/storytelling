@@ -86,3 +86,145 @@ describe("ArtboardBuilder", () => {
     expect(condition.props.get(key("inputId"))).toBe(0);
   });
 });
+
+describe("ArtboardBuilder view model", () => {
+  function build() {
+    const ab = new ArtboardBuilder("V", 100, 100);
+    const vm = ab.viewModel("V");
+    const level = vm.number("level", 40);
+    const poke = vm.trigger("poke");
+    const mode = vm.enum("mode", ["a", "b"], "a");
+    const tint = vm.color("tint", argb(1, 2, 3));
+    const dot = ab.ellipse({ name: "dot", x: 50, y: 50, width: 10, height: 10, fill: argb(0, 0, 0) });
+    ab.bind(dot.fillColor!, "color", tint);
+    const low = ab.animation("low", 60, "loop").key(dot.shape, "x", [[0, 10]]);
+    const high = ab.animation("high", 60, "loop").key(dot.shape, "x", [[0, 90]]);
+    const sm = ab.stateMachine("V");
+    const blend = sm.layer("level");
+    blend.transition(blend.entry, blend.blend1D(level, [[0, low], [100, high]]));
+    const modes = sm.layer("mode");
+    const a = modes.play(low);
+    const b = modes.play(high);
+    modes.transition(modes.entry, a);
+    modes.transition(modes.any, a, { conditions: [{ vm: mode, value: "a" }] });
+    modes.transition(modes.any, b, { conditions: [{ vm: mode, value: "b" }] });
+    modes.onStart(b, { set: level, value: 0 });
+    sm.listen("press", dot.shape, "down", { fire: poke });
+    return decodeRiv(ab.encode()).objects;
+  }
+  const of = (objects: ReturnType<typeof build>, type: number) => objects.filter((o) => o.type === type);
+
+  it("writes the view model and its instance before the artboard, which binds to both", () => {
+    const objects = build();
+    const at = (type: number) => objects.findIndex((o) => o.type === type);
+    expect(at(TYPE.viewModel)).toBeLessThan(at(TYPE.vmInstance));
+    expect(at(TYPE.vmInstance)).toBeLessThan(at(TYPE.artboard));
+    const artboard = objects[at(TYPE.artboard)];
+    expect(artboard.props.get(key("abViewModelId"))).toBe(0);
+    expect(of(objects, TYPE.dataEnumValue).map((o) => o.props.get(key("enumValueKey")))).toEqual(["a", "b"]);
+  });
+
+  it("writes an enum's first value explicitly, because id properties default to empty", () => {
+    const objects = build();
+    const initial = of(objects, TYPE.vmInstanceEnum)[0];
+    expect(initial.props.get(key("vmEnumValue"))).toBe(0);
+    const compared = of(objects, TYPE.valueEnumComparator).map((o) => o.props.get(key("compareEnum")));
+    expect(compared).toEqual([0, 1]);
+  });
+
+  it("binds by path: view model 0, then the property's position", () => {
+    const objects = build();
+    const paths = of(objects, TYPE.dataBindContext).map((o) => o.props.get(key("bindSourcePath")));
+    expect(paths).toContainEqual([0, 3]);
+    expect(paths).toContainEqual([0, 0]);
+    expect(paths).toContainEqual([0, 1]);
+  });
+
+  it("fires a trigger through the trigger converter and writes values back to the source", () => {
+    const objects = build();
+    expect(of(objects, TYPE.dataConverterTrigger)).toHaveLength(1);
+    const binds = of(objects, TYPE.dataBindContext);
+    const fire = binds.find((o) => (o.props.get(key("bindSourcePath")) as number[])[1] === 1)!;
+    expect(fire.props.get(key("bindConverterId"))).toBe(0);
+    expect(fire.props.get(key("bindFlags"))).toBe(1);
+  });
+
+  it("puts a state's actions after the state and before its transitions", () => {
+    const objects = build();
+    const actionAt = objects.findIndex((o) => o.type === TYPE.listenerVMChange && o.props.get(key("listenerActionFlags")) === 4);
+    expect(actionAt).toBeGreaterThan(0);
+    const before = objects.slice(0, actionAt).reverse();
+    const lastLayerThing = before.find((o) => o.type === TYPE.animationState || o.type === TYPE.transition)!;
+    expect(lastLayerThing.type).toBe(TYPE.animationState);
+  });
+
+  it("targets listeners at artboard components", () => {
+    const objects = build();
+    const listener = of(objects, TYPE.listener)[0];
+    const artboardAt = objects.findIndex((o) => o.type === TYPE.artboard);
+    const target = listener.props.get(key("listenerTargetId")) as number;
+    expect(objects[artboardAt + target].props.get(key("name"))).toBe("dot");
+  });
+});
+
+describe("text, fonts and bones", () => {
+  it("embeds a font immediately after the backboard and binds a string onto the run", () => {
+    const bytes = new Uint8Array([9, 8, 7, 6]);
+    const ab = new ArtboardBuilder("T", 120, 40);
+    const line = ab.viewModel("T").string("line", "Hi");
+    ab.addFont("Inter", bytes);
+    const { run } = ab.text({ name: "say", x: 4, y: 4, width: 100, text: "Hi", fontSize: 14, color: argb(255, 255, 255) });
+    ab.bind(run, "text", line);
+    const objects = decodeRiv(ab.encode()).objects;
+    expect(objects[1].type).toBe(TYPE.fontAsset);
+    expect(objects[1].props.get(key("assetName"))).toBe("Inter");
+    expect(objects[2].type).toBe(TYPE.fileAssetContents);
+    expect(objects[2].props.get(key("assetBytes"))).toEqual([9, 8, 7, 6]);
+    const runObj = objects.find((o) => o.type === TYPE.textValueRun)!;
+    expect(runObj.props.get(key("runText"))).toBe("Hi");
+    expect(runObj.props.get(key("runStyleId"))).toBeGreaterThan(0);
+    const bound = objects.find((o) => o.type === TYPE.dataBindContext && o.props.get(key("bindPropertyKey")) === 268);
+    expect(bound?.props.get(key("bindSourcePath"))).toEqual([0, 0]);
+    const style = objects.find((o) => o.type === TYPE.textStylePaint)!;
+    expect(style.props.get(key("fontAssetId"))).toBe(0);
+  });
+
+  it("weights a skinned vertex to tendons, with index 0 reserved for the runtime", () => {
+    const ab = new ArtboardBuilder("S", 100, 100);
+    const root = ab.rootBone({ name: "root", x: 10, y: 20, length: 30 });
+    const child = ab.bone({ name: "child", parent: root, length: 12, rotation: 0.4 });
+    const bar = ab.path({
+      name: "bar",
+      x: 0,
+      y: 0,
+      contours: [{ closed: true, points: [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 4 }, { x: 0, y: 4 }] }],
+      fill: argb(255, 0, 0),
+    });
+    const contour = bar.contours![0];
+    ab.skin(
+      contour.path,
+      [
+        { bone: root, tx: 10, ty: 20 },
+        { bone: child, tx: 40, ty: 20 },
+      ],
+      [
+        { vertex: contour.vertices[0], influences: [{ tendon: 0, weight: 255 }] },
+        { vertex: contour.vertices[1], influences: [{ tendon: 1, weight: 200 }, { tendon: 0, weight: 55 }] },
+      ],
+    );
+    const objects = decodeRiv(ab.encode()).objects;
+    const weights = objects.filter((o) => o.type === TYPE.weight);
+    expect(weights[0].props.get(key("weightIndices"))).toBe(1);
+    expect(weights[0].props.get(key("weightValues"))).toBe(255);
+    // First influence is tendon 1 (runtime index 2), second is tendon 0 (runtime index 1).
+    expect(weights[1].props.get(key("weightIndices"))).toBe(2 | (1 << 8));
+    expect(weights[1].props.get(key("weightValues"))).toBe(200 | (55 << 8));
+    expect(objects.filter((o) => o.type === TYPE.rootBone)).toHaveLength(1);
+    expect(objects.filter((o) => o.type === TYPE.bone)).toHaveLength(1);
+    const rootObj = objects.find((o) => o.type === TYPE.rootBone)!;
+    expect(rootObj.props.get(key("boneX"))).toBeCloseTo(10);
+    expect(rootObj.props.get(key("boneY"))).toBeCloseTo(20);
+    expect(rootObj.props.get(key("boneLength"))).toBeCloseTo(30);
+    expect(objects.find((o) => o.type === TYPE.bone)!.props.get(key("rotation"))).toBeCloseTo(0.4);
+  });
+});
