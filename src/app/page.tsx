@@ -6,6 +6,7 @@ const LISTED_SLUGS = new Set<string>([
   "when-rates-rise",
   "where-should-the-cutoff-sit",
   "how-much-fast-reserve",
+  "where-should-the-speed-be-held",
 ]);
 
 export default function HomePage() {

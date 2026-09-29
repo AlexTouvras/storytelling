@@ -54,7 +54,7 @@
 - [x] **Human pick for the next flagship story** — `ngsim-phantom-wave`, locked 2026-09-29. Spec draft: `docs/decision-specs/where-should-the-speed-be-held.md`
 - [x] Human sign-off on that Spec (Question, Claim, Takeaway, limitations, and the two cinematic choices). Read from "OK go" on 2026-09-29; side view and daylight, recorded in the Spec
 - [x] Freeze the US-101 pack, check the replay, and build the five-beat film at `/stories/where-should-the-speed-be-held/film` with its reader kit and method page. Unlisted
-- [ ] Human approves listing the US-101 film. Until then it stays off the landing
+- [x] Human approves listing the US-101 film — approved 2026-09-29 ("List it next"); slug in `LISTED_SLUGS`, landing links `/film`
 - [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
 - [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 

@@ -238,4 +238,4 @@ No new `visualId` until implementation shows the mark field cannot do beats 0, 2
 - [x] Beat list stable enough to write narration and visual states (five beats)
 - [x] Orientation card, four terms, illustration legend
 - [x] Method page generated from the pack
-- [ ] Human approves listing. Until then the film stays off the landing
+- [x] Human approved listing (2026-09-29, "List it next"); slug in `LISTED_SLUGS`, the landing links the film
