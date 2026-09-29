@@ -320,9 +320,21 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
         const anchors = carsGeometry();
         const spots = roomRight
           ? [
-              { x: left + boxW * (anchors.leadLamp.x / CARS.width), y: top + boxH * (anchors.leadLamp.y / CARS.height) - 14, transform: "translate(-50%, -100%)" },
-              { x: left + boxW * (anchors.gap.x / CARS.width), y: top + boxH * (anchors.gap.y / CARS.height), transform: "translate(-50%, -120%)" },
-              { x: left + boxW * (anchors.thirdLamp.x / CARS.width), y: top + boxH * (anchors.thirdLamp.y / CARS.height) + 14, transform: "translate(-50%, 0)" },
+              {
+                x: left + boxW * (anchors.leadLamp.x / CARS.width),
+                y: top + boxH * (anchors.leadLamp.y / CARS.height) - boxH * 0.22,
+                transform: "translate(-50%, -100%)",
+              },
+              {
+                x: right + 16,
+                y: top + boxH * (anchors.gap.y / CARS.height),
+                transform: "translate(0, -50%)",
+              },
+              {
+                x: left + boxW * (anchors.thirdLamp.x / CARS.width),
+                y: top + boxH * (anchors.thirdLamp.y / CARS.height) + 46,
+                transform: "translate(-50%, 0)",
+              },
             ]
           : [0, 1, 2].map((i) => ({
               x: Math.max(12, left),
