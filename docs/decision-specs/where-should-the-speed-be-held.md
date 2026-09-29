@@ -2,7 +2,7 @@
 
 > Catalogue pick: `ngsim-phantom-wave`, Round G (flagship_sum 32 of 35). **Topic locked by the human 2026-09-29** ("lock in on this one").
 > **Status:** draft. Question, claim, evidence and the five beats are proposed for sign-off. The cinematic treatment is specified below; two choices are marked open. "Continue" accepts them as written.
-> **Built so far:** nothing. Numbers in this draft were measured on the open API on 2026-09-29. They are provisional until the pack is frozen, and the film reads the pack.
+> **Built so far:** a one-screen card at `/stories/where-should-the-speed-be-held/card`. It is unlisted. The five-beat film is not started. Numbers were measured on the open API on 2026-09-29 and are provisional until the pack is frozen.
 > **Film title:** *Why is the road ahead already moving?*
 > **Slug:** `where-should-the-speed-be-held`. The slug keeps the decision.
 
@@ -125,6 +125,14 @@ Headline numbers come from the trajectories. The model never replaces them.
 | 4 | **While it is still moving** | Hold the speed in that opening window. A new lane answers a different problem, a front that is already full | Decision card. The two ends at 0–10 minutes and at 15–20. The one modelled variant, if calibration passed. Limitations on the card | `highlight` | calculated, modelled |
 
 **Atmosphere:** none beyond the road. The recording is a June morning. Daylight, no weather, no skyline. The marks are the atmosphere.
+
+## One screen
+
+The human pointed at a single diagram — cars, a density step, the shockwave arithmetic — and asked for that as a surface that does not scroll. Agreed as an alternative, not as a replacement for the five beats.
+
+The reference diagram uses illustrative inputs and draws a fixed bottleneck. This minute does not. The card at `/stories/where-should-the-speed-be-held/card` draws the two observed frames of lane 2, sixty seconds apart, on one scale. The slow stretch is marked on both, and a dashed line on the later frame shows where it sat. The far end stays near 45 mph in both. The decision is the last line. There is no second chart and no formula: the positions are the evidence, and a formula on these coarse bins does not recover the measured 9 mph, so it is not printed.
+
+The card is unlisted. Listing waits on the same human gate as the film.
 
 **Operable sleeve:** none in v1. One modelled variant is enough. A slider would invite speeds the pack did not freeze.
 

@@ -53,6 +53,7 @@
 - [ ] Phase 4–5: regression + polish; documentation last
 - [x] **Human pick for the next flagship story** — `ngsim-phantom-wave`, locked 2026-09-29. Spec draft: `docs/decision-specs/where-should-the-speed-be-held.md`
 - [ ] Human sign-off on that Spec (Question, Claim, Takeaway, limitations, and the two cinematic choices). "Continue" accepts the side-view cars and the daylight road as proposed
+- [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
 
 ## Next (Orbit live — first topic shipped)
 
