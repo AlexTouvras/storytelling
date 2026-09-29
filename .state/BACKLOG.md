@@ -59,7 +59,8 @@
 - [x] Film words play as two-line subtitles (`subtitleCues`). The picture uses the frame above a 100px band on every width, so the active illustration is no longer squeezed by a paragraph
 - [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 - [x] Diagnose why the pictures stay charts, and rebuild the US-101 side view as cars (`docs/CINEMATIC_GAP.md`, `cars.riv` on the view model)
-- [ ] **Next cinematic shot: a uniform-scale window of the freeway, ordered as a cinematic spine.** Bodies at one scale, lamps at the tail, speed painted on the body. The pack's walk speed is the reveal, after the brake has been watched. Sprites do not go on the lane-index chart. The executive-deck skill is not the reference; the journalism examples in `docs/CINEMATIC_GAP.md` are. The signed question stays until a person reopens it.
+- [x] Approval stills of the slow stretch, before it enters the film. Identical cars point ahead; the slowest 100-ft cell is tinted; the 9.1 mph walk is only on the pair (`slow-stretch.ts`, `scripts/shoot-slow-stretch.ts`)
+- [ ] **Next cinematic shot, after the stills are approved: put that frame in the film, in cinematic-spine order.** Not speed-colored ticks, and not sprites on the lane-index chart. The signed question stays until a person reopens it.
 
 ## Rive: cinematic illustrations (2026-09-29)
 
