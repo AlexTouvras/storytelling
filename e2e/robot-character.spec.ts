@@ -22,6 +22,12 @@ async function open(page: Page) {
   await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
 }
 
+/** A control below the card scrolls the canvas off a phone, and the runtime stops advancing while it is offscreen. */
+async function poke(page: Page) {
+  await page.getByTestId("poke").click();
+  await page.getByTestId("rive-robot").scrollIntoViewIfNeeded();
+}
+
 test("the robot is driven by its view model and reports what it shows", async ({ page }) => {
   const problems = watchConsole(page);
   await open(page);
@@ -29,11 +35,11 @@ test("the robot is driven by its view model and reports what it shows", async ({
     await page.getByTestId(`mode-${mode}`).click();
     await expect(page.getByTestId("rive-states")).toHaveText(mode);
   }
-  await page.getByTestId("poke").click();
+  await poke(page);
   await expect(page.getByTestId("robot-reacting")).toHaveText("true");
   await expect(page.getByTestId("robot-reacting")).toHaveText("false", { timeout: 4000 });
   await expect(page.getByTestId("robot-presence")).toHaveText("parked");
-  await page.getByTestId("poke").click();
+  await poke(page);
   await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
 
   await page.getByTestId("mode-speaking").click();
