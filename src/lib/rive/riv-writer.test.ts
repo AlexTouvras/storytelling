@@ -86,3 +86,83 @@ describe("ArtboardBuilder", () => {
     expect(condition.props.get(key("inputId"))).toBe(0);
   });
 });
+
+describe("ArtboardBuilder view model", () => {
+  function build() {
+    const ab = new ArtboardBuilder("V", 100, 100);
+    const vm = ab.viewModel("V");
+    const level = vm.number("level", 40);
+    const poke = vm.trigger("poke");
+    const mode = vm.enum("mode", ["a", "b"], "a");
+    const tint = vm.color("tint", argb(1, 2, 3));
+    const dot = ab.ellipse({ name: "dot", x: 50, y: 50, width: 10, height: 10, fill: argb(0, 0, 0) });
+    ab.bind(dot.fillColor!, "color", tint);
+    const low = ab.animation("low", 60, "loop").key(dot.shape, "x", [[0, 10]]);
+    const high = ab.animation("high", 60, "loop").key(dot.shape, "x", [[0, 90]]);
+    const sm = ab.stateMachine("V");
+    const blend = sm.layer("level");
+    blend.transition(blend.entry, blend.blend1D(level, [[0, low], [100, high]]));
+    const modes = sm.layer("mode");
+    const a = modes.play(low);
+    const b = modes.play(high);
+    modes.transition(modes.entry, a);
+    modes.transition(modes.any, a, { conditions: [{ vm: mode, value: "a" }] });
+    modes.transition(modes.any, b, { conditions: [{ vm: mode, value: "b" }] });
+    modes.onStart(b, { set: level, value: 0 });
+    sm.listen("press", dot.shape, "down", { fire: poke });
+    return decodeRiv(ab.encode()).objects;
+  }
+  const of = (objects: ReturnType<typeof build>, type: number) => objects.filter((o) => o.type === type);
+
+  it("writes the view model and its instance before the artboard, which binds to both", () => {
+    const objects = build();
+    const at = (type: number) => objects.findIndex((o) => o.type === type);
+    expect(at(TYPE.viewModel)).toBeLessThan(at(TYPE.vmInstance));
+    expect(at(TYPE.vmInstance)).toBeLessThan(at(TYPE.artboard));
+    const artboard = objects[at(TYPE.artboard)];
+    expect(artboard.props.get(key("abViewModelId"))).toBe(0);
+    expect(of(objects, TYPE.dataEnumValue).map((o) => o.props.get(key("enumValueKey")))).toEqual(["a", "b"]);
+  });
+
+  it("writes an enum's first value explicitly, because id properties default to empty", () => {
+    const objects = build();
+    const initial = of(objects, TYPE.vmInstanceEnum)[0];
+    expect(initial.props.get(key("vmEnumValue"))).toBe(0);
+    const compared = of(objects, TYPE.valueEnumComparator).map((o) => o.props.get(key("compareEnum")));
+    expect(compared).toEqual([0, 1]);
+  });
+
+  it("binds by path: view model 0, then the property's position", () => {
+    const objects = build();
+    const paths = of(objects, TYPE.dataBindContext).map((o) => o.props.get(key("bindSourcePath")));
+    expect(paths).toContainEqual([0, 3]);
+    expect(paths).toContainEqual([0, 0]);
+    expect(paths).toContainEqual([0, 1]);
+  });
+
+  it("fires a trigger through the trigger converter and writes values back to the source", () => {
+    const objects = build();
+    expect(of(objects, TYPE.dataConverterTrigger)).toHaveLength(1);
+    const binds = of(objects, TYPE.dataBindContext);
+    const fire = binds.find((o) => (o.props.get(key("bindSourcePath")) as number[])[1] === 1)!;
+    expect(fire.props.get(key("bindConverterId"))).toBe(0);
+    expect(fire.props.get(key("bindFlags"))).toBe(1);
+  });
+
+  it("puts a state's actions after the state and before its transitions", () => {
+    const objects = build();
+    const actionAt = objects.findIndex((o) => o.type === TYPE.listenerVMChange && o.props.get(key("listenerActionFlags")) === 4);
+    expect(actionAt).toBeGreaterThan(0);
+    const before = objects.slice(0, actionAt).reverse();
+    const lastLayerThing = before.find((o) => o.type === TYPE.animationState || o.type === TYPE.transition)!;
+    expect(lastLayerThing.type).toBe(TYPE.animationState);
+  });
+
+  it("targets listeners at artboard components", () => {
+    const objects = build();
+    const listener = of(objects, TYPE.listener)[0];
+    const artboardAt = objects.findIndex((o) => o.type === TYPE.artboard);
+    const target = listener.props.get(key("listenerTargetId")) as number;
+    expect(objects[artboardAt + target].props.get(key("name"))).toBe("dot");
+  });
+});
