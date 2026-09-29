@@ -51,6 +51,7 @@
 - [x] Grid film reader fixes (2026-09-28): the axis opens to the floor before the fall; the pullback holds the trip's hour on screen (`wideShotOn`); the phone picture ends above the tallest beat's text, with the caption and chart cross-fading in turn. e2e guards for each
 - [x] Grid film on phones: narration and picture take turns (text first on a solid card, then the full-size picture plays; kicker + label strip stays). Reader asked 2026-09-28 not to shrink the graph for the text. e2e on a 360×740 phone
 - [ ] Phase 4–5: regression + polish; documentation last
+- [ ] **Human pick for the next flagship story.** Recommended: `ngsim-phantom-wave` — *Why is the road ahead already moving?* Wide audience, one mechanism, cars on the canvas and one of them opening into an illustrated brake. Measured on open NGSIM US-101 (lane 2, first 15 minutes). Round G in `docs/DATASET_CATALOGUE.md`. No Decision Spec until picked. Runner-up if the stake should be a waiting room: `nhs-exit-block` (not re-scored).
 
 ## Next (Orbit live — first topic shipped)
 
