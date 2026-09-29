@@ -426,6 +426,19 @@ export class LayerBuilder {
     return this;
   }
 
+  /** Names of the animation states so far, in order: the values for `report`. */
+  stateNames(): string[] {
+    return this.states.flatMap((s) => (s.animation ? [s.animation.name] : []));
+  }
+
+  /** Writes each animation state's name to `prop` as the state starts. */
+  report(prop: VMProp<"enum">): this {
+    for (const s of this.states) {
+      if (s.animation) s.onStart.push({ set: prop, value: s.animation.name });
+    }
+    return this;
+  }
+
   private stateOf(h: Handle): State {
     const state = this.states.find((s) => s.handle === h);
     if (!state) throw new Error(`${h.label} is not a state of layer ${this.name}`);

@@ -31,14 +31,16 @@ describe("household.riv", () => {
     expect(Buffer.compare(committed, Buffer.from(buildHousehold(values)))).toBe(0);
   });
 
-  it("carries the state machine and inputs the director drives", () => {
+  it("carries the state machine and the view model the director drives, and no inputs", () => {
     const { objects } = decodeRiv(new Uint8Array(committed));
     const machine = objects.find((o) => o.type === TYPE.stateMachine)!;
     expect(machine.props.get(key("animName"))).toBe(HOUSEHOLD.stateMachine);
-    const trigger = objects.find((o) => o.type === TYPE.smTrigger)!;
-    const bool = objects.find((o) => o.type === TYPE.smBool)!;
-    expect(trigger.props.get(key("smName"))).toBe(HOUSEHOLD.inputs.shock);
-    expect(bool.props.get(key("smName"))).toBe(HOUSEHOLD.inputs.constrained);
+    const named = (type: number) => objects.filter((o) => o.type === type).map((o) => o.props.get(key("vmName")));
+    expect(named(TYPE.viewModel)).toEqual([HOUSEHOLD.viewModel]);
+    expect(named(TYPE.vmPropertyTrigger)).toEqual([HOUSEHOLD.props.shock]);
+    expect(named(TYPE.vmPropertyBoolean)).toEqual([HOUSEHOLD.props.constrained]);
+    expect(named(TYPE.vmPropertyEnumCustom)).toEqual([...HOUSEHOLD.reports]);
+    expect(objects.some((o) => o.type === TYPE.smTrigger || o.type === TYPE.smBool)).toBe(false);
     const artboard = objects.find((o) => o.type === TYPE.artboard)!;
     expect(artboard.props.get(key("name"))).toBe(HOUSEHOLD.name);
   });

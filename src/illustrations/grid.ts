@@ -32,18 +32,21 @@ import {
 export const GRID = {
   name: "Grid",
   stateMachine: "Grid",
+  viewModel: "Grid",
   width: 400,
   height: 400,
-  inputs: {
+  props: {
     /** Trigger: the plant trips and the fall plays. */
     trip: "trip",
-    /** Bool: jump straight to the end state of the trip, no animation. */
+    /** Boolean: jump straight to the end state of the trip, no animation. */
     tripped: "tripped",
-    /** Bool: a light hour, with fewer wheels. Read when the trip fires. */
+    /** Boolean: a light hour, with fewer wheels. Read when the trip fires. */
     light: "light",
-    /** Bool: fast reserve is held. Read when the trip fires. */
+    /** Boolean: fast reserve is held. Read when the trip fires. */
     reserve: "reserve",
   },
+  /** Enums the machine writes as each layer changes state: what it is showing. */
+  reports: ["machine", "mass", "reserveShown"],
   /** Length of the trip animation, so the director can caption its end. */
   tripSeconds: 4,
   /** Model seconds per illustration second. */
@@ -336,16 +339,18 @@ export function buildGrid(values: GridValues): Uint8Array {
   const reserveOff = ab.animation("reserve off", 60, "loop").key(reserve, "opacity", [[0, 0]]);
   const reserveOn = ab.animation("reserve on", 60, "loop").key(reserve, "opacity", [[0, 1]]);
 
-  const sm = ab.stateMachine(GRID.stateMachine);
-  const tripInput = sm.trigger(GRID.inputs.trip);
-  const tripped = sm.bool(GRID.inputs.tripped);
-  const light = sm.bool(GRID.inputs.light);
-  const reserveInput = sm.bool(GRID.inputs.reserve);
+  const vm = ab.viewModel(GRID.viewModel);
+  const tripProp = vm.trigger(GRID.props.trip);
+  const tripped = vm.boolean(GRID.props.tripped);
+  const light = vm.boolean(GRID.props.light);
+  const reserveProp = vm.boolean(GRID.props.reserve);
 
+  const sm = ab.stateMachine(GRID.stateMachine);
+  const [machineReport, massReport, reserveReport] = GRID.reports;
   const spinLayer = sm.layer("spin");
   spinLayer.transition(spinLayer.entry, spinLayer.play(spinAll));
 
-  const machine = sm.layer("machine");
+  const machine = sm.layer(machineReport);
   const sSteady = machine.play(steady);
   machine.transition(machine.entry, sSteady);
   order.forEach((k, i) => {
@@ -353,27 +358,30 @@ export function buildGrid(values: GridValues): Uint8Array {
     const sTrip = machine.play(trips[i]);
     const sHeld = machine.play(helds[i]);
     const which = [
-      { bool: light, equals: v.light },
-      { bool: reserveInput, equals: v.reserve },
+      { vm: light, value: v.light },
+      { vm: reserveProp, value: v.reserve },
     ];
-    machine.transition(sSteady, sTrip, { conditions: [{ trigger: tripInput }, ...which] });
-    machine.transition(sSteady, sHeld, { conditions: [{ bool: tripped, equals: true }, ...which] });
+    machine.transition(sSteady, sTrip, { conditions: [{ vmTrigger: tripProp }, ...which] });
+    machine.transition(sSteady, sHeld, { conditions: [{ vm: tripped, value: true }, ...which] });
     machine.transition(sTrip, sHeld, { conditions: [], exitAtPercent: 100 });
   });
+  machine.report(vm.enum(machineReport, machine.stateNames()));
 
-  const mass = sm.layer("mass");
+  const mass = sm.layer(massReport);
   const sHeavy = mass.play(heavyMass);
   const sLight = mass.play(lightMass);
   mass.transition(mass.entry, sHeavy);
-  mass.transition(sHeavy, sLight, { conditions: [{ bool: light, equals: true }], durationMs: 450 });
-  mass.transition(sLight, sHeavy, { conditions: [{ bool: light, equals: false }], durationMs: 450 });
+  mass.transition(sHeavy, sLight, { conditions: [{ vm: light, value: true }], durationMs: 450 });
+  mass.transition(sLight, sHeavy, { conditions: [{ vm: light, value: false }], durationMs: 450 });
+  mass.report(vm.enum(massReport, mass.stateNames()));
 
-  const reserveLayer = sm.layer("reserve");
+  const reserveLayer = sm.layer(reserveReport);
   const sOff = reserveLayer.play(reserveOff);
   const sOn = reserveLayer.play(reserveOn);
   reserveLayer.transition(reserveLayer.entry, sOff);
-  reserveLayer.transition(sOff, sOn, { conditions: [{ bool: reserveInput, equals: true }], durationMs: 300 });
-  reserveLayer.transition(sOn, sOff, { conditions: [{ bool: reserveInput, equals: false }], durationMs: 300 });
+  reserveLayer.transition(sOff, sOn, { conditions: [{ vm: reserveProp, value: true }], durationMs: 300 });
+  reserveLayer.transition(sOn, sOff, { conditions: [{ vm: reserveProp, value: false }], durationMs: 300 });
+  reserveLayer.report(vm.enum(reserveReport, reserveLayer.stateNames()));
 
   return ab.encode(0x6e1d);
 }

@@ -27,7 +27,7 @@ describe("robot.riv", () => {
     expect(names(TYPE.stateMachine, "animName")).toEqual([ROBOT.stateMachine]);
     expect(objects.some((o) => o.type === TYPE.smTrigger || o.type === TYPE.smBool)).toBe(false);
     const props = objects
-      .filter((o) => [TYPE.vmPropertyNumber, TYPE.vmPropertyBoolean, TYPE.vmPropertyTrigger, TYPE.vmPropertyColor, TYPE.vmPropertyEnumCustom].includes(o.type))
+      .filter((o) => ([TYPE.vmPropertyNumber, TYPE.vmPropertyBoolean, TYPE.vmPropertyTrigger, TYPE.vmPropertyColor, TYPE.vmPropertyEnumCustom] as number[]).includes(o.type))
       .map((o) => o.props.get(key("vmName")));
     expect(props).toEqual(Object.values(ROBOT.props));
   });

@@ -52,6 +52,8 @@ export const ROBOT = {
     /** Written by the machine: true while the hop plays. */
     reacting: "reacting",
   },
+  /** Enums the machine writes, for a host to read back as states. */
+  reports: ["showing"],
   defaults: { mode: "idle" as RobotMode, energy: 60 },
 } as const;
 
