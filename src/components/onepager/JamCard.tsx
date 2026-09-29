@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LANE2_MINUTE, speedFill, type LaneCar } from "./lane2-minute";
 
 const W = 720;
@@ -117,7 +118,7 @@ export function JamCard() {
   const was = now.cars.reduce((a, b) => (a.mph < b.mph ? a : b)).y;
 
   return (
-    <article className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-5 pb-2 pt-16 sm:gap-4 sm:px-8 sm:pb-4 sm:pt-20">
+    <article className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-5 pb-2 pt-14 sm:px-8 sm:pb-3 sm:pt-16">
       <header className="space-y-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
           {LANE2_MINUTE.place} · lane {LANE2_MINUTE.lane} · {LANE2_MINUTE.when}
@@ -160,7 +161,7 @@ export function JamCard() {
         </figcaption>
       </figure>
 
-      <dl className="grid grid-cols-3 gap-3 border-y border-white/10 py-4">
+      <dl className="grid grid-cols-3 gap-3 border-y border-white/10 py-3">
         <div>
           <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">
             Walked back
@@ -184,14 +185,14 @@ export function JamCard() {
             Ahead, mph
           </dt>
           <dd className="mt-1 font-display text-2xl tracking-tight text-neon-cyan sm:text-3xl">
-            45
+            {LANE2_MINUTE.ahead[0]}
             <span className="mx-0.5 text-white/30">→</span>
-            48
+            {LANE2_MINUTE.ahead[1]}
           </dd>
         </div>
       </dl>
 
-      <footer className="space-y-2">
+      <footer className="space-y-1.5">
         <p className="font-display text-lg leading-snug tracking-tight text-white sm:text-xl">
           Hold the speed while the road ahead is still moving.
         </p>
@@ -201,6 +202,20 @@ export function JamCard() {
           stretch sat sixty seconds earlier. Place is measured; the mark size
           is not.
         </p>
+        <nav className="flex gap-6">
+          <Link
+            href="/stories/where-should-the-speed-be-held/film"
+            className="focus-ring font-mono text-[11px] uppercase tracking-[0.16em] text-neon-cyan"
+          >
+            The film →
+          </Link>
+          <Link
+            href="/stories/where-should-the-speed-be-held/method"
+            className="focus-ring font-mono text-[11px] uppercase tracking-[0.16em] text-white/70 hover:text-white"
+          >
+            Method and data →
+          </Link>
+        </nav>
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">
           Observed positions · one lane · two frames · FHWA NGSIM
         </p>
