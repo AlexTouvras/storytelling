@@ -166,3 +166,65 @@ describe("ArtboardBuilder view model", () => {
     expect(objects[artboardAt + target].props.get(key("name"))).toBe("dot");
   });
 });
+
+describe("text, fonts and bones", () => {
+  it("embeds a font immediately after the backboard and binds a string onto the run", () => {
+    const bytes = new Uint8Array([9, 8, 7, 6]);
+    const ab = new ArtboardBuilder("T", 120, 40);
+    const line = ab.viewModel("T").string("line", "Hi");
+    ab.addFont("Inter", bytes);
+    const { run } = ab.text({ name: "say", x: 4, y: 4, width: 100, text: "Hi", fontSize: 14, color: argb(255, 255, 255) });
+    ab.bind(run, "text", line);
+    const objects = decodeRiv(ab.encode()).objects;
+    expect(objects[1].type).toBe(TYPE.fontAsset);
+    expect(objects[1].props.get(key("assetName"))).toBe("Inter");
+    expect(objects[2].type).toBe(TYPE.fileAssetContents);
+    expect(objects[2].props.get(key("assetBytes"))).toEqual([9, 8, 7, 6]);
+    const runObj = objects.find((o) => o.type === TYPE.textValueRun)!;
+    expect(runObj.props.get(key("runText"))).toBe("Hi");
+    expect(runObj.props.get(key("runStyleId"))).toBeGreaterThan(0);
+    const bound = objects.find((o) => o.type === TYPE.dataBindContext && o.props.get(key("bindPropertyKey")) === 268);
+    expect(bound?.props.get(key("bindSourcePath"))).toEqual([0, 0]);
+    const style = objects.find((o) => o.type === TYPE.textStylePaint)!;
+    expect(style.props.get(key("fontAssetId"))).toBe(0);
+  });
+
+  it("weights a skinned vertex to tendons, with index 0 reserved for the runtime", () => {
+    const ab = new ArtboardBuilder("S", 100, 100);
+    const root = ab.rootBone({ name: "root", x: 10, y: 20, length: 30 });
+    const child = ab.bone({ name: "child", parent: root, length: 12, rotation: 0.4 });
+    const bar = ab.path({
+      name: "bar",
+      x: 0,
+      y: 0,
+      contours: [{ closed: true, points: [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 4 }, { x: 0, y: 4 }] }],
+      fill: argb(255, 0, 0),
+    });
+    const contour = bar.contours![0];
+    ab.skin(
+      contour.path,
+      [
+        { bone: root, tx: 10, ty: 20 },
+        { bone: child, tx: 40, ty: 20 },
+      ],
+      [
+        { vertex: contour.vertices[0], influences: [{ tendon: 0, weight: 255 }] },
+        { vertex: contour.vertices[1], influences: [{ tendon: 1, weight: 200 }, { tendon: 0, weight: 55 }] },
+      ],
+    );
+    const objects = decodeRiv(ab.encode()).objects;
+    const weights = objects.filter((o) => o.type === TYPE.weight);
+    expect(weights[0].props.get(key("weightIndices"))).toBe(1);
+    expect(weights[0].props.get(key("weightValues"))).toBe(255);
+    // First influence is tendon 1 (runtime index 2), second is tendon 0 (runtime index 1).
+    expect(weights[1].props.get(key("weightIndices"))).toBe(2 | (1 << 8));
+    expect(weights[1].props.get(key("weightValues"))).toBe(200 | (55 << 8));
+    expect(objects.filter((o) => o.type === TYPE.rootBone)).toHaveLength(1);
+    expect(objects.filter((o) => o.type === TYPE.bone)).toHaveLength(1);
+    const rootObj = objects.find((o) => o.type === TYPE.rootBone)!;
+    expect(rootObj.props.get(key("boneX"))).toBeCloseTo(10);
+    expect(rootObj.props.get(key("boneY"))).toBeCloseTo(20);
+    expect(rootObj.props.get(key("boneLength"))).toBeCloseTo(30);
+    expect(objects.find((o) => o.type === TYPE.bone)!.props.get(key("rotation"))).toBeCloseTo(0.4);
+  });
+});

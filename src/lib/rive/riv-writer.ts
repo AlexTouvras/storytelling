@@ -21,7 +21,7 @@
 export const RIV_MAJOR = 7;
 export const RIV_MINOR = 0;
 
-type Kind = "uint" | "string" | "double" | "color" | "bool" | "bytes";
+type Kind = "uint" | "string" | "double" | "color" | "bool" | "bytes" | "blob";
 
 export const TYPE = {
   backboard: 23,
@@ -95,6 +95,20 @@ export const TYPE = {
   listener: 114,
   listenerVMChange: 487,
   listenerAlignTarget: 126,
+  // Text, fonts, skeletons
+  text: 134,
+  textValueRun: 135,
+  textStylePaint: 137,
+  fontAsset: 141,
+  fileAssetContents: 106,
+  bone: 40,
+  rootBone: 41,
+  skin: 43,
+  tendon: 44,
+  weight: 45,
+  vmPropertyString: 443,
+  vmInstanceString: 433,
+  bindableString: 471,
 } as const;
 
 /** Property key and wire kind. */
@@ -246,11 +260,41 @@ export const PROP = {
   listenerActionFlags: [980, "uint"],
   alignTargetId: [240, "uint"],
   alignPreserveOffset: [541, "bool"],
+  // Text
+  textAlign: [281, "uint"],
+  textSizing: [284, "uint"],
+  textWidth: [285, "double"],
+  textHeight: [286, "double"],
+  textWrap: [683, "uint"],
+  textOrigin: [377, "uint"],
+  fontSize: [274, "double"],
+  fontAssetId: [279, "uint"],
+  runText: [268, "string"],
+  runStyleId: [272, "uint"],
+  // Font asset. `assetBytes` is the raw file, not a list of ids.
+  assetName: [203, "string"],
+  assetId: [204, "uint"],
+  assetBytes: [212, "blob"],
+  // Bones. A root bone's position is its own x/y, not the transform's.
+  boneLength: [89, "double"],
+  boneX: [90, "double"],
+  boneY: [91, "double"],
+  tendonBoneId: [95, "uint"],
+  tendonXx: [96, "double"],
+  tendonYx: [97, "double"],
+  tendonXy: [98, "double"],
+  tendonYy: [99, "double"],
+  tendonTx: [100, "double"],
+  tendonTy: [101, "double"],
+  weightValues: [102, "uint"],
+  weightIndices: [103, "uint"],
+  vmStringValue: [561, "string"],
+  bindableStringValue: [635, "string"],
 } as const satisfies Record<string, readonly [number, Kind]>;
 
 export type PropName = keyof typeof PROP;
-/** A `bytes` property is a list of ids, each written as a varuint. */
-export type PropValue = number | string | boolean | readonly number[];
+/** A `bytes` property is a list of ids, each written as a varuint. A `blob` is raw bytes. */
+export type PropValue = number | string | boolean | readonly number[] | Uint8Array;
 export type Props = Partial<Record<PropName, PropValue>>;
 
 export const LOOP = { oneShot: 0, loop: 1, pingPong: 2 } as const;
@@ -331,6 +375,11 @@ class Bytes {
     for (const b of encoded) this.byte(b);
   }
 
+  blob(v: Uint8Array) {
+    this.varuint(v.length);
+    for (const b of v) this.byte(b);
+  }
+
   ids(v: readonly number[]) {
     const inner = new Bytes();
     for (const id of v) inner.varuint(id);
@@ -355,6 +404,11 @@ function writeObject(out: Bytes, object: RivObject) {
     if (kind === "bytes") {
       if (!Array.isArray(value)) throw new Error(`${name} needs a list of ids`);
       out.ids(value);
+      continue;
+    }
+    if (kind === "blob") {
+      if (!(value instanceof Uint8Array)) throw new Error(`${name} needs raw bytes`);
+      out.blob(value);
       continue;
     }
     switch (kind) {
@@ -438,6 +492,12 @@ export function decodeRiv(bytes: Uint8Array): {
           const ids: number[] = [];
           while (i < end) ids.push(varuint());
           props.set(key, ids);
+          break;
+        }
+        case "blob": {
+          const length = varuint();
+          props.set(key, Array.from(bytes.subarray(i, i + length)));
+          i += length;
           break;
         }
         case "uint":

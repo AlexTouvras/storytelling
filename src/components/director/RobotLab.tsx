@@ -3,16 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RiveLayer, type RiveLayerHandle } from "@/components/director/RiveLayer";
 import { ROBOT_RIV_URL } from "@/components/director/rive-assets";
-import { ROBOT, ROBOT_MODES, type RobotMode } from "@/illustrations/robot";
+import { ROBOT, ROBOT_ACCENTS, ROBOT_MODES, type RobotMode } from "@/illustrations/robot";
 import { argb } from "@/lib/rive/riv-writer";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
-
-const ACCENTS = [
-  { name: "cyan", rgb: [92, 214, 226] },
-  { name: "violet", rgb: [186, 104, 255] },
-  { name: "amber", rgb: [255, 186, 92] },
-  { name: "mint", rgb: [120, 236, 170] },
-] as const;
 
 /** Long enough for the mode mix (320 ms) and the poke hop to finish. */
 const SETTLE_MS = 1400;
@@ -29,9 +22,10 @@ export function RobotLab() {
   const [mode, setMode] = useState<RobotMode>(ROBOT.defaults.mode);
   const [energy, setEnergy] = useState<number>(ROBOT.defaults.energy);
   const [look, setLook] = useState({ x: 0, y: 0 });
-  const [accent, setAccent] = useState<string>(ACCENTS[0].name);
+  const [accent, setAccent] = useState<string>(ROBOT_ACCENTS[0].id);
+  const [line, setLine] = useState<string>(ROBOT.defaults.line);
   const [states, setStates] = useState<string[]>([]);
-  const [readback, setReadback] = useState({ hover: false, reacting: false });
+  const [readback, setReadback] = useState({ hover: false, reacting: false, presence: "" });
 
   const settleTimer = useRef<number | null>(null);
   /** Under reduced motion the robot holds still, and only moves to settle a change the reader asked for. */
@@ -44,16 +38,25 @@ export function RobotLab() {
 
   useEffect(() => {
     if (!ready) return;
-    if (reduced) rive.current?.pause();
-    else rive.current?.play();
-  }, [ready, reduced]);
+    if (!reduced) {
+      rive.current?.play();
+      return;
+    }
+    // One shot, not a held flag: any → present never re-enters, so a later tap can still tuck.
+    rive.current?.fire(ROBOT.props.settle);
+    settle();
+  }, [ready, reduced, settle]);
 
   useEffect(() => {
     if (!ready) return;
     const id = window.setInterval(() => {
       const r = rive.current;
       if (!r) return;
-      setReadback({ hover: r.read(ROBOT.props.hover) === true, reacting: r.read(ROBOT.props.reacting) === true });
+      setReadback({
+        hover: r.read(ROBOT.props.hover) === true,
+        reacting: r.read(ROBOT.props.reacting) === true,
+        presence: String(r.read(ROBOT.props.presence) ?? ""),
+      });
     }, 120);
     return () => window.clearInterval(id);
   }, [ready]);
@@ -84,11 +87,15 @@ export function RobotLab() {
     rive.current?.setNumber(ROBOT.props.lookY, next.y);
     settle();
   };
-  const chooseAccent = (name: string) => {
-    const [r, g, b] = ACCENTS.find((c) => c.name === name)!.rgb;
-    setAccent(name);
+  const chooseAccent = (id: string) => {
+    const [r, g, b] = ROBOT_ACCENTS.find((c) => c.id === id)!.rgb;
+    setAccent(id);
     rive.current?.setColor(ROBOT.props.accent, argb(r, g, b));
     settle();
+  };
+  const chooseLine = (value: string) => {
+    setLine(value);
+    rive.current?.setString(ROBOT.props.line, value);
   };
   const poke = () => {
     rive.current?.fire(ROBOT.props.poke);
@@ -105,9 +112,9 @@ export function RobotLab() {
         A character for the AI field card
       </h1>
       <p className="mt-4 max-w-2xl text-white/65">
-        <code>robot.riv</code>, written from code with curved, morphing shapes, gradients and a view
-        model. Point at it and it perks up and follows the pointer; press it and it hops. The controls
-        set the same view-model properties a field card or a director would. Chrome, not evidence.
+        <code>robot.riv</code> introduces the card, then a tap tucks it into the corner; tap again and
+        it comes back. Point at it and the eyes follow; the accent is the homepage colour of a field
+        card. Chrome, not evidence.
       </p>
 
       <div className="mt-10 grid gap-8 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
@@ -193,22 +200,34 @@ export function RobotLab() {
           <fieldset>
             <legend className={label}>Accent</legend>
             <div className="mt-2 flex flex-wrap gap-2 uppercase tracking-[0.14em]">
-              {ACCENTS.map((a) => (
+              {ROBOT_ACCENTS.map((a) => (
                 <button
-                  key={a.name}
+                  key={a.id}
                   type="button"
-                  data-testid={`accent-${a.name}`}
-                  aria-pressed={accent === a.name}
+                  data-testid={`accent-${a.id}`}
+                  aria-pressed={accent === a.id}
                   disabled={!ready}
-                  className={`${button} flex items-center gap-2 ${accent === a.name ? "border-white/70" : "border-white/20"} text-white/75`}
-                  onClick={() => chooseAccent(a.name)}
+                  className={`${button} flex items-center gap-2 ${accent === a.id ? "border-white/70" : "border-white/20"} text-white/75`}
+                  onClick={() => chooseAccent(a.id)}
                 >
                   <span aria-hidden className="h-3 w-3 rounded-full" style={{ background: `rgb(${a.rgb.join(",")})` }} />
-                  {a.name}
+                  {a.label}
                 </button>
               ))}
             </div>
           </fieldset>
+
+          <label className="block max-w-md">
+            <span className={label}>Bubble</span>
+            <input
+              type="text"
+              value={line}
+              disabled={!ready}
+              data-testid="robot-line"
+              className="focus-ring mt-2 block w-full border border-white/20 bg-transparent px-3 py-2 text-white/80"
+              onChange={(e) => chooseLine(e.target.value)}
+            />
+          </label>
 
           <div className="flex flex-wrap gap-2 uppercase tracking-[0.14em]">
             <button
@@ -230,8 +249,12 @@ export function RobotLab() {
                 setMode(ROBOT.defaults.mode);
                 setEnergy(ROBOT.defaults.energy);
                 setLook({ x: 0, y: 0 });
-                setAccent(ACCENTS[0].name);
-                if (reduced) settle();
+                setAccent(ROBOT_ACCENTS[0].id);
+                setLine(ROBOT.defaults.line);
+                if (reduced) {
+                  rive.current?.fire(ROBOT.props.settle);
+                  settle();
+                }
               }}
             >
               Reset
@@ -254,6 +277,10 @@ export function RobotLab() {
             <div>
               <dt className={label}>Reacting</dt>
               <dd data-testid="robot-reacting">{String(readback.reacting)}</dd>
+            </div>
+            <div>
+              <dt className={label}>Presence</dt>
+              <dd data-testid="robot-presence">{readback.presence || "—"}</dd>
             </div>
             <div>
               <dt className={label}>Motion</dt>

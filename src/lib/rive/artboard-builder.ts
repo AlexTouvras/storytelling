@@ -14,10 +14,11 @@
  * Two ways to drive a machine:
  *   - state-machine inputs (`sm.trigger`, `sm.bool`): what the older
  *     illustrations use. The runtime deprecates them.
- *   - a view model (`ab.viewModel`): numbers, booleans, triggers, colours and
- *     enums the host sets through data binding. Transitions compare them,
- *     1D blend states mix animations by a number, listeners and state actions
- *     write them, and `ab.bind` ties one straight to a component property.
+ *   - a view model (`ab.viewModel`): numbers, booleans, triggers, colours,
+ *     strings and enums the host sets through data binding. Transitions compare
+ *     them, 1D blend states mix animations by a number, listeners and state
+ *     actions write them, and `ab.bind` ties one straight to a component
+ *     property. Text runs, embedded fonts and bone chains are the same file.
  */
 
 import {
@@ -156,6 +157,12 @@ const KEYABLE = {
 } as const;
 export type Keyable = keyof typeof KEYABLE;
 
+/** `TextAlign` / `TextSizing` as the runtime numbers them. */
+const TEXT_ALIGN = { left: 0, right: 1, center: 2 } as const;
+const TEXT_SIZING = { autoWidth: 0, autoHeight: 1, fixed: 2 } as const;
+/** A string bind writes the run's text. Id 0 is a real font, so it is written explicitly. */
+const BINDABLE_TEXT = 268;
+
 /** Properties a view-model number can be bound straight onto. */
 const BINDABLE_NUMBER = {
   x: 13,
@@ -267,14 +274,14 @@ type Input = { handle: Handle; type: number; name: string; value?: boolean };
 /* View model                                                          */
 /* ------------------------------------------------------------------ */
 
-export type VMKind = "number" | "boolean" | "trigger" | "color" | "enum";
+export type VMKind = "number" | "boolean" | "trigger" | "color" | "enum" | "string";
 
 export type VMProp<K extends VMKind = VMKind> = {
   readonly kind: K;
   readonly name: string;
   /** Position in the view model: the second id of every data-bind path. */
   readonly index: number;
-  readonly initial: number | boolean;
+  readonly initial: number | boolean | string;
   /** Enum only: the value names, in order. */
   readonly values?: readonly string[];
 };
@@ -285,6 +292,7 @@ const VM_PROPERTY_TYPE: Record<VMKind, number> = {
   trigger: TYPE.vmPropertyTrigger,
   color: TYPE.vmPropertyColor,
   enum: TYPE.vmPropertyEnumCustom,
+  string: TYPE.vmPropertyString,
 };
 
 const VM_INSTANCE: Record<VMKind, { type: number; value: PropName }> = {
@@ -293,6 +301,7 @@ const VM_INSTANCE: Record<VMKind, { type: number; value: PropName }> = {
   trigger: { type: TYPE.vmInstanceTrigger, value: "vmTriggerValue" },
   color: { type: TYPE.vmInstanceColor, value: "vmColorValue" },
   enum: { type: TYPE.vmInstanceEnum, value: "vmEnumValue" },
+  string: { type: TYPE.vmInstanceString, value: "vmStringValue" },
 };
 
 /** The state-machine-side stand-in for a view-model property, and the key a data bind writes on it. */
@@ -302,6 +311,7 @@ const BINDABLE: Record<VMKind, { type: number; key: number; value: PropName }> =
   trigger: { type: TYPE.bindableTrigger, key: 686, value: "bindableTriggerValue" },
   color: { type: TYPE.bindableColor, key: 638, value: "bindableColorValue" },
   enum: { type: TYPE.bindableEnum, key: 637, value: "bindableEnumValue" },
+  string: { type: TYPE.bindableString, key: 635, value: "bindableStringValue" },
 };
 
 export class ViewModelBuilder {
@@ -309,7 +319,7 @@ export class ViewModelBuilder {
 
   constructor(readonly name: string) {}
 
-  private add<K extends VMKind>(kind: K, name: string, initial: number | boolean, values?: readonly string[]): VMProp<K> {
+  private add<K extends VMKind>(kind: K, name: string, initial: number | boolean | string, values?: readonly string[]): VMProp<K> {
     if (this.props.some((p) => p.name === name)) throw new Error(`view model ${this.name} already has ${name}`);
     const prop: VMProp<K> = { kind, name, index: this.props.length, initial, values };
     this.props.push(prop);
@@ -330,6 +340,10 @@ export class ViewModelBuilder {
 
   color(name: string, initial: number): VMProp<"color"> {
     return this.add("color", name, initial);
+  }
+
+  string(name: string, initial = ""): VMProp<"string"> {
+    return this.add("string", name, initial);
   }
 
   enum<const V extends string>(name: string, values: readonly V[], initial: V = values[0]): VMProp<"enum"> {
@@ -508,6 +522,7 @@ export class ArtboardBuilder {
   private readonly easings: Easer[] = [];
   private readonly animations: AnimationBuilder[] = [];
   private readonly machines: StateMachineBuilder[] = [];
+  private readonly fonts: Array<{ name: string; bytes: Uint8Array }> = [];
   private vm: ViewModelBuilder | null = null;
 
   constructor(
@@ -581,6 +596,126 @@ export class ArtboardBuilder {
     return this.shape(spec, [], spec.contours, spec.cubic ?? false);
   }
 
+  /** Embeds a font and returns its index, which `text` uses. The bytes are a ttf or otf. */
+  addFont(name: string, bytes: Uint8Array): number {
+    this.fonts.push({ name, bytes });
+    return this.fonts.length - 1;
+  }
+
+  /**
+   * A text box. `sizing: "autoHeight"` wraps at `width`. The returned `run` is
+   * what a string bind writes, so a host can change the words.
+   */
+  text(
+    spec: Base & {
+      text: string;
+      width: number;
+      height?: number;
+      fontSize?: number;
+      color?: number;
+      align?: keyof typeof TEXT_ALIGN;
+      sizing?: keyof typeof TEXT_SIZING;
+      /** Index from `addFont`. Defaults to the first font. */
+      font?: number;
+    },
+  ): { text: Handle; run: Handle } {
+    if (!this.fonts.length) throw new Error(`${this.name}: text needs a font from addFont`);
+    const h = handle(`text ${spec.name}`);
+    const sizing = spec.sizing ?? "autoHeight";
+    const text: Component = {
+      handle: h,
+      type: TYPE.text,
+      props: {
+        ...transformProps(spec),
+        textAlign: TEXT_ALIGN[spec.align ?? "left"],
+        textSizing: TEXT_SIZING[sizing],
+        textWidth: spec.width,
+        textHeight: spec.height,
+        textWrap: sizing === "autoWidth" ? 1 : 0,
+      },
+      parent: spec.parent ?? null,
+      children: [],
+    };
+    this.byHandle.set(h, text);
+    this.drawables.push(text);
+    const style = this.child(
+      text,
+      TYPE.textStylePaint,
+      { fontSize: spec.fontSize ?? 16, fontAssetId: spec.font ?? 0 },
+      `style ${spec.name}`,
+    );
+    const fill = this.child(style, TYPE.fill, {}, `fill ${spec.name}`);
+    this.child(fill, TYPE.solidColor, { colorValue: spec.color ?? 0xffffffff }, `colour ${spec.name}`, SOLID_COLOR);
+    const run = this.child(text, TYPE.textValueRun, { runText: spec.text }, `run ${spec.name}`);
+    run.links = { runStyleId: style.handle };
+    return { text: h, run: run.handle };
+  }
+
+  /**
+   * The first bone of a chain. It can parent to any group; further bones parent
+   * to a bone and sit at the end of it. A shape parented to a bone moves rigidly
+   * with it. `length` is along the bone's own x axis, so a rotation of π/2 points it down.
+   */
+  rootBone(spec: Base & { length: number }): Handle {
+    return this.boneNode(TYPE.rootBone, spec, { boneX: spec.x, boneY: spec.y, boneLength: spec.length });
+  }
+
+  /** A bone whose position is the tip of its parent bone. */
+  bone(spec: { name: string; parent: Handle; length: number; rotation?: number }): Handle {
+    return this.boneNode(TYPE.bone, { ...spec, x: 0, y: 0 }, { boneLength: spec.length });
+  }
+
+  /**
+   * Skins a path to bones. Each influence names a tendon by its position in
+   * `tendons` and a weight of 0–255; the weights on one vertex should sum to 255.
+   * A tendon's matrix is that bone's world transform at rest, in the same space
+   * as the path's vertices (xx, xy, yx, yy, tx, ty). The runtime inverts it, so
+   * at rest the vertices stay put and a later rotation is the difference.
+   * `path` is the contour's points path, not the shape.
+   */
+  skin(
+    path: Handle,
+    tendons: Array<{ bone: Handle; xx?: number; xy?: number; yx?: number; yy?: number; tx?: number; ty?: number }>,
+    weights: Array<{ vertex: Handle; influences: Array<{ tendon: number; weight: number }> }>,
+  ): Handle {
+    const owner = this.componentOf(path);
+    const skinNode = this.child(owner, TYPE.skin, {}, `skin ${path.label}`);
+    tendons.forEach((t, i) => {
+      const tendon = this.child(
+        skinNode,
+        TYPE.tendon,
+        { tendonXx: t.xx ?? 1, tendonYy: t.yy ?? 1, tendonXy: t.xy, tendonYx: t.yx, tendonTx: t.tx, tendonTy: t.ty },
+        `tendon ${i}`,
+      );
+      tendon.links = { tendonBoneId: t.bone };
+    });
+    for (const w of weights) {
+      let values = 0;
+      let indices = 0;
+      w.influences.slice(0, 4).forEach((inf, i) => {
+        values |= (Math.round(inf.weight) & 0xff) << (i * 8);
+        // Index 0 is an identity bone the runtime inserts; tendons start at 1.
+        indices |= ((inf.tendon + 1) & 0xff) << (i * 8);
+      });
+      this.child(this.componentOf(w.vertex), TYPE.weight, { weightValues: values, weightIndices: indices }, `weight ${w.vertex.label}`);
+    }
+    return skinNode.handle;
+  }
+
+  private boneNode(type: number, spec: Base, props: Props): Handle {
+    const h = handle(`bone ${spec.name}`);
+    const c: Component = {
+      handle: h,
+      type,
+      props: { ...transformProps(spec), ...props },
+      parent: spec.parent ?? null,
+      children: [],
+    };
+    this.groups.push(c);
+    this.byHandle.set(h, c);
+    return h;
+  }
+
   /** Clips `owner`'s drawn children to `source`'s geometry. The source shape needs no paint. */
   clip(owner: Handle, source: ShapeHandles): Handle {
     const h = handle(`clip ${owner.label}`);
@@ -636,13 +771,16 @@ export class ArtboardBuilder {
    * Ties a component property straight to a view-model property, no state
    * machine involved: the host sets the value and the next frame draws it.
    */
-  bind(target: Handle, property: "color" | keyof typeof BINDABLE_NUMBER, prop: VMProp): this {
+  bind(target: Handle, property: "color" | "text" | keyof typeof BINDABLE_NUMBER, prop: VMProp): this {
     const component = this.componentOf(target);
     let propertyKey: number;
     if (property === "color") {
       if (prop.kind !== "color") throw new Error(`${prop.name} is not a colour`);
       if (target.colorProperty === undefined) throw new Error(`${target.label} has no colour to bind`);
       propertyKey = target.colorProperty;
+    } else if (property === "text") {
+      if (prop.kind !== "string") throw new Error(`${prop.name} is not a string`);
+      propertyKey = BINDABLE_TEXT;
     } else {
       if (prop.kind !== "number") throw new Error(`${prop.name} is not a number`);
       propertyKey = BINDABLE_NUMBER[property];
@@ -816,6 +954,13 @@ export class ArtboardBuilder {
       m.layers.some((layer) => layer.states.some((s) => s.onStart.some((a) => "fire" in a))),
     );
     const out: RivObject[] = [{ type: TYPE.backboard, props: {} }];
+    // A font is a file asset: it has to follow the backboard, and its bytes have
+    // to be the very next object so they attach to that font. `fontAssetId` on a
+    // text style is the index in this list, not the asset's own id.
+    this.fonts.forEach((font, i) => {
+      out.push({ type: TYPE.fontAsset, props: { assetName: font.name, assetId: i + 1 } });
+      out.push({ type: TYPE.fileAssetContents, props: { assetBytes: font.bytes } });
+    });
 
     // File level: converters, enums, the view model and its default instance.
     const TRIGGER_CONVERTER = 0;

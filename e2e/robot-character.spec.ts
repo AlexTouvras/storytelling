@@ -19,6 +19,7 @@ async function open(page: Page) {
   await expect(page.getByTestId("rive-status")).toHaveText("ready");
   await expect(page.getByTestId("rive-robot").locator("canvas")).toBeVisible();
   await expect(page.getByTestId("rive-states")).toHaveText("idle");
+  await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
 }
 
 test("the robot is driven by its view model and reports what it shows", async ({ page }) => {
@@ -31,6 +32,9 @@ test("the robot is driven by its view model and reports what it shows", async ({
   await page.getByTestId("poke").click();
   await expect(page.getByTestId("robot-reacting")).toHaveText("true");
   await expect(page.getByTestId("robot-reacting")).toHaveText("false", { timeout: 4000 });
+  await expect(page.getByTestId("robot-presence")).toHaveText("parked");
+  await page.getByTestId("poke").click();
+  await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
 
   await page.getByTestId("mode-speaking").click();
   await page.getByTestId("reset").click();
@@ -50,6 +54,9 @@ test("the robot answers the pointer with its own listeners", async ({ page, isMo
   await expect(page.getByTestId("robot-reacting")).toHaveText("true");
   await page.mouse.move(box.x + box.width + 40, box.y - 40);
   await expect(page.getByTestId("robot-hover")).toHaveText("false");
+  await expect(page.getByTestId("robot-presence")).toHaveText("parked", { timeout: 3000 });
+  await page.mouse.click(box.x + box.width * 0.88, box.y + box.height * 0.76);
+  await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
   expect(problems).toEqual([]);
 });
 
@@ -60,6 +67,9 @@ test("a tap on the robot makes it hop", async ({ page, isMobile }) => {
   const box = (await page.getByTestId("rive-robot").boundingBox())!;
   await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.55);
   await expect(page.getByTestId("robot-reacting")).toHaveText("true");
+  await expect(page.getByTestId("robot-presence")).toHaveText("parked", { timeout: 3000 });
+  await page.touchscreen.tap(box.x + box.width * 0.88, box.y + box.height * 0.76);
+  await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
   expect(problems).toEqual([]);
 });
 
@@ -68,6 +78,7 @@ test("under reduced motion the robot holds still but still takes a change", asyn
   const problems = watchConsole(page);
   await open(page);
   await expect(page.getByTestId("robot-motion")).toContainText("reduced");
+  await expect(page.getByTestId("robot-presence")).toHaveText("present");
   await page.getByTestId("mode-happy").click();
   await expect(page.getByTestId("rive-states")).toHaveText("happy");
   expect(problems).toEqual([]);

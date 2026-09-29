@@ -14,13 +14,18 @@
  *   - listeners, so it reacts to a pointer with no host code: hover perks it
  *     up and the eyes follow the pointer, a press makes it hop and wave;
  *   - state actions that write back what it is doing (`showing`, `reacting`),
- *     which replace the runtime's deprecated state-change events.
+ *     which replace the runtime's deprecated state-change events;
+ *   - a speech bubble, a text run bound to a string, in a subset of Inter;
+ *   - a two-bone arm, so the wave bends at the elbow. The rest of the body
+ *     stays rigid groups.
  *
- * Its parts are rigid, so the rig is a hierarchy of groups (float → hop →
- * body / neck → head → gaze → eye → lid); it needs no bones.
+ * It arrives with the bubble, and a tap tucks it into the lower right; a
+ * second tap brings it back. The bubble font is a subset of Inter
+ * (src/illustrations/fonts, SIL OFL): ASCII plus a few punctuation marks.
+ * Anything else has no glyph.
  */
 
-import { ArtboardBuilder, type AnimationBuilder, type Handle, type Key, type ShapeHandles } from "@/lib/rive/artboard-builder";
+import { ArtboardBuilder, type AnimationBuilder, type Key, type ShapeHandles } from "@/lib/rive/artboard-builder";
 import { mapContour, parsePath, roundedRect, translateContour, type Contour } from "@/lib/rive/path-data";
 import { argb } from "@/lib/rive/riv-writer";
 
@@ -51,14 +56,35 @@ export const ROBOT = {
     showing: "showing",
     /** Written by the machine: true while the hop plays. */
     reacting: "reacting",
+    /** String. The bubble's line; a card replaces the introduction. */
+    line: "line",
+    /** Written by the machine, and not one of `reports`: arriving, present, tucking, parked, returning. */
+    presence: "presence",
+    /** Trigger. Skips the arrival, for reduced motion. A held boolean would cancel a later tuck. */
+    settle: "settle",
   },
-  /** Enums the machine writes, for a host to read back as states. */
+  /** Enums the machine writes, for a host to read back as states. `presence` is read on its own. */
   reports: ["showing"],
-  defaults: { mode: "idle" as RobotMode, energy: 60 },
+  defaults: {
+    mode: "idle" as RobotMode,
+    energy: 60,
+    line: "Hi — this card is when to use AI. Tap me and I'll tuck into the corner.",
+  },
 } as const;
 
-const CYAN = [92, 214, 226] as const;
-const VIOLET = [186, 104, 255] as const;
+/**
+ * Homepage field-card colours, sRGB from the site's neon tokens. The accent
+ * starts as the AI card's cyan; the antenna keeps the site violet.
+ */
+export const ROBOT_ACCENTS = [
+  { id: "ai", label: "AI", rgb: [0, 210, 211] },
+  { id: "delivery", label: "Delivery", rgb: [157, 91, 244] },
+  { id: "analytics", label: "Analytics", rgb: [57, 134, 228] },
+  { id: "credit", label: "Credit risk", rgb: [240, 166, 70] },
+] as const;
+
+const CYAN = ROBOT_ACCENTS[0].rgb;
+const VIOLET = ROBOT_ACCENTS[1].rgb;
 const cyan = (a = 1) => argb(...CYAN, a);
 const violet = (a = 1) => argb(...VIOLET, a);
 const white = (a = 1) => argb(255, 255, 255, a);
@@ -100,8 +126,9 @@ function flicker(seed: number, frames: number, step: number, lo: number, hi: num
   return keys;
 }
 
-export function buildRobot(): Uint8Array {
+export function buildRobot(font: Uint8Array): Uint8Array {
   const ab = new ArtboardBuilder(ROBOT.name, ROBOT.width, ROBOT.height);
+  ab.addFont("Inter", font);
   const vm = ab.viewModel(ROBOT.viewModel);
   const P = ROBOT.props;
   const mode = vm.enum(P.mode, ROBOT_MODES, ROBOT.defaults.mode);
@@ -113,6 +140,9 @@ export function buildRobot(): Uint8Array {
   const accent = vm.color(P.accent, cyan());
   const showing = vm.enum(P.showing, ROBOT_MODES, ROBOT.defaults.mode);
   const reacting = vm.boolean(P.reacting, false);
+  const line = vm.string(P.line, ROBOT.defaults.line);
+  const presence = vm.enum(P.presence, ["arriving", "present", "tucking", "parked", "returning"], "arriving");
+  const settle = vm.trigger(P.settle);
 
   const ease = ab.cubic(0.42, 0, 0.58, 1);
   const out = ab.cubic(0.16, 1, 0.3, 1);
@@ -127,6 +157,10 @@ export function buildRobot(): Uint8Array {
   const body = ab.group({ name: "body", x: 0, y: BODY_Y, parent: hop });
   const shoulderL = ab.group({ name: "shoulder L", x: -56, y: -30, parent: body });
   const shoulderR = ab.group({ name: "shoulder R", x: 56, y: -30, parent: body });
+  // +x is the bone axis. π/2 points the right arm down; the wave keys these rotations.
+  const DOWN = Math.PI / 2;
+  const upperR = ab.rootBone({ name: "upper arm R", x: 0, y: 0, parent: shoulderR, length: 42, rotation: DOWN });
+  const foreR = ab.bone({ name: "forearm R", parent: upperR, length: 18 });
   const neck = ab.group({ name: "neck", x: 0, y: NECK_Y, parent: hop });
   const head = ab.group({ name: "head", x: 0, y: HEAD_Y, parent: neck });
   const antenna = ab.group({ name: "antenna", x: 0, y: -64, parent: head });
@@ -143,8 +177,9 @@ export function buildRobot(): Uint8Array {
   /* ---- drawing, back to front -------------------------------------- */
   const shadow = ab.ellipse({
     name: "shadow",
-    x: CX,
+    x: 0,
     y: 358,
+    parent: float,
     width: 170,
     height: 26,
     fill: { kind: "radial", from: [0, 0], to: [85, 0], stops: [[0, ink(0, 0, 0, 0.6)], [1, ink(0, 0, 0, 0)]] },
@@ -160,30 +195,45 @@ export function buildRobot(): Uint8Array {
     fill: { kind: "radial", from: [0, -8], to: [0, 24], stops: [[0, cyan(0.9)], [0.45, cyan(0.35)], [1, cyan(0)]] },
   });
 
-  const arm = (side: -1 | 1, shoulder: Handle) => {
-    const upper = parsePath(`M ${-7 * side} -4 C ${-9 * side} 14 ${-8 * side} 30 ${-4 * side} 40 L ${10 * side} 40 C ${12 * side} 28 ${10 * side} 12 ${8 * side} -4 Z`);
-    ab.path({
-      name: `arm ${side < 0 ? "L" : "R"}`,
-      x: 0,
-      y: 0,
-      parent: shoulder,
-      contours: upper,
-      fill: { kind: "linear", from: [0, -4], to: [0, 44], stops: [[0, ink(52, 62, 96)], [1, ink(18, 22, 40)]] },
-      stroke: { color: white(0.28), thickness: 1.5 },
-    });
-    ab.ellipse({
-      name: `hand ${side < 0 ? "L" : "R"}`,
-      x: 3 * side,
-      y: 46,
-      parent: shoulder,
-      width: 20,
-      height: 20,
-      fill: { kind: "radial", from: [-3, -4], to: [8, 6], stops: [[0, ink(74, 86, 128)], [1, ink(20, 24, 44)]] },
-      stroke: { color: violet(0.55), thickness: 1.5 },
-    });
+  const armPaint = {
+    fill: { kind: "linear" as const, from: [0, -4] as [number, number], to: [0, 44] as [number, number], stops: [[0, ink(52, 62, 96)], [1, ink(18, 22, 40)]] as Array<[number, number]> },
+    stroke: { color: white(0.28), thickness: 1.5 },
   };
-  arm(-1, shoulderL);
-  arm(1, shoulderR);
+  const handPaint = {
+    width: 20,
+    height: 20,
+    fill: { kind: "radial" as const, from: [-3, -4] as [number, number], to: [8, 6] as [number, number], stops: [[0, ink(74, 86, 128)], [1, ink(20, 24, 44)]] as Array<[number, number]> },
+    stroke: { color: violet(0.55), thickness: 1.5 },
+  };
+  ab.path({
+    name: "arm L",
+    x: 0,
+    y: 0,
+    parent: shoulderL,
+    contours: parsePath("M 7 -4 C 9 14 8 30 4 40 L -10 40 C -12 28 -10 12 -8 -4 Z"),
+    ...armPaint,
+  });
+  ab.ellipse({ name: "hand L", x: -3, y: 46, parent: shoulderL, ...handPaint });
+  // The right arm is drawn along the bone's +x, which rotation π/2 aims downward.
+  ab.path({
+    name: "arm R",
+    x: 0,
+    y: 0,
+    parent: upperR,
+    contours: parsePath("M -4 7 C 14 9 30 8 40 4 L 40 -10 C 28 -12 12 -10 -4 -8 Z"),
+    fill: { kind: "linear", from: [0, 0], to: [42, 0], stops: [[0, ink(52, 62, 96)], [1, ink(18, 22, 40)]] },
+    stroke: armPaint.stroke,
+  });
+  ab.path({
+    name: "forearm R",
+    x: 0,
+    y: 0,
+    parent: foreR,
+    contours: parsePath("M 0 -6 C 4 -7 12 -6 16 -4 L 16 4 C 12 6 4 7 0 6 Z"),
+    fill: { kind: "linear", from: [0, 0], to: [16, 0], stops: [[0, ink(48, 58, 92)], [1, ink(16, 20, 38)]] },
+    stroke: armPaint.stroke,
+  });
+  ab.ellipse({ name: "hand R", x: 16, y: 0, parent: foreR, ...handPaint });
 
   ab.polyline({
     name: "nozzle",
@@ -370,8 +420,34 @@ export function buildRobot(): Uint8Array {
     ab.rect({ name: `bar ${i}`, x, y: BAR_Y, parent: head, width: 6, height: 4, cornerRadius: 3, fill: cyan(), opacity: 0.3 }),
   );
 
-  // On top of everything, and invisible: what the pointer listeners hit-test.
-  const touch = ab.rect({ name: "touch", x: CX, y: 196, width: 250, height: 330, cornerRadius: 60, fill: argb(0, 0, 0, 0) });
+  // Beside the head, clear of the antenna and the eyes. It rides `float`, so the tuck takes it along.
+  const bubble = ab.group({ name: "bubble", x: -108, y: 68, parent: float, opacity: 0 });
+  ab.rect({
+    name: "bubble panel",
+    x: 0,
+    y: 0,
+    parent: bubble,
+    width: 168,
+    height: 84,
+    cornerRadius: 16,
+    fill: ink(8, 14, 28, 0.94),
+    stroke: { color: cyan(0.9), thickness: 1.5 },
+  });
+  const said = ab.text({
+    name: "bubble line",
+    x: -76,
+    y: -32,
+    parent: bubble,
+    width: 152,
+    text: ROBOT.defaults.line,
+    fontSize: 13,
+    color: argb(227, 232, 242),
+    align: "center",
+  });
+  ab.bind(said.run, "text", line);
+
+  // Invisible, and parented to the rig so a tap still lands once it has shrunk into the corner.
+  const touch = ab.rect({ name: "touch", x: 0, y: 196, parent: float, width: 250, height: 330, cornerRadius: 60, fill: argb(0, 0, 0, 0) });
 
   /* ---- colour, bound straight to the view model -------------------- */
   for (const s of eyeShapes) ab.bind(s.fillColor!, "color", accent);
@@ -501,13 +577,22 @@ export function buildRobot(): Uint8Array {
   bounce.key(hop, "scaleY", [[0, 1, ease], [6, 0.9, out], [16, 1.07, ease], [40, 0.9, spring], [HOP, 1]]);
   bounce.key(hop, "scaleX", [[0, 1, ease], [6, 1.07, out], [16, 0.95, ease], [40, 1.07, spring], [HOP, 1]]);
   for (const c of eyeContours) bounce.morph(c, [[0, EYE.open, out], [8, EYE.happy, "hold"], [66, EYE.happy, ease], [HOP, EYE.open]]);
-  bounce.key(shoulderR, "rotation", [
+  bounce.key(upperR, "rotation", [
+    [0, DOWN, out],
+    [14, DOWN - 1.45, ease],
+    [26, DOWN - 1.05, ease],
+    [38, DOWN - 1.6, ease],
+    [50, DOWN - 1.05, ease],
+    [62, DOWN - 1.4, ease],
+    [HOP, DOWN],
+  ]);
+  bounce.key(foreR, "rotation", [
     [0, 0, out],
-    [14, -2.3, ease],
-    [26, -1.9, ease],
-    [38, -2.5, ease],
-    [50, -1.9, ease],
-    [62, -2.3, ease],
+    [14, 0.75, ease],
+    [26, 0.2, ease],
+    [38, 0.9, ease],
+    [50, 0.15, ease],
+    [62, 0.7, ease],
     [HOP, 0],
   ]);
   for (const axis of ["scaleX", "scaleY"] as const) {
@@ -562,6 +647,53 @@ export function buildRobot(): Uint8Array {
   pokeLayer.transition(pokeLayer.entry, sStill);
   pokeLayer.transition(sStill, sHop, { conditions: [{ vmTrigger: poke }] });
   pokeLayer.transition(sHop, sStill, { conditions: [], exitAtPercent: 100, durationMs: 200 });
+
+  // After `alive`, so a tuck's y wins over the bob and a present state that does not key y lets the bob continue.
+  const ARRIVE = 36;
+  const TUCK = 48;
+  const BACK = 42;
+  const PARK = { x: 352, y: 236, scale: 0.34 };
+  const arriving = ab.animation("arriving", ARRIVE, "oneShot");
+  arriving.key(float, "scaleX", [[0, 0.62, spring], [ARRIVE, 1]]);
+  arriving.key(float, "scaleY", [[0, 0.62, spring], [ARRIVE, 1]]);
+  arriving.key(bubble, "opacity", [[0, 0, ease], [22, 1]]);
+  const present = ab.animation("present", 30, "loop");
+  present.key(float, "x", [[0, CX]]).key(float, "scaleX", [[0, 1]]).key(float, "scaleY", [[0, 1]]).key(float, "rotation", [[0, 0]]);
+  present.key(bubble, "opacity", [[0, 1]]);
+  const tucking = ab.animation("tucking", TUCK, "oneShot");
+  tucking.key(float, "x", [[0, CX, ease], [TUCK, PARK.x]]);
+  tucking.key(float, "y", [[0, 0, out], [16, -18, inQuad], [TUCK, PARK.y]]);
+  tucking.key(float, "scaleX", [[0, 1, ease], [TUCK, PARK.scale]]);
+  tucking.key(float, "scaleY", [[0, 1, ease], [TUCK, PARK.scale]]);
+  tucking.key(float, "rotation", [[0, 0, out], [18, -0.22, ease], [34, 0.12, spring], [TUCK, 0]]);
+  tucking.key(bubble, "opacity", [[0, 1, ease], [16, 0]]);
+  const parked = ab.animation("parked", 30, "loop");
+  parked.key(float, "x", [[0, PARK.x]]).key(float, "y", [[0, PARK.y]]);
+  parked.key(float, "scaleX", [[0, PARK.scale]]).key(float, "scaleY", [[0, PARK.scale]]).key(float, "rotation", [[0, 0]]);
+  parked.key(bubble, "opacity", [[0, 0]]);
+  const returning = ab.animation("returning", BACK, "oneShot");
+  returning.key(float, "x", [[0, PARK.x, ease], [BACK, CX]]);
+  returning.key(float, "y", [[0, PARK.y, out], [16, PARK.y - 24, inQuad], [BACK, 0]]);
+  returning.key(float, "scaleX", [[0, PARK.scale, spring], [BACK, 1]]);
+  returning.key(float, "scaleY", [[0, PARK.scale, spring], [BACK, 1]]);
+  returning.key(float, "rotation", [[0, 0, out], [14, 0.4, ease], [BACK, 0]]);
+  returning.key(bubble, "opacity", [[0, 0, "hold"], [20, 0, ease], [BACK, 1]]);
+
+  const presenceLayer = sm.layer("presence");
+  const sArriving = presenceLayer.play(arriving);
+  const sPresent = presenceLayer.play(present);
+  const sTucking = presenceLayer.play(tucking);
+  const sParked = presenceLayer.play(parked);
+  const sReturning = presenceLayer.play(returning);
+  presenceLayer.report(presence);
+  presenceLayer.transition(presenceLayer.entry, sArriving);
+  presenceLayer.transition(sArriving, sTucking, { conditions: [{ vmTrigger: poke }] });
+  presenceLayer.transition(sArriving, sPresent, { conditions: [], exitAtPercent: 100 });
+  presenceLayer.transition(sPresent, sTucking, { conditions: [{ vmTrigger: poke }] });
+  presenceLayer.transition(sTucking, sParked, { conditions: [], exitAtPercent: 100 });
+  presenceLayer.transition(sParked, sReturning, { conditions: [{ vmTrigger: poke }] });
+  presenceLayer.transition(sReturning, sPresent, { conditions: [], exitAtPercent: 100 });
+  presenceLayer.transition(presenceLayer.any, sPresent, { conditions: [{ vmTrigger: settle }] });
 
   // Gaze: the pointer moves a target; the eyes copy a share of its offset, clamped
   // to the visor. The hover layer owns the constraint's strength, so when the

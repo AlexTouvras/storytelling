@@ -22,6 +22,8 @@ export type RiveLayerHandle = {
   setEnum(prop: string, value: string): boolean;
   /** Sets a colour property, 0xAARRGGBB. */
   setColor(prop: string, argb: number): boolean;
+  /** Sets a string property, such as a text run bound to the view model. */
+  setString(prop: string, value: string): boolean;
   /** Reads a view-model value back: what a listener or a state action wrote. */
   read(prop: string): string | number | boolean | null;
   /** Back to the entry state with a fresh default view-model instance. */
@@ -197,6 +199,12 @@ export function RiveLayer({
             if (p) p.value = argb;
             return !!p;
           }),
+        setString: (name, value) =>
+          set((vm) => {
+            const p = vm.string(name);
+            if (p) p.value = value;
+            return !!p;
+          }),
         read(name) {
           const vm = boundInstance(rive);
           const type = vm?.properties.find((p) => p.name === name)?.type as string | undefined;
@@ -205,6 +213,7 @@ export function RiveLayer({
           if (type === "boolean") return vm.boolean(name)?.value ?? null;
           if (type === "number") return vm.number(name)?.value ?? null;
           if (type === "color") return vm.color(name)?.value ?? null;
+          if (type === "string") return vm.string(name)?.value ?? null;
           return null;
         },
         reset() {

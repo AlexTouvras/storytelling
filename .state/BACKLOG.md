@@ -60,9 +60,10 @@
 - [x] AI field card character: `robot.riv` (moods morph, energy and gaze blend, hover/press handled in the file, accent colour bindable)
 - [x] Migrate `grid.riv` and `household.riv` to data binding; `RiveLayer` on the view model; e2e fails on Rive deprecation warnings
 - [x] `/lab/robot` with a mock field card, `e2e/robot-character.spec.ts`
-- [ ] Human: design review of the robot (name, personality, palette per field, card size/background, whether it "speaks") — questions in the PR
+- [x] Human: design review of the robot — friendly helper; homepage neon plus each field card's colour; appears with an introduction, tap tucks to the lower right, tap again returns; text bubble, no sound; skeletons for later. Shipped on `robot.riv` / `/lab/robot`
 - [ ] Place the robot on the real AI field card (Orbit side; this repo only ships the `.riv` and `RiveLayer`)
-- [ ] If a character needs soft deformation: bones + skins in the writer. If a story needs a reusable part: nested artboards. Neither earned yet
+- [x] Writer: text runs, embedded fonts, root/child bones, skin/tendon/weight. The robot's waving arm is a rigid bone chain. Skin deformation is in the writer (tendon matrix = rest world transform; weight index 0 is the runtime identity bone)
+- [ ] Nested artboards, if a story needs a reusable part. Not earned yet
 
 ## Next (Orbit live — first topic shipped)
 

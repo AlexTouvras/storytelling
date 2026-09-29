@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { PROP, TYPE, decodeRiv } from "@/lib/rive/riv-writer";
 import { ROBOT, ROBOT_MODES, buildRobot, robotEyePose } from "@/illustrations/robot";
 
+const font = new Uint8Array(readFileSync(join(process.cwd(), "src/illustrations/fonts/Inter-subset.ttf")));
+
 const key = (name: keyof typeof PROP) => PROP[name][0];
 
 describe("robot eyes", () => {
@@ -19,7 +21,7 @@ describe("robot.riv", () => {
   const names = (type: number, prop: keyof typeof PROP) => objects.filter((o) => o.type === type).map((o) => o.props.get(key(prop)));
 
   it("is exactly what the builder produces today", () => {
-    expect(Buffer.compare(committed, Buffer.from(buildRobot()))).toBe(0);
+    expect(Buffer.compare(committed, Buffer.from(buildRobot(font)))).toBe(0);
   });
 
   it("is driven by a view model, not by state-machine inputs", () => {
@@ -27,7 +29,18 @@ describe("robot.riv", () => {
     expect(names(TYPE.stateMachine, "animName")).toEqual([ROBOT.stateMachine]);
     expect(objects.some((o) => o.type === TYPE.smTrigger || o.type === TYPE.smBool)).toBe(false);
     const props = objects
-      .filter((o) => ([TYPE.vmPropertyNumber, TYPE.vmPropertyBoolean, TYPE.vmPropertyTrigger, TYPE.vmPropertyColor, TYPE.vmPropertyEnumCustom] as number[]).includes(o.type))
+      .filter((o) =>
+        (
+          [
+            TYPE.vmPropertyNumber,
+            TYPE.vmPropertyBoolean,
+            TYPE.vmPropertyTrigger,
+            TYPE.vmPropertyColor,
+            TYPE.vmPropertyEnumCustom,
+            TYPE.vmPropertyString,
+          ] as number[]
+        ).includes(o.type),
+      )
       .map((o) => o.props.get(key("vmName")));
     expect(props).toEqual(Object.values(ROBOT.props));
   });
@@ -44,7 +57,16 @@ describe("robot.riv", () => {
     expect(types).toEqual(expect.arrayContaining([0, 1, 2, 4]));
   });
 
-  it("stays a KB-size asset", () => {
-    expect(committed.byteLength).toBeLessThan(40 * 1024);
+  it("carries the introduction, the font and a bone chain", () => {
+    expect(names(TYPE.textValueRun, "runText")).toContain(ROBOT.defaults.line);
+    expect(names(TYPE.fontAsset, "assetName")).toEqual(["Inter"]);
+    const bytes = objects.find((o) => o.type === TYPE.fileAssetContents)!.props.get(key("assetBytes")) as number[];
+    expect(bytes.length).toBe(font.byteLength);
+    expect(objects.filter((o) => o.type === TYPE.rootBone).length).toBeGreaterThan(0);
+    expect(objects.filter((o) => o.type === TYPE.bone).length).toBeGreaterThan(0);
+  });
+
+  it("stays a small asset, font included", () => {
+    expect(committed.byteLength).toBeLessThan(96 * 1024);
   });
 });
