@@ -1,8 +1,9 @@
 # Decision Spec — Where should the speed be held?
 
 > Catalogue pick: `ngsim-phantom-wave`, Round G (flagship_sum 32 of 35). **Topic locked by the human 2026-09-29** ("lock in on this one").
-> **Status:** draft. Question, claim, evidence and the five beats are proposed for sign-off. The cinematic treatment is specified below; two choices are marked open. "Continue" accepts them as written.
-> **Built so far:** a one-screen card at `/stories/where-should-the-speed-be-held/card`. It is unlisted. The five-beat film is not started. Numbers were measured on the open API on 2026-09-29 and are provisional until the pack is frozen.
+> **Status:** signed off 2026-09-29. The human's "OK go" is read as Continue: Question, Claim, Takeaway, limitations, and the two cinematic choices (side view of three cars; daylight, no weather). Recorded so it can be objected to.
+> **Built:** the one-screen card, the frozen pack `data/figures/where-should-the-speed-be-held.v1.json`, the replay, and the five-beat film at `/stories/where-should-the-speed-be-held/film`. Unlisted. Listing is still the publish gate.
+> **Since sign-off, from the pack:** the walk is 800 ft at 9.1 mph. The opened car is 928, at 840 ft and 15.3 mph; its acceleration at that instant is positive, so the lamp on the road is off and the side view is the mechanism. Lane 7 is the entrance, lane 8 the exit, lane 6 the lane between them, from where those vehicles go. The coarser rule counts two crossings, on lanes 2 and 3, both in the first nine minutes. Lanes 1, 4 and 5 do not meet it. The replay walks the slow cell back at 8.0 mph and leaves the far end near 48; it slows the cell to about 6 mph against a measured 11, so that depth is not quoted as a measurement. A road lamp is on only below −3 ft/s², because the sign of acceleration lights most of the road. Lane 6 is labelled "lane" on the picture; the pack still calls it auxiliary. Forbidding a harder brake stops the pocket walking. The 20–46 minute bands are not flat teens: the far end does not return to 40.
 > **Film title:** *Why is the road ahead already moving?*
 > **Slug:** `where-should-the-speed-be-held`. The slug keeps the decision.
 
@@ -52,7 +53,7 @@ Companion: `docs/FLAGSHIP.md`, `docs/DATASET_CATALOGUE.md` (Round G).
 | Rows | 4,802,933 |
 | Geometry | `local_y` increases in the direction of travel, from 0 to about 2,200 ft. Upstream is the smaller coordinate |
 | Lanes 1–5 | The through lanes, the full length. Whole-morning mean speeds about 19, 20, 20, 21 and 23 mph |
-| Lanes 6–8 | Short lanes inside the section (lane 6 about 615–1,350 ft, lane 7 about 370–660 ft, lane 8 about 1,310–1,610 ft). These are the entrance, the exit and the lane between them. Which is which is confirmed from the NGSIM lane map when the pack is frozen |
+| Lanes 6–8 | Short lanes inside the section. Lane 7 (about 370–660 ft) is the entrance: its vehicles continue into a through lane. Lane 8 (about 1,310–1,610 ft) is the exit: its vehicles arrive from a through lane. Lane 6 (about 615–1,350 ft) is the lane between them. A sample of six vehicles a lane, plus where the lanes sit. Drawn, not modelled |
 
 ### The morning fills in (calculated)
 
@@ -72,9 +73,9 @@ For ten minutes the far end is still near 40 mph. By fifteen minutes it has fall
 
 Lane 2, first 15 minutes, speeds in 100-ft by 10-second cells. From 240 s to 300 s the slowest cell moves from 800 ft to the upstream end. The speed there falls from about 19 mph to about 9 mph. The downstream end, at 2,100 ft, stays at 45–48 mph for that minute. About 800 ft in 60 seconds is about 9 mph against the traffic. Two further pockets on the same lane do the same between 360 s and 520 s, each while the downstream end stays in the forties.
 
-A coarser pass (200-ft by 20-second cells, all through lanes, the whole morning) finds the same walk on lanes 1, 2 and 3, clearest in the first nine minutes, at about 7–11 mph. Lanes 4 and 5, toward the ramps, do not show a crossing under that rule. The film may say the pocket is clearest in the left lanes. It may not say the right lanes were free of it.
+A coarser pass (200-ft by 20-second cells, the back of the cells slower than 25 mph, a move of at least 400 ft at 5–12 mph, downstream still above 35 mph) counts two crossings, both in the first nine minutes: lane 2 and lane 3, each at 6.8 mph. Lanes 1, 4 and 5 do not meet that rule. The film may say the counted walks are on lanes 2 and 3. It may not say the other lanes were free of slow cars. A jump faster than 12 mph is a different car becoming the slowest, and is not counted.
 
-The featured picture is the lane-2 minute above, because that is the one measured on the fine cells. The featured car — the one the illustration opens — is the car at the upstream edge of that pocket at 240 s. The pack records its id. The film does not swap it.
+The featured picture is the lane-2 minute above, because that is the one measured on the fine cells. The featured car — the one the illustration opens — is car 928, at the upstream edge of that pocket at 240 s (840 ft, 15.3 mph). The film does not swap it.
 
 ### What this recording cannot say
 
@@ -186,7 +187,7 @@ Inherited, and not reopened: same marks through the cut; one camera; pull back o
 
 ### The road (canvas)
 
-Overhead, looking along the stretch, `local_y` running away from the reader so "ahead" is up the picture. Each car is one mark. Colour is speed: fast marks in the existing cyan, slow marks in the existing violet, with nothing else on the scale. A mark that is braking lights a small red lamp. The lamp is data — it is on when that car's acceleration is negative — and it is the thing the reader watches walk upstream in beat 2. Marks are not given a vehicle shape on the canvas. The shape appears only when one mark opens.
+Overhead, looking along the stretch, `local_y` running away from the reader so "ahead" is up the picture. Each car is one mark. Colour is speed: fast marks in the existing cyan, slow marks in the existing violet, with nothing else on the scale. A mark that is braking lights a small red lamp. The lamp is data — it is on when that car's acceleration is below −3 ft/s². A negative sign alone is noise in this file and would light most of the road. The slow colour is the pocket the reader watches walk upstream in beat 2; the lamps mark hard brakes and do not themselves draw that walk. Marks are not given a vehicle shape on the canvas. The shape appears only when one mark opens.
 
 ### The opened cars (Rive)
 
@@ -196,10 +197,12 @@ The lead car's lamp comes on. The second lamp follows, later. The third follows 
 
 The camera drops onto the featured mark (FOCUS), the side view opens on that mark (MORPH), the trigger fires, and the view closes back into the mark before the pullback. Scrubbing reverses it, as Gate 2 required.
 
-### Open — answer these, or "Continue" accepts them
+### Closed 2026-09-29
 
-1. **Side view, not the driver's seat.** The opened beat looks at three cars from the side, so the lamps and the gap are all in frame. The alternative is a view forward from the following driver's seat, which puts the reader in the jam and hides the third car. Proposed: side view.
-2. **Daylight, no weather.** The morning is left as a road and its marks. The alternative is a sky, a time-of-day grade, or rain. Proposed: no atmosphere beyond the road.
+"OK go" accepted both as proposed.
+
+1. **Side view, not the driver's seat.** The opened beat looks at three cars from the side, so the lamps and the gap are all in frame.
+2. **Daylight, no weather.** The morning is a road and its marks. No sky, no weather, no skyline.
 
 ---
 
@@ -209,7 +212,7 @@ The camera drops onto the featured mark (FOCUS), the side view opens on that mar
 |------|-------------------|-------|
 | Stopped | `reveal` | Marks only. The far end is already fast. No chrome |
 | One brake | FOCUS → MORPH → trigger | Gate 2 transition. The featured car is the entity |
-| The pocket | `trace` | Same marks. The lamps walk upstream. The far end stays fast |
+| The pocket | `trace` | Same marks. The slow colour walks upstream. The far end stays fast |
 | The window closes | PULLBACK | `wideShotOn` the section. Downstream marks lose their speed |
 | While it is still moving | `highlight` | Decision card and limitations |
 
@@ -229,10 +232,10 @@ No new `visualId` until implementation shows the mark field cannot do beats 0, 2
 
 ## Definition of done (this Spec)
 
-- [ ] Human approves Question / Claim / Takeaway / limitations, and the two cinematic choices
-- [ ] Evidence pack frozen with kind tags, featured car id included
-- [ ] Model checked against the featured minute; drawn only if the pocket walks at about 9 mph
-- [ ] Beat list stable enough to write narration and visual states (five beats)
-- [ ] Orientation card, four terms, illustration legend
-- [ ] Method page generated from the pack
+- [x] Human approves Question / Claim / Takeaway / limitations, and the two cinematic choices (2026-09-29, "OK go")
+- [x] Evidence pack frozen with kind tags, featured car id 928 included
+- [x] Model checked against the featured minute; the walk passes and the depth is not quoted as a measurement
+- [x] Beat list stable enough to write narration and visual states (five beats)
+- [x] Orientation card, four terms, illustration legend
+- [x] Method page generated from the pack
 - [ ] Human approves listing. Until then the film stays off the landing
