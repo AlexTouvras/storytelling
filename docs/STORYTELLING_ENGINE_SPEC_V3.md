@@ -39,7 +39,7 @@ Each representation exists because it communicates something different.
 
 ### DATA / GRAPHS
 Use for: quantitative evidence, distributions, comparisons, trends, magnitude, statistical relationships.
-**Engine:** existing canvas drawing functions (`draw-field.ts`, `draw-apps.ts`, `frame.ts`, `cutoff-frame.ts`, `recovery-frame.ts`).
+**Engine:** existing canvas drawing functions (`draw-field.ts`, `draw-apps.ts`, `frame.ts`, `cutoff-frame.ts`).
 
 ### DATA WORLDS / PARTICLES
 Use for: populations, scale, segmentation, concentration, clustering, emergence, individual entities inside populations.
@@ -127,8 +127,8 @@ manifests (JSON)  →  Zod schema  →  template registry  →  StoryLayout
 ```
 
 The film uses custom canvas drawing functions:
-- `draw-field.ts`, `draw-apps.ts`, `draw-delays.ts` — canvas drawing
-- `frame.ts`, `cutoff-frame.ts`, `recovery-frame.ts` — frame rendering
+- `draw-field.ts`, `draw-apps.ts` — canvas drawing
+- `frame.ts`, `cutoff-frame.ts` — frame rendering
 - `cue-table.ts` — timeline/cue system for the film
 - `craft.ts` — craft utilities
 
@@ -861,13 +861,13 @@ Inspected:
 - visual registry — 2 visuals: `rate-risk-mechanism`, `cashflow-pressure`
 - scene schema — manifest JSON → Zod → template registry → StoryLayout
 - scroll runtime — react-scrollama, sticky scenes, `onStepEnter` → section ID
-- data renderers — custom canvas drawing functions (`draw-field.ts`, `draw-apps.ts`, `frame.ts`, `cutoff-frame.ts`, `recovery-frame.ts`)
+- data renderers — custom canvas drawing functions (`draw-field.ts`, `draw-apps.ts`, `frame.ts`, `cutoff-frame.ts`)
 - current "When Rates Rise" — single-canvas scroll-scrubbed film
 - tests — Vitest, Playwright + axe, Zod validation
 - cue-table.ts — existing timeline/cue system
 - Story Grammar — reveal, transform, compare, filter, accumulate, trace, highlight, annotate, zoom, split
 - atmosphere system — 5 motif types with registry
-- 4 stories total — when-rates-rise, where-should-the-cutoff-sit, where-should-the-recovery-time-sit, rates-and-defaults
+- 4 stories total — when-rates-rise, where-should-the-cutoff-sit, where-should-the-recovery-time-sit, rates-and-defaults (the rail story was withdrawn 2026-09-30)
 
 ### PHASE 1 — REAL RIVE RENDERING (1-2 days)
 
@@ -906,7 +906,7 @@ Design and build the new flagship story (Section 16). Use the existing manifest 
 ### PHASE 4 — REGRESSION (2-3 days)
 
 Verify:
-- Existing routes (`/stories`, `/stories/when-rates-rise/film`, `/stories/where-should-the-cutoff-sit/film`, `/stories/where-should-the-recovery-time-sit/film`)
+- Existing routes (`/stories`, `/stories/when-rates-rise/film`, `/stories/where-should-the-cutoff-sit/film`, `/stories/how-much-fast-reserve/film`)
 - Existing stories render correctly through the new architecture
 - Data correctness (sim output matches frozen evidence)
 - `npm run validate:stories`
@@ -1263,7 +1263,6 @@ interface RiveProps {
 |---|---|---|
 | When Rates Rise | `/stories/when-rates-rise/film` | Reference |
 | Where Should the Cut-Off Sit | `/stories/where-should-the-cutoff-sit/film` | Active |
-| Where Should the Recovery Time Sit | `/stories/where-should-the-recovery-time-sit/film` | Active |
 | Rates and Defaults | (manifest only) | Active |
 
 ### Commands

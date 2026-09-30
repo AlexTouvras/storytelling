@@ -343,8 +343,8 @@ finding rather than a staging device.
 (range +2.8 to +12.3); `KV→LH` absorbs **−4.8 min** (range −5.7 to −4.2); `OL→YV` absorbs **−8.1 min**.
 The two that flip both sit within a rounding of zero, which is the honest result rather than a problem.
 
-**Proposed question:** *Where should the recovery time sit?* — kept as the *decision*; the film is titled
-*Why don't delays die?* (`docs/decision-specs/rail-recovery-time.md`). A timetable has a finite budget of padding
+**Proposed question:** *Where should the recovery time sit?* — kept as the *decision*; the film was titled
+*Why don't delays die?*. A timetable has a finite budget of padding
 minutes. Spend it on the wrong legs and a delay survives eight stops; spend it on the right ones and
 the same delay is gone in two. That is a budgeted allocation across a network — the cut-off story's
 frontier logic in a wholly different domain — with a mechanism the camera can follow along one run.
@@ -375,21 +375,19 @@ written, on 24 days spanning October 2025 → September 2026 including three con
    carry-over is highest on the days with the most lateness — so padding sized on a median day is
    undersized exactly when it matters. That is now the story's counterpoint.
 
-**Decision Spec (draft):** [`docs/decision-specs/rail-recovery-time.md`](./decision-specs/rail-recovery-time.md)
+**Decision Spec:** written, then withdrawn with the story on 2026-09-30.
 
 ### Where this leaves the field
 
 | id | craft_sum | standing |
 |----|----------:|----------|
-| `rata-delay-propagation` | **28** | **Picked for story 3** (human, 2026-09-26). Only measured C in the catalogue |
+| `rata-delay-propagation` | **28** | **Tried, then withdrawn** (2026-09-30). Only measured C in the catalogue |
 | `usgs-flood-routing` | 25 | Shortlist. Strong mechanism, US-centric, 3-year request cap, unverified |
 | `digitraffic-tms-raw` | 23 | Still a good decision story (onset timing), not a craft test |
 | `bts-rotation-delay` | 23 | Park. Over-told domain |
 | `entsoe-europe-load` | 24 | Park. Curve rather than field |
 
-**Picked (human, 2026-09-26):** `rata-delay-propagation`. Catalogue closed again; Decision Spec is
-[`docs/decision-specs/rail-recovery-time.md`](./decision-specs/rail-recovery-time.md), awaiting
-sign-off. No corpus freeze or film work starts before that.
+**Scrapped (human, 2026-09-30).** The rail story was built and then withdrawn. The film, the pack, and the spec are gone. This row stays as a candidate that was tried.
 
 ---
 
@@ -1126,8 +1124,8 @@ The pack is NGSIM US-101. I-24 is out of scope for v1.
    propagation lag fails, so `digitraffic-tms-raw` falls to **23** and no candidate is clearly ahead.
 7. ~~Round E: one seed round for a propagation whose lag is recorded rather than inferred~~ →
    `rata-delay-propagation` (**28**), verified on ten weekdays before being recommended.
-8. ~~Human pick for story 3, then a Decision Spec~~ → `rata-delay-propagation`,
-   `docs/decision-specs/rail-recovery-time.md`.
+8. ~~Human pick for story 3, then a Decision Spec~~ → `rata-delay-propagation`.
+   The story was withdrawn on 2026-09-30; the film, the pack, and the spec are gone.
 9. ~~Verify the story's structure, not just its dataset~~ — the human asked for a wide opening
    narrowing to one lane, and whether the reader could pick a line. Measured, not assumed:
    - **A line picker is buildable.** Seven routes clear 1,000+ late arrivals and 30+ usable days; six

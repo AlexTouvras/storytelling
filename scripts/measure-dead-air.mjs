@@ -12,7 +12,6 @@
 import { chromium, devices } from "playwright";
 import { RATE_HOLDS } from "../src/components/film/frame.ts";
 import { CUTOFF_HOLDS } from "../src/components/film/cutoff-frame.ts";
-import { RECOVERY_HOLDS } from "../src/components/film/recovery-frame.ts";
 
 const BASE = process.argv[2] ?? "http://127.0.0.1:3100";
 const FLOOR = 0.002;
@@ -20,7 +19,6 @@ const FLOOR = 0.002;
 const FILMS = [
   { name: "when-rates-rise", path: "/stories/when-rates-rise/film", track: "rate-film", holds: RATE_HOLDS },
   { name: "where-should-the-cutoff-sit", path: "/stories/where-should-the-cutoff-sit/film", track: "cutoff-film", holds: CUTOFF_HOLDS },
-  { name: "why-dont-delays-die", path: "/stories/where-should-the-recovery-time-sit/film", track: "recovery-film", holds: RECOVERY_HOLDS },
 ];
 
 const browser = await chromium.launch();

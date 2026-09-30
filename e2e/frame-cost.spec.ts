@@ -1,7 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { RATE_HOLDS } from "../src/components/film/frame";
 import { CUTOFF_HOLDS } from "../src/components/film/cutoff-frame";
-import { RECOVERY_HOLDS } from "../src/components/film/recovery-frame";
 
 /**
  * What the craft layer costs per frame.
@@ -84,19 +83,9 @@ async function scrubTo(page: Page, track: string, at: number) {
 
 const mid = (hold: { from: number; to: number }) => (hold.from + hold.to) / 2;
 
-const lastRecoveryHold = RECOVERY_HOLDS[RECOVERY_HOLDS.length - 1];
-
 /**
- * Where each film is worst. Two films accumulate, so their closing hold is both
+ * Where each film is worst. Both films accumulate, so their closing hold is both
  * the fullest frame and a creeping one, and one probe covers the worst case.
- *
- * The delay film does the opposite: it opens on every line in the network and
- * then spends nine acts taking them away, so its closing hold draws one line and
- * is the *cheapest* frame in the film, not the dearest. Probing only that would
- * have left the expensive end of this film unmeasured — which is how a draw that
- * paid full per-mark cost for marks too faint to change a pixel survived a green
- * gate once already. So it gets two probes: the held closing beat, for the craft
- * layer on a creeping camera, and the open, for the whole field at once.
  */
 const FILMS = [
   {
@@ -113,17 +102,6 @@ const FILMS = [
     track: "cutoff-film",
     probes: [
       { name: `beat ${CUTOFF_HOLDS[CUTOFF_HOLDS.length - 1].beat} hold`, at: mid(CUTOFF_HOLDS[CUTOFF_HOLDS.length - 1]) },
-    ],
-  },
-  {
-    name: "why-dont-delays-die",
-    path: "/stories/where-should-the-recovery-time-sit/film",
-    track: "recovery-film",
-    probes: [
-      { name: `beat ${lastRecoveryHold.beat} hold`, at: mid(lastRecoveryHold) },
-      // Just past the open, where the population has finished arriving and the
-      // camera has not yet started putting lines away: every mark in the field.
-      { name: "open, whole field", at: 0.05 },
     ],
   },
 ];

@@ -1,15 +1,14 @@
 import { test, expect, type Page } from "@playwright/test";
 import { RATE_HOLDS } from "../src/components/film/frame";
 import { CUTOFF_HOLDS } from "../src/components/film/cutoff-frame";
-import { RECOVERY_HOLDS } from "../src/components/film/recovery-frame";
 
 /**
  * The dead-air gate, measured on pixels rather than on intent.
  *
  * Every cue table contains spans where no drawn channel moves — a third of the
- * rate film, nearly half of the cut-off film, and three declared holds in the
- * delay film, closing beats included. Those are the spans a reader dwells in,
- * because that is when they are reading. This walks to the middle of each one,
+ * rate film and nearly half of the cut-off film, closing beats included. Those
+ * are the spans a reader dwells in, because that is when they are reading. This
+ * walks to the middle of each one,
  * stops, and measures the canvas frame by frame.
  *
  * Frame by frame is the point. The first version of this gate compared two
@@ -114,12 +113,6 @@ const FILMS = [
     path: "/stories/where-should-the-cutoff-sit/film",
     track: "cutoff-film",
     holds: CUTOFF_HOLDS,
-  },
-  {
-    name: "why-dont-delays-die",
-    path: "/stories/where-should-the-recovery-time-sit/film",
-    track: "recovery-film",
-    holds: RECOVERY_HOLDS,
   },
 ];
 

@@ -20,20 +20,6 @@ test.describe("story accessibility", () => {
     );
   });
 
-  test("why-dont-delays-die film has no serious axe violations", async ({ page }) => {
-    await page.goto("/stories/where-should-the-recovery-time-sit/film");
-    await expect(page.getByTestId("film-title")).toBeVisible();
-
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa"])
-      .disableRules(["color-contrast"])
-      .analyze();
-
-    expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-      [],
-    );
-  });
-
   test("landing has no serious axe violations", async ({ page }) => {
     await page.goto("/");
     const results = await new AxeBuilder({ page })
