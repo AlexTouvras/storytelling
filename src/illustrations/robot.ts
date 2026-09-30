@@ -227,7 +227,18 @@ export function buildRobot(font: Uint8Array): Uint8Array {
     contours: parsePath("M 7 -4 C 9 14 8 30 4 40 L -10 40 C -12 28 -10 12 -8 -4 Z"),
     ...armPaint,
   });
-  ab.ellipse({ name: "hand L", x: -3, y: 46, parent: shoulderL, ...handPaint });
+  // The right cuff is the upper bone (length 42) plus the hand 16 along the forearm.
+  // This piece is that same forearm, mirrored, so the two hands hang level.
+  ab.path({
+    name: "forearm L",
+    x: 0,
+    y: 0,
+    parent: shoulderL,
+    contours: parsePath("M -6 42 C -7 46 -6 54 -4 58 L 4 58 C 6 54 7 46 6 42 Z"),
+    fill: { kind: "linear", from: [0, 42], to: [0, 58], stops: [[0, ink(48, 58, 92)], [1, ink(16, 20, 38)]] },
+    stroke: armPaint.stroke,
+  });
+  ab.ellipse({ name: "hand L", x: 0, y: 58, parent: shoulderL, ...handPaint });
   // The right arm is drawn along the bone's +x, which rotation π/2 aims downward.
   ab.path({
     name: "arm R",
