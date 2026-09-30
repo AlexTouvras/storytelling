@@ -41,8 +41,6 @@ function storyHref(slug: string) {
   if (slug === "where-should-the-cutoff-sit")
     return "/stories/where-should-the-cutoff-sit/film";
   if (slug === "how-much-fast-reserve") return "/stories/how-much-fast-reserve/film";
-  if (slug === "where-should-the-speed-be-held")
-    return "/stories/where-should-the-speed-be-held/film";
   return `/stories/${slug}`;
 }
 

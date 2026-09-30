@@ -8,7 +8,6 @@ import { join } from "node:path";
 import { buildField } from "@/lib/sim/book-field";
 import { buildHousehold, householdValues } from "@/illustrations/household";
 import { buildGrid, gridValues } from "@/illustrations/grid";
-import { buildCars } from "@/illustrations/cars";
 import { buildRobot } from "@/illustrations/robot";
 
 const check = process.argv.includes("--check");
@@ -19,8 +18,7 @@ const robotFont = new Uint8Array(readFileSync(join(dir, "fonts", "Inter-subset.t
 const files: Array<[string, Uint8Array, string]> = [
   ["household.riv", buildHousehold(householdValues(featured)), `for loan ${featured.id}`],
   ["grid.riv", buildGrid(gridValues()), "from the grid frequency model"],
-  ["cars.riv", buildCars(), "three cars, one brake"],
-  ["robot.riv", buildRobot(robotFont), "the AI field card character"],
+  ["robot.riv", buildRobot(robotFont), "the field card character"],
 ];
 
 let stale = 0;

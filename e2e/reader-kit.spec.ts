@@ -1,5 +1,4 @@
 import { test, expect, type Page } from "@playwright/test";
-import { phoneReadAt } from "../src/lib/director/jam-film";
 
 /**
  * The reader kit, on every reference story: an orientation card before the
@@ -11,15 +10,6 @@ const STORIES = [
   { slug: "where-should-the-cutoff-sit", track: "cutoff-film", at: 0.22, beat: "2", term: "pd", terms: 13, kind: "modelled" },
   // 0.195 is inside beat 1 on a laptop and inside beat 1's reading span on a phone (`phoneReadAt`).
   { slug: "how-much-fast-reserve", track: "grid-film", at: 0.195, beat: "1", term: "trip", terms: 9, kind: "observed" },
-  {
-    slug: "where-should-the-speed-be-held",
-    track: "jam-film",
-    at: phoneReadAt(2),
-    beat: "2",
-    term: "pocket",
-    terms: 4,
-    kind: "calculated",
-  },
 ] as const;
 
 async function scrubTo(page: Page, track: string, at: number) {

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RiveLayer, type RiveLayerHandle } from "@/components/director/RiveLayer";
 import { ROBOT_RIV_URL } from "@/components/director/rive-assets";
-import { ROBOT, ROBOT_ACCENTS, ROBOT_LINES, ROBOT_MODES, type RobotMode } from "@/illustrations/robot";
+import { FIELD_CARDS, fieldCard, fieldCardAccent, type FieldCardId } from "@/illustrations/field-cards";
+import { ROBOT, ROBOT_MODES, robotLineProps, type RobotMode } from "@/illustrations/robot";
 import { argb } from "@/lib/rive/riv-writer";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 
@@ -11,9 +12,8 @@ import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 const SETTLE_MS = 1400;
 
 /**
- * Lab for `robot.riv`, the AI field card's character: the robot on a mock
- * field card, every view-model property on a control, and what the file
- * writes back. Nothing here is evidence; the card copy is placeholder.
+ * Lab for `robot.riv`: one character, and the lines and accent of each field
+ * card. Nothing here is evidence.
  */
 export function RobotLab() {
   const rive = useRef<RiveLayerHandle>(null);
@@ -22,7 +22,7 @@ export function RobotLab() {
   const [mode, setMode] = useState<RobotMode>(ROBOT.defaults.mode);
   const [energy, setEnergy] = useState<number>(ROBOT.defaults.energy);
   const [look, setLook] = useState({ x: 0, y: 0 });
-  const [accent, setAccent] = useState<string>(ROBOT_ACCENTS[0].id);
+  const [cardId, setCardId] = useState<FieldCardId>("ai");
   const [states, setStates] = useState<string[]>([]);
   const [readback, setReadback] = useState({ hover: false, reacting: false, presence: "" });
 
@@ -86,9 +86,11 @@ export function RobotLab() {
     rive.current?.setNumber(ROBOT.props.lookY, next.y);
     settle();
   };
-  const chooseAccent = (id: string) => {
-    const [r, g, b] = ROBOT_ACCENTS.find((c) => c.id === id)!.rgb;
-    setAccent(id);
+  const chooseCard = (id: FieldCardId) => {
+    const card = fieldCard(id);
+    const [r, g, b] = fieldCardAccent(id).rgb;
+    setCardId(id);
+    robotLineProps().forEach((prop, i) => rive.current?.setString(prop, card.lines[i]));
     rive.current?.setColor(ROBOT.props.accent, argb(r, g, b));
     settle();
   };
@@ -104,13 +106,12 @@ export function RobotLab() {
     <div className="mx-auto max-w-6xl px-5 pb-24 pt-24 text-white">
       <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-neon-cyan/80">Engine lab · character</p>
       <h1 className="mt-3 font-display text-[clamp(2rem,4vw,3rem)] font-semibold tracking-[-0.03em]">
-        A character for the AI field card
+        One character for every field card
       </h1>
       <p className="mt-4 max-w-2xl text-white/65">
-        <code>robot.riv</code> opens with a short judgement about when to hand a step to AI, then
-        swaps in a new one every few seconds. A tap tucks it into the corner; tap again and it comes
-        back. Point at it and the eyes follow; the accent is the homepage colour of a field card.
-        Chrome, not evidence.
+        <code>robot.riv</code> crossfades six short judgements. Pick a field card and it takes that
+        card&apos;s lines and homepage colour. A tap tucks it into the corner; tap again and it comes
+        back. Point at it and the eyes follow. Chrome, not evidence.
       </p>
 
       <div className="mt-10 grid gap-8 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
@@ -132,9 +133,9 @@ export function RobotLab() {
             />
           </div>
           <div className="px-5 pb-5 pt-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/80">Field · AI</p>
-            <h2 className="mt-2 font-display text-xl font-semibold tracking-[-0.02em]">Artificial intelligence</h2>
-            <p className="mt-2 text-sm text-white/55">Placeholder copy: the field card&apos;s one-line pitch sits here.</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan/80">Field · {fieldCard(cardId).label}</p>
+            <h2 className="mt-2 font-display text-xl font-semibold tracking-[-0.02em]">{fieldCard(cardId).title}</h2>
+            <p className="mt-2 text-sm text-white/55">{fieldCard(cardId).lines[0]}</p>
           </div>
         </article>
 
@@ -194,29 +195,32 @@ export function RobotLab() {
           </div>
 
           <fieldset>
-            <legend className={label}>Accent</legend>
+            <legend className={label}>Field card</legend>
             <div className="mt-2 flex flex-wrap gap-2 uppercase tracking-[0.14em]">
-              {ROBOT_ACCENTS.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  data-testid={`accent-${a.id}`}
-                  aria-pressed={accent === a.id}
-                  disabled={!ready}
-                  className={`${button} flex items-center gap-2 ${accent === a.id ? "border-white/70" : "border-white/20"} text-white/75`}
-                  onClick={() => chooseAccent(a.id)}
-                >
-                  <span aria-hidden className="h-3 w-3 rounded-full" style={{ background: `rgb(${a.rgb.join(",")})` }} />
-                  {a.label}
-                </button>
-              ))}
+              {FIELD_CARDS.map((card) => {
+                const accent = fieldCardAccent(card.id);
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    data-testid={`card-${card.id}`}
+                    aria-pressed={cardId === card.id}
+                    disabled={!ready}
+                    className={`${button} flex items-center gap-2 ${cardId === card.id ? "border-white/70" : "border-white/20"} text-white/75`}
+                    onClick={() => chooseCard(card.id)}
+                  >
+                    <span aria-hidden className="h-3 w-3 rounded-full" style={{ background: `rgb(${accent.rgb.join(",")})` }} />
+                    {card.label}
+                  </button>
+                );
+              })}
             </div>
           </fieldset>
 
           <div className="max-w-md">
             <p className={label}>What it says, in turn</p>
             <ol data-testid="robot-lines" className="mt-2 list-decimal space-y-1 pl-4 text-[12px] normal-case tracking-normal text-white/70">
-              {ROBOT_LINES.map((words) => (
+              {fieldCard(cardId).lines.map((words) => (
                 <li key={words}>{words}</li>
               ))}
             </ol>
@@ -242,7 +246,7 @@ export function RobotLab() {
                 setMode(ROBOT.defaults.mode);
                 setEnergy(ROBOT.defaults.energy);
                 setLook({ x: 0, y: 0 });
-                setAccent(ROBOT_ACCENTS[0].id);
+                setCardId("ai");
                 if (reduced) {
                   rive.current?.fire(ROBOT.props.settle);
                   settle();

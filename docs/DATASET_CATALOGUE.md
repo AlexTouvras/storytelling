@@ -546,9 +546,7 @@ braking car does, the decision-maker is generic, and the mechanism is another la
 One FRED response succeeded and a later download timed out, so the 2021–2023 amplification was not
 recomputed.
 
-**Picked (human, 2026-09-29):** `ngsim-phantom-wave`. Decision Spec draft:
-[`docs/decision-specs/where-should-the-speed-be-held.md`](./decision-specs/where-should-the-speed-be-held.md).
-The pack is NGSIM US-101. I-24 is out of scope for v1.
+**Scrapped (human, 2026-09-30).** The US-101 story was built and then withdrawn. The film, the pack, and the spec are gone. This row stays as a candidate that was tried.
 
 ---
 

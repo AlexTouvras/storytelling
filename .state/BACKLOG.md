@@ -55,11 +55,15 @@
 - [x] Human sign-off on that Spec (Question, Claim, Takeaway, limitations, and the two cinematic choices). Read from "OK go" on 2026-09-29; side view and daylight, recorded in the Spec
 - [x] Freeze the US-101 pack, check the replay, and build the five-beat film at `/stories/where-should-the-speed-be-held/film` with its reader kit and method page. Unlisted
 - [x] Human approves listing the US-101 film — approved 2026-09-29 ("List it next"); slug in `LISTED_SLUGS`, landing links `/film`
-- [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
+- [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — cancelled. The story was scrapped 2026-09-30
+- [x] **Scrapped 2026-09-30.** The US-101 story is withdrawn: film, card, pack, spec, cars illustration, and the landing row.
 - [x] Film words play as two-line subtitles (`subtitleCues`). The picture uses the frame above a 100px band on every width, so the active illustration is no longer squeezed by a paragraph
 - [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 - [x] Diagnose why the pictures stay charts, and rebuild the US-101 side view as cars (`docs/CINEMATIC_GAP.md`, `cars.riv` on the view model)
-- [ ] **Next cinematic shot: a uniform-scale window of the freeway, ordered as a cinematic spine.** Bodies at one scale, lamps at the tail, speed painted on the body. The pack's walk speed is the reveal, after the brake has been watched. Sprites do not go on the lane-index chart. The executive-deck skill is not the reference; the journalism examples in `docs/CINEMATIC_GAP.md` are. The signed question stays until a person reopens it.
+- [x] Approval stills of the slow stretch, before it enters the film. Identical cars point ahead; the slowest 100-ft cell is tinted; the 9.1 mph walk is only on the pair (`slow-stretch.ts`, `scripts/shoot-slow-stretch.ts`)
+- [x] **The approved slow-stretch frame is beat 2 of the US-101 film.** Three cues: cars pointing ahead, the cell at the back, then 800 feet at 9 mph. The lane-index chart stays off that beat. The signed question stays until a person reopens it.
+- [x] Opening beat withholds the speeds. The line is "You are stopped, and the road ahead is not." The 9 mph walk and the 45 mph road ahead are the last cue of the pocket, on the pair.
+- [x] The calendar date is off the film, the diagram, and the card. The method page still names 15 June 2005.
 
 ## Rive: cinematic illustrations (2026-09-29)
 
@@ -70,10 +74,12 @@
 - [x] Migrate `grid.riv` and `household.riv` to data binding; `RiveLayer` on the view model; e2e fails on Rive deprecation warnings
 - [x] `/lab/robot` with a mock field card, `e2e/robot-character.spec.ts`
 - [x] Human: design review of the robot — friendly helper; homepage neon plus each field card's colour; appears with an introduction, tap tucks to the lower right, tap again returns; text bubble, no sound; skeletons for later. Shipped on `robot.riv` / `/lab/robot`
-- [x] Bubble rotates through six short judgements about handing a step to AI (`ROBOT_LINES`), baked into `robot.riv`
+- [x] Bubble rotates through six short judgements. First set was about handing a step to AI; each line is now a view-model string so a card can replace the whole rotation (`FIELD_CARDS`)
 - [x] Robot on the live Agentic AI field card at `/lab/ai-card`: the card stays in its own page, the robot is screen chrome over it, a tap tucks to the lower right. Publishing that into `agentic-ai-field-card` itself needs a push this repo's token cannot make
 - [ ] Publish the robot into `AlexTouvras/agentic-ai-field-card` (the Pages URL). Prepared locally; push was denied for this run
 - [ ] Merge `/stories/ai-card` so Orbit's next sync puts the robot on alextouvras.com (the live site 404s every `/lab/*` route)
+- [x] One robot for every homepage field card: six bound lines, accent on the bubble edge, overlays at `/stories/ai-card`, `delivery-card`, `analytics-card`, `sdlc-card`, `credit-risk-card`, `story-card` (and the matching `/lab/*` routes)
+- [ ] Ask the Delivery and Analytics repos, and the SDLC, Credit risk, and Story hosts, to mount this robot. They should set `line`…`line6` and `accent`. The AI repo can keep setting only `line`; the file defaults are that card's other five lines
 - [x] Writer: text runs, embedded fonts, root/child bones, skin/tendon/weight. The robot's waving arm is a rigid bone chain. Skin deformation is in the writer (tendon matrix = rest world transform; weight index 0 is the runtime identity bone)
 - [ ] Nested artboards, if a story needs a reusable part. Not earned yet
 
