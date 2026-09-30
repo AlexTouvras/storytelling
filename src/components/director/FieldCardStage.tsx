@@ -10,7 +10,7 @@ import { argb } from "@/lib/rive/riv-writer";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import {
   CARD_FRAME_SANDBOX,
-  fieldCardFramePath,
+  loadFramedCard,
   parseSectionMessage,
   SCROLL_MESSAGE,
   speechLine,
@@ -84,11 +84,9 @@ export function FieldCardStage({ card: id }: { card: FieldCardId }) {
   useEffect(() => {
     const ac = new AbortController();
     const cardId = id;
-    fetch(fieldCardFramePath(cardId), { signal: ac.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error(String(res.status));
-        return res.text();
-      })
+    // The browser reads the sheet itself. The live site does not serve
+    // `/field-card-frame`, and that 404 used to leave the bubble on a timer.
+    loadFramedCard(cardId, card.url, ac.signal)
       .then((html) => {
         if (ac.signal.aborted) return;
         setFrame({ id: cardId, html });
