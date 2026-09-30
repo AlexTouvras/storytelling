@@ -12,9 +12,10 @@
  *
  * `lines` is that rotation: six judgements for a host that does not know
  * where the reader is. `sections` is one line per block of the sheet, in
- * document order. The overlay shows the section under the cursor, or — on
- * a phone, where there is no cursor — the section crossing the reading
- * band as the sheet scrolls. Headings match the card's `h1` / `h2` text.
+ * document order, used when the reader is not on a finer row. The overlay
+ * shows the table row, picker entry, or list item crossing the reading band
+ * as the sheet scrolls, and the one under the cursor when the pointer moves.
+ * Headings match the card's `h1` / `h2` text.
  *
  * Lines are judgements, not measurements. The bubble font is printable ASCII.
  * Headings keep the card's own punctuation; they are never drawn.

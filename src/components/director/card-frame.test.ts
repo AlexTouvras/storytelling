@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 import { FIELD_CARDS } from "@/illustrations/field-cards";
 import {
   READING_BAND,
+  SCROLL_MESSAGE,
   SECTION_MESSAGE,
   cardFrameHtml,
   fieldCardBridge,
   fieldCardFramePath,
+  fitBubbleLine,
   parseSectionMessage,
   sectionLine,
+  speechLine,
 } from "@/components/director/card-frame";
 
 describe("field card section lines", () => {
@@ -33,12 +36,45 @@ describe("field card section lines", () => {
   });
 
   it("accepts only a short heading from the bridge", () => {
-    expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "Always on" })).toBe("Always on");
-    expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "  Ladder + gates \n" })).toBe("Ladder + gates");
+    expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "Always on" })).toEqual({
+      heading: "Always on",
+      title: "",
+      text: "",
+    });
+    expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "  Ladder + gates \n", title: " RAG ", text: "Cite the SOP" })).toEqual({
+      heading: "Ladder + gates",
+      title: "RAG",
+      text: "Cite the SOP",
+    });
     expect(parseSectionMessage({ source: "other", heading: "Always on" })).toBeNull();
     expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "" })).toBeNull();
     expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "x".repeat(161) })).toBeNull();
+    expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "Always on", text: "x".repeat(181) })?.text).toBe("");
     expect(parseSectionMessage(null)).toBeNull();
+  });
+
+  it("speaks the row in the sheet's own words, folded to one ASCII line", () => {
+    const card = FIELD_CARDS[0];
+    expect(fitBubbleLine("RAG", "Answers ignore our docs, go stale, or invent policy.")).toBe(
+      "RAG. Answers ignore our docs, go stale, or invent policy.",
+    );
+    expect(fitBubbleLine("", "Agent for pure Q&A (start with RAG)")).toBe("Agent for pure Q&A (start with RAG)");
+    expect(fitBubbleLine("Fine-tune", "Still wrong — “formal”.")).toBe('Fine-tune. Still wrong - "formal".');
+    expect(fitBubbleLine("Gate", "Pause over €50…")).toBe("Gate. Pause over EUR 50...");
+    const long = fitBubbleLine("Metrics / semantic layer", "Nobody agrees what active customer means before the Monday report");
+    expect(long).toBeTruthy();
+    expect(long!.length).toBeLessThanOrEqual(64);
+    expect(long).toMatch(/^[\x20-\x7E]+$/);
+    expect(
+      speechLine(card, {
+        heading: "Problem → use → example",
+        title: "MCP",
+        text: "Need live reads or writes against systems.",
+      }),
+    ).toBe("MCP. Need live reads or writes against systems.");
+    expect(speechLine(card, { heading: "Always on", title: "", text: "" })).toBe(
+      "If you cannot stop it, you do not ship it.",
+    );
   });
 });
 
@@ -52,10 +88,46 @@ describe("field card frame", () => {
     expect(html.match(/data-field-card-bridge/g)).toHaveLength(1);
     expect(html.endsWith("</script></body></html>") || html.includes("</script></body>")).toBe(true);
     expect(fieldCardBridge()).toContain(SECTION_MESSAGE);
+    expect(fieldCardBridge()).toContain(SCROLL_MESSAGE);
     expect(fieldCardBridge()).toContain(String(READING_BAND));
     expect(fieldCardBridge()).toContain("(hover: hover) and (pointer: fine)");
+    expect(fieldCardBridge()).toContain("bestScore = -Infinity");
     expect(fieldCardBridge()).not.toContain("</script>");
     expect(fieldCardFramePath("ai")).toBe("/field-card-frame/ai");
+  });
+
+  it("follows the reading band on scroll, and the row beside the cursor on a move", () => {
+    const bridge = mountBridge({ fine: true, width: 1280, height: 800 });
+    expect(bridge.headings()).toEqual(["Hero block"]);
+
+    bridge.pointer(400, 200);
+    expect(bridge.headings()).toEqual(["Hero block"]);
+
+    bridge.pointer(1100, 700);
+    expect(bridge.headings()).toEqual(["Hero block", "Problem block"]);
+
+    bridge.pointer(400, 200);
+    bridge.scrollTo(250);
+    bridge.fire("scroll");
+    expect(bridge.headings()).toEqual(["Hero block", "Problem block", "Hero block", "Problem block"]);
+  });
+
+  it("changes the posted row when the reading band crosses the next one", () => {
+    const bridge = mountTable();
+    expect(bridge.messages().map((message) => message.title)).toEqual(["RAG"]);
+    bridge.scrollTo(80);
+    bridge.fire("scroll");
+    expect(bridge.messages().map((message) => message.title)).toEqual(["RAG", "MCP"]);
+  });
+
+  it("scrolls the sheet when the overlay forwards a wheel", () => {
+    const bridge = mountBridge({ fine: true, width: 1280, height: 800 });
+    bridge.wheel(0, 180);
+    expect(bridge.scrollTop()).toBe(180);
+    bridge.wheel(0, 40, 1);
+    expect(bridge.scrollTop()).toBe(180 + 40 * 16);
+    bridge.wheel(Number.NaN, 10);
+    expect(bridge.scrollTop()).toBe(180 + 40 * 16);
   });
 
   it("does not add a second base", () => {
@@ -67,3 +139,175 @@ describe("field card frame", () => {
     expect(html).toContain('href="https://example.test/"');
   });
 });
+
+type Box = { top: number; bottom: number; left: number; right: number };
+
+/**
+ * Runs the bridge against a two-block sheet. Hero is 0–500, the problem
+ * block is 500–1400, and the sheet only spans x 80–1000, so x 1100 is the
+ * margin beside a row.
+ */
+function mountBridge(spec: { fine: boolean; width: number; height: number }) {
+  const headings: string[] = [];
+  const parent = {
+    postMessage(data: { heading?: string }) {
+      if (data.heading) headings.push(data.heading);
+    },
+  };
+  const state = { scroll: 0 };
+  const blocks: Array<{ heading: string; box: Box }> = [
+    { heading: "Hero block", box: { top: 0, bottom: 500, left: 80, right: 1000 } },
+    { heading: "Problem block", box: { top: 500, bottom: 1400, left: 80, right: 1000 } },
+  ];
+  const sections = blocks.map((block) => ({
+    querySelector() {
+      return { textContent: block.heading };
+    },
+    getAttribute() {
+      return "";
+    },
+    getBoundingClientRect() {
+      const top = block.box.top - state.scroll;
+      const bottom = block.box.bottom - state.scroll;
+      return { top, bottom, left: block.box.left, right: block.box.right, height: bottom - top };
+    },
+  }));
+  const listeners: Record<string, Array<(event: unknown) => void>> = {};
+  const on = (type: string, fn: (event: unknown) => void) => {
+    (listeners[type] ??= []).push(fn);
+  };
+  const root = { scrollTop: 0, scrollLeft: 0, style: { scrollBehavior: "" } };
+  const documentMock = {
+    readyState: "complete",
+    scrollingElement: root,
+    documentElement: root,
+    addEventListener: on,
+    querySelectorAll(sel: string) {
+      if (sel.includes("tr")) return [];
+      return sections;
+    },
+    elementFromPoint(x: number, y: number) {
+      const hit = sections.find((section) => {
+        const box = section.getBoundingClientRect();
+        return y >= box.top && y <= box.bottom && x >= box.left && x <= box.right;
+      });
+      return {
+        closest(sel: string) {
+          if (sel.includes("tr") || sel.includes("pick") || sel.includes("li")) return null;
+          return hit ?? null;
+        },
+      };
+    },
+  };
+  const windowMock = {
+    innerWidth: spec.width,
+    innerHeight: spec.height,
+    parent,
+    matchMedia: () => ({ matches: spec.fine }),
+    addEventListener: on,
+    requestAnimationFrame: (fn: () => void) => fn(),
+  };
+  const run = new Function("window", "document", "parent", "requestAnimationFrame", fieldCardBridge());
+  run(windowMock, documentMock, parent, windowMock.requestAnimationFrame);
+  return {
+    headings: () => headings,
+    pointer(x: number, y: number) {
+      for (const fn of listeners.pointermove ?? []) fn({ clientX: x, clientY: y });
+    },
+    scrollTo(y: number) {
+      state.scroll = y;
+    },
+    fire(type: string) {
+      for (const fn of listeners[type] ?? []) fn({});
+    },
+    wheel(x: number, y: number, mode = 0) {
+      for (const fn of listeners.message ?? []) fn({ source: parent, data: { source: SCROLL_MESSAGE, x, y, mode } });
+    },
+    scrollTop: () => root.scrollTop,
+  };
+}
+
+/** Two table rows inside one section. The band starts on RAG and reaches MCP after an 80px scroll. */
+function mountTable() {
+  const messages: Array<{ heading?: string; title?: string; text?: string }> = [];
+  const parent = {
+    postMessage(data: { heading?: string; title?: string; text?: string }) {
+      if (data.heading) messages.push(data);
+    },
+  };
+  const state = { scroll: 0 };
+  const section = {
+    querySelector() {
+      return { textContent: "Problem block" };
+    },
+    getAttribute() {
+      return "";
+    },
+    getBoundingClientRect() {
+      return { top: 0 - state.scroll, bottom: 2000 - state.scroll, left: 80, right: 1000, height: 2000 };
+    },
+  };
+  const rows = [
+    { title: "RAG", text: "Answers ignore our docs.", top: 260, bottom: 340 },
+    { title: "MCP", text: "Need live reads.", top: 340, bottom: 420 },
+  ].map((row) => {
+    const node = {
+      querySelectorAll() {
+        return [{ textContent: row.text }, { textContent: row.title }];
+      },
+      closest(sel: string) {
+        return sel.includes("tr") ? node : sel.includes("section") ? section : null;
+      },
+      getBoundingClientRect() {
+        const top = row.top - state.scroll;
+        const bottom = row.bottom - state.scroll;
+        return { top, bottom, left: 80, right: 1000, height: bottom - top };
+      },
+    };
+    return node;
+  });
+  const listeners: Record<string, Array<(event: unknown) => void>> = {};
+  const on = (type: string, fn: (event: unknown) => void) => {
+    (listeners[type] ??= []).push(fn);
+  };
+  const root = { scrollTop: 0, scrollLeft: 0, style: { scrollBehavior: "" } };
+  const documentMock = {
+    readyState: "complete",
+    scrollingElement: root,
+    documentElement: root,
+    addEventListener: on,
+    querySelectorAll(sel: string) {
+      if (sel.includes("tr")) return rows;
+      return [section];
+    },
+    elementFromPoint(x: number, y: number) {
+      const row = rows.find((item) => {
+        const box = item.getBoundingClientRect();
+        return y >= box.top && y <= box.bottom && x >= box.left && x <= box.right;
+      });
+      if (row) return row;
+      const box = section.getBoundingClientRect();
+      if (y >= box.top && y <= box.bottom) return { closest: (sel: string) => (sel.includes("section") ? section : null) };
+      return { closest: () => null };
+    },
+  };
+  const windowMock = {
+    innerWidth: 1280,
+    innerHeight: 800,
+    parent,
+    matchMedia: () => ({ matches: true }),
+    addEventListener: on,
+    requestAnimationFrame: (fn: () => void) => fn(),
+  };
+  const run = new Function("window", "document", "parent", "requestAnimationFrame", fieldCardBridge());
+  run(windowMock, documentMock, parent, windowMock.requestAnimationFrame);
+  return {
+    messages: () => messages,
+    scrollTo(y: number) {
+      state.scroll = y;
+    },
+    fire(type: string) {
+      for (const fn of listeners[type] ?? []) fn({});
+    },
+  };
+}
