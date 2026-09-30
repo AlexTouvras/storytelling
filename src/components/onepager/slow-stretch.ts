@@ -256,7 +256,18 @@ function downstream(mph: number) {
   return `<text x="${R}" y="132" fill="${INK}" font-size="16" font-family="${SANS}" text-anchor="end">Past 1,700 ft, still ${one(mph)} mph</text>`;
 }
 
-export function slowStretchScene(id: StretchId): { id: StretchId; width: number; height: number; svg: string } {
+/** Which still is on screen. The walk speed belongs to the last cue of the beat. */
+export function slowStretchPhase(cue: number, count: number): StretchId {
+  if (count <= 1 || cue <= 0) return "now";
+  if (cue >= count - 1) return "pair";
+  return "later";
+}
+
+export function slowStretchScene(
+  id: StretchId,
+  opts?: { compact?: boolean },
+): { id: StretchId; width: number; height: number; svg: string } {
+  if (opts?.compact) return compactScene(id);
   const [now, later] = SLOW_STRETCH_FRAMES;
   const closePlot = (frame: Frame) => plot(L, R, frame.closeFt, CLOSE_FT);
 
@@ -300,4 +311,88 @@ export function slowStretchScene(id: StretchId): { id: StretchId; width: number;
     ${note(880, "Both enlargements are 500 feet at the same scale. The arrow is the slow stretch over this minute.")}
   `;
   return { id, width: W, height: H, svg: svgDoc(H, body) };
+}
+
+/**
+ * The same claims, drawn for a phone-width picture. The enlargement is 200
+ * feet so a car is still a car. The wide stills stay the ones that were approved.
+ */
+function compactScene(id: StretchId): { id: StretchId; width: number; height: number; svg: string } {
+  const [now, later] = SLOW_STRETCH_FRAMES;
+  const CW = 390;
+  const left = 46;
+  const right = 368;
+  const doc = (height: number, body: string) =>
+    `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${CW}" height="${height}" viewBox="0 0 ${CW} ${height}">
+  <rect width="${CW}" height="${height}" fill="${PAPER}"/>
+  ${body}
+</svg>`;
+  const locatorC = (frame: Frame, top: number, motion?: { from: number; label: string }) => {
+    const p = plot(left, right, 0, WINDOW_FT);
+    const ground = top + 36;
+    const bandTop = ground - 16;
+    const ghost =
+      motion == null
+        ? ""
+        : `<rect x="${p.x(motion.from).toFixed(1)}" y="${bandTop}" width="${(p.x(motion.from + CELL_FT) - p.x(motion.from)).toFixed(1)}" height="20" fill="none" stroke="${FAINT}" stroke-dasharray="3 3"/>`;
+    const arrow =
+      motion == null
+        ? ""
+        : arrowLeft(p.x(motion.from + 8), p.x(frame.cellFt + CELL_FT), top + 12);
+    const label =
+      motion == null
+        ? `<text x="${p.x(frame.cellFt + CELL_FT / 2).toFixed(1)}" y="${top + 10}" fill="${AMBER}" font-size="11" font-family="${SANS}" text-anchor="middle">slow stretch</text>`
+        : `<text x="${right}" y="${top + 8}" fill="${AMBER}" font-size="11" font-family="${SANS}" text-anchor="end">${motion.label}</text>`;
+    return `${ghost}
+      ${wash(p, frame.cellFt, bandTop, 20, 0.8)}
+      <line x1="${p.left}" y1="${ground}" x2="${p.right}" y2="${ground}" stroke="#d9d0c2"/>
+      ${carsOn(p, frame.cars, ground)}
+      ${arrow}
+      ${label}
+      ${ticks(p, ground + 16, [0, 800, 1200])}
+      <text x="${p.right}" y="${ground + 30}" fill="${FAINT}" font-size="11" font-family="${SANS}" text-anchor="end">ahead →</text>`;
+  };
+  const closeC = (frame: Frame, top: number, from: number, span: number) => {
+    const p = plot(left, right, from, span);
+    const ground = top + 52;
+    const bandTop = ground - 30;
+    const end = from + span;
+    return `<text x="${left}" y="${top}" fill="${INK}" font-size="13" font-family="${SANS}">${ft(from)}–${ft(end)} ft</text>
+      <rect x="${p.left}" y="${bandTop}" width="${p.width}" height="38" rx="6" fill="${ROAD}"/>
+      ${wash(p, frame.cellFt, bandTop, 38, 0.55)}
+      <line x1="${p.left}" y1="${ground}" x2="${p.right}" y2="${ground}" stroke="#d4cbbd"/>
+      ${carsOn(p, frame.cars, ground)}
+      <text x="${p.left}" y="${ground + 16}" fill="${FAINT}" font-size="11" font-family="${SANS}">back</text>
+      <text x="${p.right}" y="${ground + 16}" fill="${FAINT}" font-size="11" font-family="${SANS}" text-anchor="end">ahead →</text>`;
+  };
+
+  if (id === "now" || id === "later") {
+    const frame = id === "now" ? now : later;
+    const from = id === "now" ? 760 : 0;
+    const span = 200;
+    const motion = id === "later" ? { from: now.cellFt, label: "walks back" } : undefined;
+    const H = 430;
+    const body = `
+      <text x="16" y="22" fill="${MUTED}" font-size="11" font-family="${SANS}">${frame.clock} · past 1,700 ft, ${one(frame.downstream)} mph</text>
+      ${locatorC(frame, 36, motion)}
+      ${closeC(frame, 118, from, span)}
+      ${speedChart(plot(left, right, from, span), 210, 150, frame.cars, frame.downstream, frame.cellFt)}
+      <text x="16" y="400" fill="${MUTED}" font-size="11" font-family="${SANS}">Car length is illustrative. The tint is the slowest 100 feet.</text>
+    `;
+    return { id, width: CW, height: H, svg: doc(H, body) };
+  }
+
+  const H = 520;
+  const body = `
+    <text x="16" y="24" fill="${INK}" font-size="15" font-family="${SANS}">800 feet back, at ${one(walk.walk_mph)} mph</text>
+    <text x="16" y="46" fill="${MUTED}" font-size="12" font-family="${SANS}">${now.clock} · ahead still ${one(now.downstream)} mph</text>
+    ${locatorC(now, 58)}
+    ${closeC(now, 140, 760, 200)}
+    <text x="16" y="250" fill="${MUTED}" font-size="12" font-family="${SANS}">${later.clock} · ahead still ${one(later.downstream)} mph</text>
+    ${locatorC(later, 264, { from: now.cellFt, label: "walks back" })}
+    ${closeC(later, 360, 0, 200)}
+    <text x="16" y="490" fill="${MUTED}" font-size="11" font-family="${SANS}">Against the traffic. Car length is illustrative.</text>
+  `;
+  return { id, width: CW, height: H, svg: doc(H, body) };
 }

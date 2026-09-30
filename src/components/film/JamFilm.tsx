@@ -6,7 +6,8 @@ import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import { cameraCreep, clamp01, lerp } from "@/components/film/craft";
 import { nextTriggerState, reconcileTrigger, type TriggerState } from "@/components/film/cue-table";
 import { FilmSubtitle } from "@/components/film/FilmSubtitle";
-import { beatLocal, cueIndex, firstCueAt, subtitleCues } from "@/components/film/subtitles";
+import { beatLocal, cueIndex, firstCueAt, subtitleCues, SUBTITLE_BAND } from "@/components/film/subtitles";
+import { slowStretchPhase, slowStretchScene, type StretchId } from "@/components/onepager/slow-stretch";
 import type { JamCopy, JamDecision } from "@/components/film/jam-copy";
 import type { JamCloud, JamFilmData, JamMark } from "@/components/film/jam-film-data";
 import { CARS, carsGeometry } from "@/illustrations/cars";
@@ -276,6 +277,7 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
       shot.focus = { x: shot.focus.x + (creep.pan * vp.width) / shot.zoom, y: shot.focus.y };
       camera = cameraFor(shot);
       applyCamera(container, camera);
+      container.style.opacity = frame.beat === 2 ? "0" : "1";
       draw(frame, camera.zoom);
 
       const wrap = riveWrapRef.current;
@@ -410,6 +412,9 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
   }, [layout, viewport, data, copy]);
 
   const beatCopy = copy[beat] ?? copy[0];
+  const cues = subtitleCues(beatCopy.paragraphs);
+  const stretchPhase: StretchId | null = beat === 2 ? slowStretchPhase(cue, cues.length) : null;
+  const figure = stretchPhase ? null : beatCopy.figure;
   const legend = reader.legend;
 
   return (
@@ -497,7 +502,10 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
             ) : null}
 
             <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-void via-void/80 to-transparent" />
-            <div data-testid="beat-copy" data-card="up" className="pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-4">
+            {stretchPhase ? (
+              <SlowStretchFrame phase={stretchPhase} compact={!layout.wide} />
+            ) : null}
+            <div data-testid="beat-copy" data-card="up" className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-5 pb-4">
               <div className="pointer-events-auto">
                 <FilmSubtitle
                   kicker={beatCopy.kicker}
@@ -507,7 +515,7 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
                   beat={beat}
                   slug={slug}
                   kind={beatCopy.kind}
-                  figure={beatCopy.figure}
+                  figure={figure}
                   figureNote={beatCopy.figureNote}
                   caveat={beatCopy.caveat}
                 />
@@ -519,6 +527,22 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
         <DecisionSection slug={slug} decision={decision} />
       </div>
     </ReaderProvider>
+  );
+}
+
+function SlowStretchFrame({ phase, compact }: { phase: StretchId; compact: boolean }) {
+  const scene = slowStretchScene(phase, { compact });
+  const markup = scene.svg
+    .replace(/^<\?xml[^>]*>\s*/, "")
+    .replace("<svg ", '<svg preserveAspectRatio="xMidYMid meet" ');
+  return (
+    <div
+      data-testid="slow-stretch"
+      data-phase={phase}
+      className="pointer-events-none absolute inset-x-2 z-20 flex items-center justify-center [&>svg]:h-full [&>svg]:w-full"
+      style={{ top: 8, bottom: SUBTITLE_BAND + 48 }}
+      dangerouslySetInnerHTML={{ __html: markup }}
+    />
   );
 }
 

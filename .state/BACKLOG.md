@@ -60,7 +60,7 @@
 - [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 - [x] Diagnose why the pictures stay charts, and rebuild the US-101 side view as cars (`docs/CINEMATIC_GAP.md`, `cars.riv` on the view model)
 - [x] Approval stills of the slow stretch, before it enters the film. Identical cars point ahead; the slowest 100-ft cell is tinted; the 9.1 mph walk is only on the pair (`slow-stretch.ts`, `scripts/shoot-slow-stretch.ts`)
-- [ ] **Next cinematic shot, after the stills are approved: put that frame in the film, in cinematic-spine order.** Not speed-colored ticks, and not sprites on the lane-index chart. The signed question stays until a person reopens it.
+- [x] **The approved slow-stretch frame is beat 2 of the US-101 film.** Three cues: cars pointing ahead, the cell at the back, then 800 feet at 9 mph. The lane-index chart stays off that beat. The signed question stays until a person reopens it.
 
 ## Rive: cinematic illustrations (2026-09-29)
 

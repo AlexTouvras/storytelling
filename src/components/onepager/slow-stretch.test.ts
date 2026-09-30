@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAR_FT, SLOW_STRETCH_FRAMES, WINDOW_FT, slowStretchScene } from "./slow-stretch";
+import { CAR_FT, SLOW_STRETCH_FRAMES, WINDOW_FT, slowStretchPhase, slowStretchScene } from "./slow-stretch";
 
 const [now, later] = SLOW_STRETCH_FRAMES;
 
@@ -37,5 +37,14 @@ describe("slow-stretch still", () => {
     expect(mid).toContain("48.1");
     expect(pair).toContain("illustrative");
     expect(early).toContain("illustrative");
+  });
+
+  it("maps the beat's cues onto now, then later, then the pair", () => {
+    expect(slowStretchPhase(0, 3)).toBe("now");
+    expect(slowStretchPhase(1, 3)).toBe("later");
+    expect(slowStretchPhase(2, 3)).toBe("pair");
+    const compact = slowStretchScene("now", { compact: true }).svg;
+    expect(compact).not.toContain("9.1");
+    expect(slowStretchScene("pair", { compact: true }).svg).toContain("9.1");
   });
 });

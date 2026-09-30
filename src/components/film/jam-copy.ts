@@ -37,7 +37,6 @@ const mph = (x: number) => Math.round(x);
 
 const band = (from: number) => pack.bands.rows.find((row) => row.from_min === from)!;
 const now = pack.featured.frames[0];
-const later = pack.featured.frames[1];
 const walk = pack.featured.walk;
 const car = pack.featured.car;
 
@@ -67,10 +66,13 @@ export function jamNarration(): JamCopy[] {
       title: "It walks back through the cars",
       kind: "calculated",
       paragraphs: [
-        `The pocket walks back against the traffic at ${mph(walk.walk_mph)} mph. A minute later it is at the back of the stretch, near ${mph(walk.to_mph)} mph, and the road ahead is still near ${mph(later.downstream_mph ?? 0)} mph.`,
+        "The pocket is the slow part here, and every car points ahead.",
+        "A minute later the cars still point ahead and the pocket is at the back.",
+        `The pocket walked back ${walk.walk_ft} feet at ${mph(walk.walk_mph)} mph, against the traffic.`,
       ],
       figure: String(mph(walk.walk_mph)),
       figureNote: "mph, back",
+      caveat: "Car length is illustrative. Positions and speeds are measured.",
     },
     {
       kicker: "The morning",
