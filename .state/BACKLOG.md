@@ -55,7 +55,8 @@
 - [x] Human sign-off on that Spec (Question, Claim, Takeaway, limitations, and the two cinematic choices). Read from "OK go" on 2026-09-29; side view and daylight, recorded in the Spec
 - [x] Freeze the US-101 pack, check the replay, and build the five-beat film at `/stories/where-should-the-speed-be-held/film` with its reader kit and method page. Unlisted
 - [x] Human approves listing the US-101 film — approved 2026-09-29 ("List it next"); slug in `LISTED_SLUGS`, landing links `/film`
-- [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — the jam walking back, no scroll. Unlisted. The five-beat film is still the longer form
+- [ ] Human review of the one-screen card at `/stories/where-should-the-speed-be-held/card` — cancelled. The story was scrapped 2026-09-30
+- [x] **Scrapped 2026-09-30.** The US-101 story is withdrawn: film, card, pack, spec, cars illustration, and the landing row.
 - [x] Film words play as two-line subtitles (`subtitleCues`). The picture uses the frame above a 100px band on every width, so the active illustration is no longer squeezed by a paragraph
 - [ ] Human review: film words are subtitles (`FilmSubtitle`), and every reader-kit story has a share card at `/stories/<slug>/card` linking to the film and the method page
 - [x] Diagnose why the pictures stay charts, and rebuild the US-101 side view as cars (`docs/CINEMATIC_GAP.md`, `cars.riv` on the view model)

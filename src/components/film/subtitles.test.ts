@@ -5,12 +5,10 @@ import whenRates from "@/stories/manifests/when-rates-rise.json";
 import cutoff from "@/stories/manifests/where-should-the-cutoff-sit.json";
 import recovery from "@/stories/manifests/where-should-the-recovery-time-sit.json";
 import grid from "@/stories/manifests/how-much-fast-reserve.json";
-import jam from "@/stories/manifests/where-should-the-speed-be-held.json";
 import { RATE_BEAT_STARTS } from "@/components/film/frame";
 import { CUTOFF_BEAT_STARTS } from "@/components/film/cutoff-frame";
 import { RECOVERY_BEAT_STARTS } from "@/components/film/recovery-frame";
 import { GRID_BEAT_STARTS } from "@/lib/director/grid-film";
-import { JAM_BEAT_STARTS, phoneReadAt } from "@/lib/director/jam-film";
 import { beatLocal, cueIndex, firstCueAt, picturePlot, subtitleCues, SUBTITLE_BAND } from "@/components/film/subtitles";
 
 describe("subtitle cues", () => {
@@ -62,7 +60,6 @@ const TAUGHT: { slug: string; at: number; beat: number; term: string; starts: re
   { slug: "where-should-the-cutoff-sit", at: 0.22, beat: 2, term: "pd", starts: CUTOFF_BEAT_STARTS },
   { slug: "where-should-the-recovery-time-sit", at: 0.63, beat: 7, term: "recovery-margin", starts: RECOVERY_BEAT_STARTS },
   { slug: "how-much-fast-reserve", at: 0.195, beat: 1, term: "trip", starts: GRID_BEAT_STARTS },
-  { slug: "where-should-the-speed-be-held", at: phoneReadAt(2), beat: 2, term: "pocket", starts: JAM_BEAT_STARTS },
 ];
 
 const TERMS: Record<string, Term[]> = {
@@ -70,7 +67,6 @@ const TERMS: Record<string, Term[]> = {
   "where-should-the-cutoff-sit": cutoff.reader.terms,
   "where-should-the-recovery-time-sit": recovery.reader.terms,
   "how-much-fast-reserve": grid.reader.terms,
-  "where-should-the-speed-be-held": jam.reader.terms,
 };
 
 describe("the opening subtitle is where a beat's first term is taught", () => {
