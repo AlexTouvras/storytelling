@@ -4,7 +4,6 @@ import { gridNarration } from "@/components/film/grid-copy";
 import { rateNarration } from "@/components/film/rate-copy";
 import { cutoffNarration } from "@/components/film/cutoff-copy";
 import { recoveryNarration } from "@/components/film/recovery-copy";
-import { jamNarration } from "@/components/film/jam-copy";
 
 /**
  * Each film's narration, beat by beat, so the term-order rules run against
@@ -16,5 +15,4 @@ export const NARRATION: Record<string, () => readonly BeatText[]> = {
   "when-rates-rise": () => rateNarration(buildField()),
   "where-should-the-cutoff-sit": cutoffNarration,
   "where-should-the-recovery-time-sit": recoveryNarration,
-  "where-should-the-speed-be-held": jamNarration,
 };
