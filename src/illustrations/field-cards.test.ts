@@ -19,6 +19,33 @@ describe("field card robot copy", () => {
     }
     const bodies = FIELD_CARDS.map((c) => c.lines.slice(0, 5).join("\n"));
     expect(new Set(bodies).size).toBe(FIELD_CARDS.length);
+    for (const card of FIELD_CARDS) {
+      expect(card.sections.length).toBeGreaterThanOrEqual(6);
+      expect(card.sections[0].line).toBe(card.lines[0]);
+      for (const section of card.sections) {
+        expect(section.heading.length).toBeGreaterThan(0);
+        expect(section.line.length).toBeGreaterThan(0);
+        expect(section.line.length).toBeLessThanOrEqual(64);
+        expect([...section.line].every((ch) => ch.charCodeAt(0) >= 32 && ch.charCodeAt(0) <= 126)).toBe(true);
+      }
+    }
+  });
+
+  it("puts each card's rotation ahead of its sections, where the live script reads lines", () => {
+    const source = readFileSync(join(process.cwd(), "src/illustrations/field-cards.ts"), "utf8");
+    const start = source.indexOf("export const FIELD_CARDS");
+    const end = source.indexOf("export type FieldCardId");
+    const body = source.slice(start, end);
+    let cursor = 0;
+    for (const card of FIELD_CARDS) {
+      const at = body.indexOf(`id: "${card.id}"`, cursor);
+      const linesAt = body.indexOf("lines:", at);
+      const sectionsAt = body.indexOf("sections:", at);
+      expect(at).toBeGreaterThanOrEqual(0);
+      expect(linesAt).toBeGreaterThan(at);
+      expect(sectionsAt).toBeGreaterThan(linesAt);
+      cursor = sectionsAt;
+    }
   });
 
   it("keeps the AI opener where the live field-card script reads it", () => {
