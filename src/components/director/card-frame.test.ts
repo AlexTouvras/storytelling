@@ -5,6 +5,7 @@ import {
   SECTION_MESSAGE,
   cardFrameHtml,
   fieldCardBridge,
+  fieldCardFramePath,
   parseSectionMessage,
   sectionLine,
 } from "@/components/director/card-frame";
@@ -54,6 +55,7 @@ describe("field card frame", () => {
     expect(fieldCardBridge()).toContain(String(READING_BAND));
     expect(fieldCardBridge()).toContain("(hover: hover) and (pointer: fine)");
     expect(fieldCardBridge()).not.toContain("</script>");
+    expect(fieldCardFramePath("ai")).toBe("/field-card-frame/ai");
   });
 
   it("does not add a second base", () => {

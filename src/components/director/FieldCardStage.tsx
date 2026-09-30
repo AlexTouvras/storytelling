@@ -10,7 +10,7 @@ import { argb } from "@/lib/rive/riv-writer";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
 import {
   CARD_FRAME_SANDBOX,
-  cardFrameHtml,
+  fieldCardFramePath,
   parseSectionMessage,
   sectionLine,
 } from "@/components/director/card-frame";
@@ -82,14 +82,14 @@ export function FieldCardStage({ card: id }: { card: FieldCardId }) {
   useEffect(() => {
     const ac = new AbortController();
     const cardId = id;
-    fetch(card.url, { signal: ac.signal })
+    fetch(fieldCardFramePath(cardId), { signal: ac.signal })
       .then((res) => {
         if (!res.ok) throw new Error(String(res.status));
         return res.text();
       })
       .then((html) => {
         if (ac.signal.aborted) return;
-        setFrame({ id: cardId, html: cardFrameHtml(html, card.url) });
+        setFrame({ id: cardId, html });
       })
       .catch(() => {
         if (ac.signal.aborted) return;

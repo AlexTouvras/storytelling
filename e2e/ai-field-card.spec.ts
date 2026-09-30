@@ -38,32 +38,32 @@ test("the bubble follows the section in view, and the cursor when there is one",
   const line = (heading: string) => card.sections.find((section) => section.heading === heading)!.line;
   await page.goto("/stories/ai-card");
   const frame = page.frameLocator('[data-testid="field-card-frame"]');
-  const anti = frame.locator("section.antis");
-  await expect(anti).toBeVisible({ timeout: 20000 });
-  await anti.evaluate((el) => {
+  const problem = frame.locator("section", { has: frame.getByRole("heading", { name: "Problem → use → example" }) });
+  await expect(problem).toBeVisible({ timeout: 20000 });
+  await expect(page.getByTestId("robot-section-line")).toHaveText(line("Agentic AI is a loop, not a menu"));
+
+  // No pointer yet, so both layouts follow the reading band. The table is long
+  // enough to reach that band; the short sections at the bottom of a desktop
+  // window are not, because the page runs out of room.
+  await problem.evaluate((el) => {
     const node = el as HTMLElement;
-    document.documentElement.style.scrollBehavior = "auto";
     const band = window.innerHeight * 0.38;
     const top = node.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo(0, Math.max(0, top - band + 48));
+    window.scrollTo({ top: Math.max(0, top - band + 80), left: 0, behavior: "instant" });
   });
-  await expect(page.getByTestId("robot-section-line")).toHaveText(line("Anti-patterns"));
+  await expect(page.getByTestId("robot-section-line")).toHaveText(line("Problem → use → example"));
 
-  if (testInfo.project.name !== "chromium") {
-    expect(problems).toEqual([]);
-    return;
+  if (testInfo.project.name === "chromium") {
+    const viewport = page.viewportSize();
+    expect(viewport).toBeTruthy();
+    const x = viewport!.width / 2;
+    const band = viewport!.height * 0.38;
+    // Above the section that holds the band: the cursor, not the scroll, decides.
+    await page.mouse.move(x, band - 140);
+    await expect(page.getByTestId("robot-section-line")).toHaveText(line("Agentic AI is a loop, not a menu"));
+    await page.mouse.move(x, band + 40);
+    await expect(page.getByTestId("robot-section-line")).toHaveText(line("Problem → use → example"));
   }
 
-  const always = frame.getByRole("heading", { name: "Always on" });
-  const alwaysBox = await always.boundingBox();
-  expect(alwaysBox).toBeTruthy();
-  await page.mouse.move(alwaysBox!.x + 12, alwaysBox!.y + alwaysBox!.height / 2);
-  await expect(page.getByTestId("robot-section-line")).toHaveText(line("Always on"));
-
-  const antiHeading = frame.getByRole("heading", { name: "Anti-patterns" });
-  const antiBox = await antiHeading.boundingBox();
-  expect(antiBox).toBeTruthy();
-  await page.mouse.move(antiBox!.x + 12, antiBox!.y + antiBox!.height / 2);
-  await expect(page.getByTestId("robot-section-line")).toHaveText(line("Anti-patterns"));
   expect(problems).toEqual([]);
 });

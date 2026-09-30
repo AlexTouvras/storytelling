@@ -1,8 +1,9 @@
 /**
  * The field-card sheet is another origin, so the overlay cannot see its
- * scroll or its cursor. The sheet is fetched (it allows any origin) and
- * framed as a sandboxed srcdoc with one bridge script. The bridge names the
- * section. This file decides which bubble line that name is.
+ * scroll or its cursor. The server route `/field-card-frame/[card]` fetches
+ * the sheet (a browser fetch fails when a redirect omits CORS) and this file
+ * frames it as a sandboxed srcdoc with one bridge script. The bridge names
+ * the section. This file decides which bubble line that name is.
  *
  * A fine pointer (a mouse) reports the section under the cursor, including
  * the row beside the cursor when the sheet does not fill the width. A coarse
@@ -19,6 +20,11 @@ export const SECTION_MESSAGE = "field-card-section";
 export const READING_BAND = 0.38;
 
 export const CARD_FRAME_SANDBOX = "allow-scripts allow-popups allow-popups-to-escape-sandbox allow-modals";
+
+/** Same-origin route that returns the framed sheet. The browser does not fetch the sheet itself. */
+export function fieldCardFramePath(id: string): string {
+  return `/field-card-frame/${id}`;
+}
 
 export function sectionKey(heading: string): string {
   return heading.replace(/\s+/g, " ").trim().toLowerCase();
