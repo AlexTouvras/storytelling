@@ -5,10 +5,10 @@
  * frames it as a sandboxed srcdoc with one bridge script. The bridge names
  * the section. This file decides which bubble line that name is.
  *
- * Moving a fine pointer reports the block under the cursor. Scrolling reports
- * the block crossing the reading band — about a third of the way down the
- * viewport — on a mouse and on a phone. A block is a table row, a picker
- * entry, or a list item when one is there, and otherwise the section.
+ * Moving a fine pointer reports the section under the cursor. Scrolling
+ * reports the section crossing the reading band — about a third of the way
+ * down the viewport — on a mouse and on a phone. A table row, a picker
+ * entry, or a list item stays inside its section's line.
  */
 
 import { type FieldCard } from "@/illustrations/field-cards";
@@ -73,58 +73,20 @@ export function sectionLine(card: FieldCard, heading: string): string | null {
   return found?.line ?? null;
 }
 
-export type SectionReport = { heading: string; title: string; text: string };
+export type SectionReport = { heading: string };
 
-/** Fold the sheet's punctuation into the bubble's printable ASCII. */
-export function toAscii(value: string): string {
-  return value
-    .replace(/[\u2018\u2019]/g, "'")
-    .replace(/[\u201C\u201D]/g, '"')
-    .replace(/[\u2013\u2014]/g, "-")
-    .replace(/\u2192/g, "->")
-    .replace(/\u2026/g, "...")
-    .replace(/\u00B7/g, "-")
-    .replace(/\u20AC/g, "EUR ")
-    .replace(/[^\x20-\x7E]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/**
- * One bubble line for the row, picker entry, or list item under the reader.
- * The words are the sheet's own, folded into ASCII and kept to one line.
- */
-export function fitBubbleLine(title: string, text: string): string | null {
-  const name = toAscii(title);
-  const body = toAscii(text);
-  const raw = name && body ? `${name}. ${body}` : name || body;
-  if (!raw) return null;
-  if (raw.length <= 64) return raw;
-  const cut = raw.slice(0, 64);
-  const space = cut.lastIndexOf(" ");
-  const trimmed = (space >= 24 ? cut.slice(0, space) : cut).trim();
-  return trimmed.length ? trimmed : null;
-}
-
-/** The row's own words when the reader is on one, otherwise the section line. */
+/** The section's line. A row, picker entry, or list item does not replace it. */
 export function speechLine(card: FieldCard, report: SectionReport): string | null {
-  return fitBubbleLine(report.title, report.text) ?? sectionLine(card, report.heading);
-}
-
-function clipField(value: unknown, max: number): string {
-  if (typeof value !== "string") return "";
-  const text = value.replace(/\s+/g, " ").trim();
-  if (text.length > max) return "";
-  return text;
+  return sectionLine(card, report.heading);
 }
 
 export function parseSectionMessage(data: unknown): SectionReport | null {
   if (!data || typeof data !== "object") return null;
-  const msg = data as { source?: unknown; heading?: unknown; title?: unknown; text?: unknown };
-  if (msg.source !== SECTION_MESSAGE) return null;
-  const heading = clipField(msg.heading, 160);
-  if (!heading) return null;
-  return { heading, title: clipField(msg.title, 80), text: clipField(msg.text, 180) };
+  const msg = data as { source?: unknown; heading?: unknown };
+  if (msg.source !== SECTION_MESSAGE || typeof msg.heading !== "string") return null;
+  const heading = msg.heading.replace(/\s+/g, " ").trim();
+  if (!heading || heading.length > 160) return null;
+  return { heading };
 }
 
 function escapeAttr(value: string): string {
@@ -133,7 +95,8 @@ function escapeAttr(value: string): string {
 
 /**
  * The script that runs inside the sheet. It posts the heading of the section
- * under the cursor, or of the section crossing the reading band.
+ * under the cursor, or of the section crossing the reading band. It does not
+ * name the row, picker entry, or list item inside that section.
  */
 export function fieldCardBridge(): string {
   return `(function () {
@@ -175,62 +138,10 @@ export function fieldCardBridge(): string {
     return best;
   }
 
-  function clip(value) {
-    return String(value || "").replace(/\\s+/g, " ").trim().slice(0, 180);
-  }
-
-  function readBlock(el) {
-    if (!el || !el.closest) return null;
-    var row = el.closest("tr");
-    if (row) {
-      var cells = row.querySelectorAll("td");
-      if (cells.length >= 2) return { title: clip(cells[1].textContent), text: clip(cells[0].textContent) };
-    }
-    var pick = el.closest(".pick");
-    if (pick) {
-      var name = pick.querySelector("strong");
-      var desc = pick.querySelector("span");
-      return { title: clip(name ? name.textContent : ""), text: clip(desc ? desc.textContent : "") };
-    }
-    var item = el.closest("li");
-    if (item) return { title: "", text: clip(item.textContent) };
-    return null;
-  }
-
-  function blockAt(x, y) {
-    var hit = document.elementFromPoint(x, y);
-    var direct = readBlock(hit);
-    if (direct && (direct.title || direct.text)) return direct;
-    var sections = document.querySelectorAll("header.hero, section, footer.meta");
-    for (var s = 0; s < sections.length; s++) {
-      var area = sections[s].getBoundingClientRect();
-      if (y >= area.top && y <= area.bottom && x >= area.left && x <= area.right) return { title: "", text: "" };
-    }
-    var nodes = document.querySelectorAll("tr, .pick, li");
-    var best = null;
-    var bestScore = -Infinity;
-    for (var i = 0; i < nodes.length; i++) {
-      var box = nodes[i].getBoundingClientRect();
-      if (y < box.top || y > box.bottom || box.height < 8) continue;
-      var containsX = x >= box.left && x <= box.right;
-      var dist = containsX ? 0 : Math.min(Math.abs(x - box.left), Math.abs(x - box.right));
-      var score = (containsX ? 1e9 : 0) - dist - box.height * 0.001;
-      if (score <= bestScore) continue;
-      var read = readBlock(nodes[i]);
-      if (!read || (!read.title && !read.text)) continue;
-      bestScore = score;
-      best = read;
-    }
-    return best || { title: "", text: "" };
-  }
-
-  function send(heading, block) {
-    var title = block && block.title ? block.title : "";
-    var text = block && block.text ? block.text : "";
-    var key = heading + "\\n" + title + "\\n" + text;
-    if (!heading || key === last) return;
-    last = key;
-    parent.postMessage({ source: SOURCE, heading: heading, title: title, text: text }, "*");
+  function send(heading) {
+    if (!heading || heading === last) return;
+    last = heading;
+    parent.postMessage({ source: SOURCE, heading: heading }, "*");
   }
 
   function place(next) {
@@ -242,7 +153,7 @@ export function fieldCardBridge(): string {
       var usePointer = sample === "pointer" && fine.matches && pointer;
       var x = usePointer ? pointer.x : window.innerWidth / 2;
       var y = usePointer ? pointer.y : window.innerHeight * BAND;
-      send(regionAt(x, y), blockAt(x, y));
+      send(regionAt(x, y));
     });
   }
 

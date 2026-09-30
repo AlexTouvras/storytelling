@@ -33,10 +33,11 @@ test(`the robot appears on the ${card.label} field card and tucks into the corne
   }
 }
 
-test("scrolling the problem table changes the bubble to the row in the band", async ({ page }, testInfo) => {
+test("scrolling through rows of one section keeps that section's line", async ({ page }, testInfo) => {
   const problems = watchConsole(page);
   const card = fieldCard("ai");
   const line = (heading: string) => card.sections.find((section) => section.heading === heading)!.line;
+  const problem = line("Problem → use → example");
   await page.goto("/stories/ai-card");
   const frame = page.frameLocator('[data-testid="field-card-frame"]');
   const mcp = frame.locator("tr", { hasText: "Need live reads" });
@@ -51,14 +52,14 @@ test("scrolling the problem table changes the bubble to the row in the band", as
     window.scrollTo({ top: Math.max(0, center - band), left: 0, behavior: "instant" });
   });
   await expectBubble(page, frame, card);
-  await expect(page.getByTestId("robot-section-line")).toContainText("MCP");
+  await expect(page.getByTestId("robot-section-line")).toHaveText(problem);
 
   if (testInfo.project.name === "chromium") {
     const rag = frame.locator("tr", { hasText: "Answers ignore our docs" });
     const box = await rag.boundingBox();
     expect(box).toBeTruthy();
     await page.mouse.move(box!.x + 48, box!.y + box!.height / 2);
-    await expect(page.getByTestId("robot-section-line")).toContainText("RAG");
+    await expect(page.getByTestId("robot-section-line")).toHaveText(problem);
   }
 
   expect(problems).toEqual([]);
@@ -147,24 +148,6 @@ async function expectBubble(page: Page, frame: FrameLocator, card: FieldCard, x?
     const y = window.innerHeight * 0.38;
     const px = typeof x === "number" ? x : window.innerWidth / 2;
     const clip = (value: string | null) => (value ?? "").replace(/\s+/g, " ").trim();
-    const read = (el: Element | null) => {
-      if (!el) return null;
-      const row = el.closest("tr");
-      if (row) {
-        const cells = [...row.querySelectorAll("td")];
-        if (cells.length >= 2) return { title: clip(cells[1].textContent), text: clip(cells[0].textContent) };
-      }
-      const pick = el.closest(".pick");
-      if (pick) {
-        return {
-          title: clip(pick.querySelector("strong")?.textContent ?? ""),
-          text: clip(pick.querySelector("span")?.textContent ?? ""),
-        };
-      }
-      const item = el.closest("li");
-      if (item) return { title: "", text: clip(item.textContent) };
-      return null;
-    };
     const nodes = [...document.querySelectorAll("header.hero, section")];
     let heading = "";
     let bestScore = -Infinity;
@@ -179,8 +162,7 @@ async function expectBubble(page: Page, frame: FrameLocator, card: FieldCard, x?
         heading = clip(node.querySelector("h1, h2")?.textContent ?? "");
       }
     }
-    const block = read(document.elementFromPoint(px, y)) ?? { title: "", text: "" };
-    return { heading, title: block.title, text: block.text };
+    return { heading };
   }, x ?? null);
   const expected = speechLine(card, report as SectionReport);
   expect(expected).toBeTruthy();
