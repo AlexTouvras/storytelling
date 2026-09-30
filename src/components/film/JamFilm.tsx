@@ -433,7 +433,7 @@ export function JamFilm({ slug, reader, copy, decision, data }: Props) {
 
         <section className="mx-auto max-w-3xl px-5 pb-16 pt-28 md:pt-36">
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-neon-cyan/80">
-            Southbound US-101 · 15 June 2005
+            Southbound US-101
           </p>
           <h1
             data-testid="film-title"

@@ -115,8 +115,8 @@ export function jamDecision(): JamDecision {
     ],
     bands: rows,
     model,
-    notClaimed: pack.limitations,
+    notClaimed: pack.limitations.map((line) => line.replace(", 15 June 2005", "")),
     attribution:
-      "Positions and speeds from FHWA NGSIM, US-101, 15 June 2005, CC BY-SA 3.0. Not affiliated with, and not endorsed by, FHWA or Caltrans.",
+      "Positions and speeds from FHWA NGSIM, US-101, CC BY-SA 3.0. Not affiliated with, and not endorsed by, FHWA or Caltrans.",
   };
 }

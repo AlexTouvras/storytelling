@@ -121,7 +121,7 @@ export function JamCard() {
     <article className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-5 pb-2 pt-14 sm:px-8 sm:pb-3 sm:pt-16">
       <header className="space-y-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
-          {LANE2_MINUTE.place} · lane {LANE2_MINUTE.lane} · {LANE2_MINUTE.when}
+          {LANE2_MINUTE.place} · lane {LANE2_MINUTE.lane}
         </p>
         <h1 className="font-display text-[1.75rem] leading-[1.05] tracking-tight text-white sm:text-4xl">
           The jam grows backward

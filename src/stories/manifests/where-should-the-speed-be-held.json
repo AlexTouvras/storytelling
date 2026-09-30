@@ -2,7 +2,7 @@
   "meta": {
     "slug": "where-should-the-speed-be-held",
     "title": "Why is the road ahead already moving?",
-    "summary": "Southbound US-101, 15 June 2005. A pocket of slow cars walks back through the section at about 9 mph while the far end is still near 45. For the first ten minutes that far end stays near 40. By fifteen minutes it has slowed to match. FHWA NGSIM trajectories, frozen and labelled.",
+    "summary": "Southbound US-101. A pocket of slow cars walks back through the section at about 9 mph while the far end is still near 45. For the first ten minutes that far end stays near 40. By fifteen minutes it has slowed to match. FHWA NGSIM trajectories, frozen and labelled.",
     "date": "2026-09-29",
     "templateId": "scrolling-narrative",
     "role": "reference",
@@ -67,14 +67,14 @@
       "url": "https://data.transportation.gov/Automobiles/Next-Generation-Simulation-NGSIM-Vehicle-Trajector/8ect-6jqj"
     }
   ],
-  "methodology": "Directed film over one frozen evidence pack. FHWA NGSIM trajectories for southbound US-101 on 15 June 2005 are read from the public SODA file. Cell speeds, the pocket's walk and the five-minute bands are arithmetic on those trajectories. A car-following replay of the featured minute is drawn only when the slow cell still walks upstream at about 9 mph and the far end stays in the forties. The opened cars are an illustration.",
-  "limitations": "One morning, about 2,100 feet, 15 June 2005. Positions are noisy. The entrance and the exit are drawn and not modelled. No variable speed limit was operating, so the film does not claim one would have worked. The film does not say why any particular driver braked.",
+  "methodology": "Directed film over one frozen evidence pack. FHWA NGSIM trajectories for southbound US-101 are read from the public SODA file. Cell speeds, the pocket's walk and the five-minute bands are arithmetic on those trajectories. A car-following replay of the featured minute is drawn only when the slow cell still walks upstream at about 9 mph and the far end stays in the forties. The opened cars are an illustration.",
+  "limitations": "One morning, about 2,100 feet. Positions are noisy. The entrance and the exit are drawn and not modelled. No variable speed limit was operating, so the film does not claim one would have worked. The film does not say why any particular driver braked.",
   "a11y": {
     "alt": "Interactive film: cars on a short stretch of US-101 coloured by speed, one car opening into three cars braking, and the slow pocket walking back while the far end is still moving",
     "reducedMotionNote": "With reduced motion, camera moves cut instead of gliding, the illustration shows the braked state without playing, and the beat narration is announced in a live region."
   },
   "reader": {
-    "orientation": "Southbound US-101, a Wednesday morning in June 2005. You are stopped, and the cars ahead of you are not. This story is about that gap, how it moves, and what the operator can do in the minutes before it closes.",
+    "orientation": "Southbound US-101, a Wednesday morning. You are stopped, and the cars ahead of you are not. This story is about that gap, how it moves, and what the operator can do in the minutes before it closes.",
     "beats": ["Stopped", "One brake", "The pocket", "The window closes", "While it is still moving"],
     "terms": [
       {

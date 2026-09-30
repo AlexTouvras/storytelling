@@ -37,6 +37,8 @@ describe("slow-stretch still", () => {
     expect(mid).toContain("48.1");
     expect(pair).toContain("illustrative");
     expect(early).toContain("illustrative");
+    expect(early).not.toContain("2005");
+    expect(pair).not.toContain("2005");
   });
 
   it("maps the beat's cues onto now, then later, then the pair", () => {

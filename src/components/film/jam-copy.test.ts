@@ -36,5 +36,9 @@ describe("jam narration", () => {
     expect(decision.model).toBeTruthy();
     expect(decision.model?.toLowerCase()).not.toContain("optimal");
     expect(decision.model).toContain("not a measurement");
+    expect(decision.attribution).not.toContain("2005");
+    expect(decision.notClaimed.join(" ")).not.toContain("2005");
+    expect(decision.notClaimed[0]).toContain("One morning");
+    expect(pack.recording.when).toContain("2005");
   });
 });

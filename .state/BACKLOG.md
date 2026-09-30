@@ -62,6 +62,7 @@
 - [x] Approval stills of the slow stretch, before it enters the film. Identical cars point ahead; the slowest 100-ft cell is tinted; the 9.1 mph walk is only on the pair (`slow-stretch.ts`, `scripts/shoot-slow-stretch.ts`)
 - [x] **The approved slow-stretch frame is beat 2 of the US-101 film.** Three cues: cars pointing ahead, the cell at the back, then 800 feet at 9 mph. The lane-index chart stays off that beat. The signed question stays until a person reopens it.
 - [x] Opening beat withholds the speeds. The line is "You are stopped, and the road ahead is not." The 9 mph walk and the 45 mph road ahead are the last cue of the pocket, on the pair.
+- [x] The calendar date is off the film, the diagram, and the card. The method page still names 15 June 2005.
 
 ## Rive: cinematic illustrations (2026-09-29)
 

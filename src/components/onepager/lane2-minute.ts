@@ -12,7 +12,6 @@ const [now, later] = pack.featured.frames;
 export const LANE2_MINUTE = {
   place: "Southbound US-101",
   lane: pack.featured.lane,
-  when: pack.recording.when,
   lengthFt: pack.recording.length_ft,
   walkFt: walk.walk_ft,
   walkMph: Math.round(walk.walk_mph),

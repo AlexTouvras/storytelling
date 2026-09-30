@@ -143,7 +143,9 @@ The card is unlisted. Listing waits on the same human gate as the film.
 
 Orientation card, after the title and before beat 0. No term the reader has to learn:
 
-> Southbound US-101, a Wednesday morning in June 2005. You are stopped, and the cars ahead of you are not. This story is about that gap, how it moves, and what the operator can do in the minutes before it closes.
+> Southbound US-101, a Wednesday morning. You are stopped, and the cars ahead of you are not. This story is about that gap, how it moves, and what the operator can do in the minutes before it closes.
+
+The calendar date stays on the method page, with the recording. It is not on the film, the diagram, or the card.
 
 Plus the usual reading line (scroll to move; underlined words explain themselves; badges say where each number comes from) and the method link.
 

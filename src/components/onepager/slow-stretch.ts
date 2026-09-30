@@ -244,7 +244,7 @@ function svgDoc(height: number, body: string) {
 }
 
 function kicker() {
-  return `<text x="56" y="44" fill="${MUTED}" font-size="13" font-family="${SANS}" letter-spacing="1.6">LANE 2  ·  SOUTHBOUND US-101  ·  15 JUNE 2005</text>`;
+  return `<text x="56" y="44" fill="${MUTED}" font-size="13" font-family="${SANS}" letter-spacing="1.6">LANE 2  ·  SOUTHBOUND US-101</text>`;
 }
 
 function note(y: number, line: string) {
