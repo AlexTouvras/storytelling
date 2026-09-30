@@ -38,7 +38,6 @@ const mph = (x: number) => Math.round(x);
 const band = (from: number) => pack.bands.rows.find((row) => row.from_min === from)!;
 const now = pack.featured.frames[0];
 const walk = pack.featured.walk;
-const car = pack.featured.car;
 
 export function jamNarration(): JamCopy[] {
   return [
@@ -46,11 +45,7 @@ export function jamNarration(): JamCopy[] {
       kicker: "Southbound US-101",
       title: "You are stopped. The far end is not",
       kind: "calculated",
-      paragraphs: [
-        `You are in the slow part of this stretch, at ${mph(car.mph)} mph. The road ahead, past 1,700 feet, is still near ${mph(now.downstream_mph ?? 0)} mph.`,
-      ],
-      figure: String(mph(now.downstream_mph ?? 0)),
-      figureNote: "mph, ahead",
+      paragraphs: ["You are stopped, and the road ahead is not."],
     },
     {
       kicker: "One brake",
@@ -68,7 +63,7 @@ export function jamNarration(): JamCopy[] {
       paragraphs: [
         "The pocket is the slow part here, and every car points ahead.",
         "A minute later the cars still point ahead and the pocket is at the back.",
-        `The pocket walked back ${walk.walk_ft} feet at ${mph(walk.walk_mph)} mph, against the traffic.`,
+        `It walked back ${walk.walk_ft} feet at ${mph(walk.walk_mph)} mph, against the traffic; ahead still ${mph(now.downstream_mph ?? 0)}.`,
       ],
       figure: String(mph(walk.walk_mph)),
       figureNote: "mph, back",

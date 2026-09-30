@@ -24,7 +24,11 @@ describe("jam narration", () => {
     expect(cues[1]).not.toMatch(/\d/);
     expect(cues[2]).toContain(`${pack.featured.walk.walk_ft} feet`);
     expect(cues[2]).toContain(`${Math.round(pack.featured.walk.walk_mph)} mph`);
+    expect(cues[2]).toContain(String(Math.round(pack.featured.frames[0].downstream_mph ?? 0)));
     expect(cues[2]).toMatch(/against the traffic/);
+    const opening = subtitleCues(jamNarration()[0].paragraphs);
+    expect(opening).toHaveLength(1);
+    expect(opening[0]).not.toMatch(/\d/);
   });
 
   it("puts the modelled sentence on the decision, labelled as the model's depth", () => {

@@ -119,7 +119,7 @@ Headline numbers come from the trajectories. The model never replaces them.
 
 | # | Beat | Reader must understand | Representation | Grammar | Kind |
 |---|------|------------------------|----------------|---------|------|
-| 0 | **Stopped** | You are stopped, and the far end of this short stretch is moving | The section in the first minutes, every car a mark coloured by speed. Camera on one slow mark, the fast marks visible ahead of it | `reveal` | observed, calculated |
+| 0 | **Stopped** | You are stopped, and the far end of this short stretch is moving | The section in the first minutes, every car a mark coloured by speed. The line does not state the speeds. Those arrive with the walk | `reveal` | observed, calculated |
 | 1 | **One brake** | The car behind brakes harder than the car ahead, and a little later | That mark opens into a side view of three cars. The lead lamp comes on; the next comes on later; the third later and fuller | FOCUS → MORPH → trigger | illustrative |
 | 2 | **The pocket** | The extra braking walks backward. The road ahead of it stays fast | Lane 2 at one scale: the same cars point ahead, the slowest 100-foot cell walks from 800 ft to the back, and the walk speed is spoken only then | `trace` | calculated |
 | 3 | **The window closes** | Ten minutes later the far end has slowed to match, and it stays there | Pull back across the 46 minutes. The downstream marks lose their speed and join the rest | PULLBACK | calculated |
@@ -201,7 +201,7 @@ The camera drops onto the featured mark (FOCUS), the side view opens on that mar
 
 The first build drew each car as a rounded rectangle, a glass rectangle and one wheel. That is the chart's vocabulary at a larger size, and it is why the beat did not read. `docs/CINEMATIC_GAP.md` records the cause and the systems that already do this job. The side view is now a depiction (shell, cabin, two wheels, a tail lamp), driven by the view model, the same surface as the other illustrations. The road marks stay marks: lane index and feet are not one scale, so a vehicle sprite there would be a stretched chart.
 
-Beat 2, the pocket, now leaves that chart. The approved still shows lane 2 at one scale: identical cars pointing ahead, the slowest 100-foot cell tinted, then the same picture a minute later with the cell at the back. The walk speed is the third subtitle, once both positions are on screen. A phone draws a 200-foot enlargement of the same cells so the cars stay cars. The question on this page stays the question.
+Beat 2, the pocket, now leaves that chart. The approved still shows lane 2 at one scale: identical cars pointing ahead, the slowest 100-foot cell tinted, then the same picture a minute later with the cell at the back. The third subtitle says the walk speed, and that the road ahead is still near 45 mph, once both positions are on screen. The opening beat shows the coloured marks and does not state a speed. A phone draws a 200-foot enlargement of the same cells so the cars stay cars. The question on this page stays the question.
 
 ### Closed 2026-09-29
 
@@ -216,9 +216,9 @@ Beat 2, the pocket, now leaves that chart. The approved still shows lane 2 at on
 
 | Beat | Primary behaviour | Notes |
 |------|-------------------|-------|
-| Stopped | `reveal` | Marks only. The far end is already fast. No chrome |
+| Stopped | `reveal` | Marks only. The far end is already fast, and the line does not say how fast. No chrome |
 | One brake | FOCUS → MORPH → trigger | Gate 2 transition. The featured car is the entity |
-| The pocket | `trace` | The approved still, in three cues. Identical cars, the cell walking back, the 9 mph figure on the last cue |
+| The pocket | `trace` | The approved still, in three cues. Identical cars, the cell walking back, then 800 feet at 9 mph and the road ahead still near 45 |
 | The window closes | PULLBACK | `wideShotOn` the section. Downstream marks lose their speed |
 | While it is still moving | `highlight` | Decision card and limitations |
 
