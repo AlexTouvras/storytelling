@@ -79,7 +79,7 @@
 - [ ] Publish the robot into `AlexTouvras/agentic-ai-field-card` (the Pages URL). Prepared locally; push was denied for this run
 - [ ] Merge `/stories/ai-card` so Orbit's next sync puts the robot on alextouvras.com (the live site 404s every `/lab/*` route)
 - [x] One robot for every homepage field card: six bound lines, accent on the bubble edge, overlays at `/stories/ai-card`, `delivery-card`, `analytics-card`, `sdlc-card`, `credit-risk-card`, `story-card` (and the matching `/lab/*` routes)
-- [x] Section lines: the overlay bubble follows the table row, picker entry, or list item in the reading band as the sheet scrolls, and the block under the cursor when the pointer moves. The overlay fetches the sheet in the browser and frames it; the live site 404s `/field-card-frame`, which had left the bubble on a timer
+- [x] Section lines: the overlay bubble follows the section in the reading band as the sheet scrolls, and the section under the cursor when the pointer moves. A row inside that section does not change the line. The overlay fetches the sheet in the browser and frames it; the live site 404s `/field-card-frame`, which had left the bubble on a timer
 - [ ] Ask the Delivery and Analytics repos, and the SDLC, Credit risk, and Story hosts, to mount this robot. They should set `line`…`line6` and `accent`. The AI repo can keep setting only `line`; the file defaults are that card's other five lines
 - [x] Writer: text runs, embedded fonts, root/child bones, skin/tendon/weight. The robot's waving arm is a rigid bone chain. Skin deformation is in the writer (tendon matrix = rest world transform; weight index 0 is the runtime identity bone)
 - [ ] Nested artboards, if a story needs a reusable part. Not earned yet

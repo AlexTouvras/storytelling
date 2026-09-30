@@ -8,7 +8,6 @@ import {
   cardFrameHtml,
   fieldCardBridge,
   fieldCardFramePath,
-  fitBubbleLine,
   parseSectionMessage,
   sectionLine,
   speechLine,
@@ -39,43 +38,22 @@ describe("field card section lines", () => {
   it("accepts only a short heading from the bridge", () => {
     expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "Always on" })).toEqual({
       heading: "Always on",
-      title: "",
-      text: "",
     });
-    expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "  Ladder + gates \n", title: " RAG ", text: "Cite the SOP" })).toEqual({
+    expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "  Ladder + gates \n" })).toEqual({
       heading: "Ladder + gates",
-      title: "RAG",
-      text: "Cite the SOP",
     });
     expect(parseSectionMessage({ source: "other", heading: "Always on" })).toBeNull();
     expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "" })).toBeNull();
     expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "x".repeat(161) })).toBeNull();
-    expect(parseSectionMessage({ source: SECTION_MESSAGE, heading: "Always on", text: "x".repeat(181) })?.text).toBe("");
     expect(parseSectionMessage(null)).toBeNull();
   });
 
-  it("speaks the row in the sheet's own words, folded to one ASCII line", () => {
+  it("keeps the section line while the reader moves through rows inside it", () => {
     const card = FIELD_CARDS[0];
-    expect(fitBubbleLine("RAG", "Answers ignore our docs, go stale, or invent policy.")).toBe(
-      "RAG. Answers ignore our docs, go stale, or invent policy.",
-    );
-    expect(fitBubbleLine("", "Agent for pure Q&A (start with RAG)")).toBe("Agent for pure Q&A (start with RAG)");
-    expect(fitBubbleLine("Fine-tune", "Still wrong — “formal”.")).toBe('Fine-tune. Still wrong - "formal".');
-    expect(fitBubbleLine("Gate", "Pause over €50…")).toBe("Gate. Pause over EUR 50...");
-    const long = fitBubbleLine("Metrics / semantic layer", "Nobody agrees what active customer means before the Monday report");
-    expect(long).toBeTruthy();
-    expect(long!.length).toBeLessThanOrEqual(64);
-    expect(long).toMatch(/^[\x20-\x7E]+$/);
-    expect(
-      speechLine(card, {
-        heading: "Problem → use → example",
-        title: "MCP",
-        text: "Need live reads or writes against systems.",
-      }),
-    ).toBe("MCP. Need live reads or writes against systems.");
-    expect(speechLine(card, { heading: "Always on", title: "", text: "" })).toBe(
-      "If you cannot stop it, you do not ship it.",
-    );
+    const heading = "Problem → use → example";
+    expect(speechLine(card, { heading })).toBe("Match the real problem to the thinnest layer that solves it.");
+    expect(speechLine(card, { heading })).not.toMatch(/RAG|MCP/);
+    expect(speechLine(card, { heading: "Always on" })).toBe("If you cannot stop it, you do not ship it.");
   });
 });
 
@@ -103,7 +81,7 @@ describe("field card frame", () => {
     ]);
   });
 
-  it("follows the reading band on scroll, and the row beside the cursor on a move", () => {
+  it("follows the reading band on scroll, and the section beside the cursor on a move", () => {
     const bridge = mountBridge({ fine: true, width: 1280, height: 800 });
     expect(bridge.headings()).toEqual(["Hero block"]);
 
@@ -119,12 +97,12 @@ describe("field card frame", () => {
     expect(bridge.headings()).toEqual(["Hero block", "Problem block", "Hero block", "Problem block"]);
   });
 
-  it("changes the posted row when the reading band crosses the next one", () => {
+  it("does not post again while the reading band stays inside one section", () => {
     const bridge = mountTable();
-    expect(bridge.messages().map((message) => message.title)).toEqual(["RAG"]);
+    expect(bridge.headings()).toEqual(["Problem block"]);
     bridge.scrollTo(80);
     bridge.fire("scroll");
-    expect(bridge.messages().map((message) => message.title)).toEqual(["RAG", "MCP"]);
+    expect(bridge.headings()).toEqual(["Problem block"]);
   });
 
   it("scrolls the sheet when the overlay forwards a wheel", () => {
@@ -234,12 +212,12 @@ function mountBridge(spec: { fine: boolean; width: number; height: number }) {
   };
 }
 
-/** Two table rows inside one section. The band starts on RAG and reaches MCP after an 80px scroll. */
+/** Two table rows inside one section. Scrolling from the first row to the second stays on that section. */
 function mountTable() {
-  const messages: Array<{ heading?: string; title?: string; text?: string }> = [];
+  const headings: string[] = [];
   const parent = {
-    postMessage(data: { heading?: string; title?: string; text?: string }) {
-      if (data.heading) messages.push(data);
+    postMessage(data: { heading?: string }) {
+      if (data.heading) headings.push(data.heading);
     },
   };
   const state = { scroll: 0 };
@@ -309,7 +287,7 @@ function mountTable() {
   const run = new Function("window", "document", "parent", "requestAnimationFrame", fieldCardBridge());
   run(windowMock, documentMock, parent, windowMock.requestAnimationFrame);
   return {
-    messages: () => messages,
+    headings: () => headings,
     scrollTo(y: number) {
       state.scroll = y;
     },

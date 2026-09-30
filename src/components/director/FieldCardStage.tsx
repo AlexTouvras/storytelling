@@ -24,10 +24,10 @@ const SETTLE_MS = 1400;
  * button over the character fires the same tuck the file uses in the lab.
  * Words and accent come from the card, not from a second character.
  *
- * Scrolling says the line for the row, picker entry, or list item crossing
- * the reading band. Moving the pointer says the line for the block under the
- * cursor. A section with none of those keeps its own line. All six runs get
- * that one line, so the file's crossfade cannot swap in a different judgement.
+ * Scrolling says the line for the section crossing the reading band. Moving
+ * the pointer says the line for the section under the cursor. Rows inside a
+ * section keep that line. All six runs get that one line, so the file's
+ * crossfade cannot swap in a different judgement.
  * A wheel that lands on the robot is forwarded into the sheet. If the sheet
  * cannot be framed, the six lines rotate as before.
  */
