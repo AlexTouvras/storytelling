@@ -4,6 +4,7 @@ import {
   READING_BAND,
   SCROLL_MESSAGE,
   SECTION_MESSAGE,
+  cardDocumentUrls,
   cardFrameHtml,
   fieldCardBridge,
   fieldCardFramePath,
@@ -94,6 +95,12 @@ describe("field card frame", () => {
     expect(fieldCardBridge()).toContain("bestScore = -Infinity");
     expect(fieldCardBridge()).not.toContain("</script>");
     expect(fieldCardFramePath("ai")).toBe("/field-card-frame/ai");
+    expect(cardDocumentUrls("https://alextouvras.com/sdlc-field-card/")).toEqual([
+      "https://alextouvras.com/sdlc-field-card",
+    ]);
+    expect(cardDocumentUrls("https://alextouvras.github.io/agentic-ai-field-card/")).toEqual([
+      "https://alextouvras.github.io/agentic-ai-field-card/",
+    ]);
   });
 
   it("follows the reading band on scroll, and the row beside the cursor on a move", () => {

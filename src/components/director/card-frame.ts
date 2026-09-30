@@ -23,9 +23,43 @@ export const READING_BAND = 0.38;
 
 export const CARD_FRAME_SANDBOX = "allow-scripts allow-popups allow-popups-to-escape-sandbox allow-modals";
 
-/** Same-origin route that returns the framed sheet. The browser does not fetch the sheet itself. */
+/** Same-origin route that returns the framed sheet, when this app is serving it. */
 export function fieldCardFramePath(id: string): string {
   return `/field-card-frame/${id}`;
+}
+
+/**
+ * URLs to try for the sheet. A trailing slash on alextouvras.com answers 308
+ * with no CORS header, so a browser on another origin cannot follow it. The
+ * same path without the slash allows the fetch.
+ */
+export function cardDocumentUrls(pageUrl: string): string[] {
+  const url = new URL(pageUrl);
+  const slashed = url.pathname.length > 1 && url.pathname.endsWith("/");
+  const bare = new URL(url.href);
+  if (slashed) bare.pathname = url.pathname.replace(/\/+$/, "") || "/";
+  const withSlash = new URL(url.href);
+  if (!slashed && url.pathname.length > 1) withSlash.pathname = `${url.pathname}/`;
+  // GitHub Pages redirects the bare path without CORS. This site redirects the slashed path the same way.
+  if (url.hostname.endsWith("github.io")) return [slashed ? url.href : withSlash.href];
+  if (url.hostname === "alextouvras.com" || url.hostname.endsWith(".alextouvras.com")) return [bare.href];
+  return [...new Set([url.href, bare.href, withSlash.href])];
+}
+
+/** The framed sheet: the card's own HTML when the browser can read it, otherwise the server route. */
+export async function loadFramedCard(id: string, pageUrl: string, signal?: AbortSignal): Promise<string> {
+  for (const url of cardDocumentUrls(pageUrl)) {
+    try {
+      const res = await fetch(url, { signal });
+      if (!res.ok) continue;
+      return cardFrameHtml(await res.text(), res.url || url);
+    } catch (err) {
+      if (signal?.aborted) throw err;
+    }
+  }
+  const res = await fetch(fieldCardFramePath(id), { signal });
+  if (!res.ok) throw new Error(String(res.status));
+  return res.text();
 }
 
 export function sectionKey(heading: string): string {
