@@ -20,14 +20,20 @@
  *     stays rigid groups.
  *
  * It arrives with the bubble, and a tap tucks it into the lower right; a
- * second tap brings it back. The bubble font is a subset of Inter
- * (src/illustrations/fonts, SIL OFL): ASCII plus a few punctuation marks.
+ * second tap brings it back. Every bubble line is a string on the view
+ * model, so each field card writes its own six judgements and its accent.
+ * The defaults are the Agentic AI card. The bubble font is a subset of Inter
+ * (src/illustrations/fonts, SIL OFL): printable ASCII.
  * Anything else has no glyph.
  */
 
+import { fieldCard, FIELD_CARD_ACCENTS } from "@/illustrations/field-cards";
 import { ArtboardBuilder, type AnimationBuilder, type Key, type ShapeHandles } from "@/lib/rive/artboard-builder";
 import { mapContour, parsePath, roundedRect, translateContour, type Contour } from "@/lib/rive/path-data";
 import { argb } from "@/lib/rive/riv-writer";
+
+/** The file's defaults. The Agentic AI host still replaces only the first string. */
+const AI_LINES = fieldCard("ai").lines;
 
 export const ROBOT_MODES = ["idle", "thinking", "speaking", "happy"] as const;
 export type RobotMode = (typeof ROBOT_MODES)[number];
@@ -56,8 +62,13 @@ export const ROBOT = {
     showing: "showing",
     /** Written by the machine: true while the hop plays. */
     reacting: "reacting",
-    /** String. Replaces the first bubble line. The rest of the rotation is baked in. */
+    /** Strings, in rotation order. A card replaces all six. The AI host still sets only the first. */
     line: "line",
+    line2: "line2",
+    line3: "line3",
+    line4: "line4",
+    line5: "line5",
+    line6: "line6",
     /** Written by the machine, and not one of `reports`: arriving, present, tucking, parked, returning. */
     presence: "presence",
     /** Trigger. Skips the arrival, for reduced motion. A held boolean would cancel a later tuck. */
@@ -68,34 +79,27 @@ export const ROBOT = {
   defaults: {
     mode: "idle" as RobotMode,
     energy: 60,
-    line: "This card is when to hand a step to AI, and when to keep it.",
+    line: AI_LINES[0],
   },
 } as const;
 
+/** View-model names for the six bubble lines, in the order the file crossfades them. */
+export function robotLineProps(): readonly string[] {
+  const p = ROBOT.props;
+  return [p.line, p.line2, p.line3, p.line4, p.line5, p.line6];
+}
+
 /**
- * What the bubble says, in order, while the robot is out. Each line is a
- * judgement about handing work to AI, not a measured result. The first one is
- * also the `line` default, so a card can replace the opener.
+ * What the bubble says while nothing has replaced it: the Agentic AI card.
+ * Other cards write their own six lines through `robotLineProps()`.
  */
-export const ROBOT_LINES = [
-  ROBOT.defaults.line,
-  "Hand it over when you do it often and a miss is easy to catch.",
-  "Keep the step when you cannot tell a good answer from a bad one.",
-  "A model can be wrong. Leave a person on the check.",
-  "One prompt should not run the whole job. Split it into steps.",
-  "Tap me and I'll wait in the corner.",
-] as const;
+export const ROBOT_LINES = AI_LINES;
 
 /**
  * Homepage field-card colours, sRGB from the site's neon tokens. The accent
  * starts as the AI card's cyan; the antenna keeps the site violet.
  */
-export const ROBOT_ACCENTS = [
-  { id: "ai", label: "AI", rgb: [0, 210, 211] },
-  { id: "delivery", label: "Delivery", rgb: [157, 91, 244] },
-  { id: "analytics", label: "Analytics", rgb: [57, 134, 228] },
-  { id: "credit", label: "Credit risk", rgb: [240, 166, 70] },
-] as const;
+export const ROBOT_ACCENTS = FIELD_CARD_ACCENTS;
 
 const CYAN = ROBOT_ACCENTS[0].rgb;
 const VIOLET = ROBOT_ACCENTS[1].rgb;
@@ -154,7 +158,7 @@ export function buildRobot(font: Uint8Array): Uint8Array {
   const accent = vm.color(P.accent, cyan());
   const showing = vm.enum(P.showing, ROBOT_MODES, ROBOT.defaults.mode);
   const reacting = vm.boolean(P.reacting, false);
-  const line = vm.string(P.line, ROBOT.defaults.line);
+  const lineSlots = robotLineProps().map((name, i) => vm.string(name, ROBOT_LINES[i]));
   const presence = vm.enum(P.presence, ["arriving", "present", "tucking", "parked", "returning"], "arriving");
   const settle = vm.trigger(P.settle);
 
@@ -447,7 +451,7 @@ export function buildRobot(font: Uint8Array): Uint8Array {
 
   // Beside the head, clear of the antenna and the eyes. It rides `float`, so the tuck takes it along.
   const bubble = ab.group({ name: "bubble", x: -108, y: 68, parent: float, opacity: 0 });
-  ab.rect({
+  const panel = ab.rect({
     name: "bubble panel",
     x: 0,
     y: 0,
@@ -458,6 +462,7 @@ export function buildRobot(font: Uint8Array): Uint8Array {
     fill: ink(8, 14, 28, 0.94),
     stroke: { color: cyan(0.9), thickness: 1.5 },
   });
+  ab.bind(panel.strokeColor!, "color", accent);
   const said = ROBOT_LINES.map((words, i) =>
     ab.text({
       name: `bubble line ${i}`,
@@ -472,7 +477,7 @@ export function buildRobot(font: Uint8Array): Uint8Array {
       opacity: i === 0 ? 1 : 0,
     }),
   );
-  ab.bind(said[0].run, "text", line);
+  said.forEach((one, i) => ab.bind(one.run, "text", lineSlots[i]));
 
   // Invisible, and parented to the rig so a tap still lands once it has shrunk into the corner.
   const touch = ab.rect({ name: "touch", x: 0, y: 196, parent: float, width: 250, height: 330, cornerRadius: 60, fill: argb(0, 0, 0, 0) });

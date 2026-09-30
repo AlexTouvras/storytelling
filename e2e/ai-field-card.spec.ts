@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { FIELD_CARDS } from "../src/illustrations/field-cards";
 
 const KNOWN = [/software WebGL/i, /GroupMarkerNotSet/i, /React DevTools/i];
 
@@ -13,8 +14,9 @@ function watchConsole(page: Page) {
   return problems;
 }
 
-for (const path of ["/stories/ai-card", "/lab/ai-card"]) {
-test(`the robot appears on the field card and tucks into the corner (${path})`, async ({ page }) => {
+for (const card of FIELD_CARDS) {
+  for (const path of [`/stories/${card.route}`, `/lab/${card.route}`]) {
+test(`the robot appears on the ${card.label} field card and tucks into the corner (${path})`, async ({ page }) => {
   const problems = watchConsole(page);
   await page.goto(path);
   await expect(page.getByTestId("field-card-frame")).toBeVisible();
@@ -27,4 +29,5 @@ test(`the robot appears on the field card and tucks into the corner (${path})`, 
   await expect(page.getByTestId("robot-presence")).toHaveText("present", { timeout: 3000 });
   expect(problems).toEqual([]);
 });
+  }
 }

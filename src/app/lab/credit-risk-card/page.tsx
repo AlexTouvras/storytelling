@@ -1,0 +1,14 @@
+import type { Metadata } from "next";
+import { FieldCardStage } from "@/components/director/FieldCardStage";
+import { fieldCard } from "@/illustrations/field-cards";
+
+const card = fieldCard("credit");
+
+export const metadata: Metadata = {
+  title: card.title,
+  robots: { index: false },
+};
+
+export default function CreditFieldCardPage() {
+  return <FieldCardStage card="credit" />;
+}

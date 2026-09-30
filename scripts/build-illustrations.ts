@@ -18,7 +18,7 @@ const robotFont = new Uint8Array(readFileSync(join(dir, "fonts", "Inter-subset.t
 const files: Array<[string, Uint8Array, string]> = [
   ["household.riv", buildHousehold(householdValues(featured)), `for loan ${featured.id}`],
   ["grid.riv", buildGrid(gridValues()), "from the grid frequency model"],
-  ["robot.riv", buildRobot(robotFont), "the AI field card character"],
+  ["robot.riv", buildRobot(robotFont), "the field card character"],
 ];
 
 let stale = 0;
