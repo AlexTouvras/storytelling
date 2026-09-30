@@ -8,6 +8,12 @@ import { fieldCard, fieldCardAccent, type FieldCardId } from "@/illustrations/fi
 import { ROBOT, robotLineProps } from "@/illustrations/robot";
 import { argb } from "@/lib/rive/riv-writer";
 import { usePrefersReducedMotion } from "@/lib/prefers-reduced-motion";
+import {
+  CARD_FRAME_SANDBOX,
+  cardFrameHtml,
+  parseSectionMessage,
+  sectionLine,
+} from "@/components/director/card-frame";
 
 const SETTLE_MS = 1400;
 
@@ -16,15 +22,31 @@ const SETTLE_MS = 1400;
  * The canvas does not take clicks, so the card's links keep working. The
  * button over the character fires the same tuck the file uses in the lab.
  * Words and accent come from the card, not from a second character.
+ *
+ * The bubble says the line for the section under the cursor. On a phone it
+ * says the line for the section in the reading band, and follows the sheet
+ * as it scrolls. All six runs get that one line, so the file's crossfade
+ * cannot swap in a different judgement. If the sheet cannot be framed, the
+ * six lines rotate as before.
  */
 export function FieldCardStage({ card: id }: { card: FieldCardId }) {
   const card = fieldCard(id);
   const rive = useRef<RiveLayerHandle>(null);
+  const frameRef = useRef<HTMLIFrameElement>(null);
   const hit = useRef<HTMLButtonElement>(null);
   const reduced = usePrefersReducedMotion();
   const [ready, setReady] = useState(false);
   const [presence, setPresence] = useState("");
+  /** Framed sheet for this card. A fetch for a different card leaves this stale on purpose. */
+  const [frame, setFrame] = useState<{ id: FieldCardId; html: string } | null>(null);
+  /** Card whose sheet could not be fetched, so the bubble falls back to the rotation. */
+  const [failed, setFailed] = useState<FieldCardId | null>(null);
+  /** Section line reported by the bridge. Ignored when it belongs to another card. */
+  const [speech, setSpeech] = useState<{ id: FieldCardId; line: string } | null>(null);
   const settleTimer = useRef<number | null>(null);
+  const srcDoc = frame?.id === id ? frame.html : null;
+  const plain = failed === id;
+  const spoken = speech?.id === id ? speech.line : card.sections[0].line;
 
   const settle = useCallback(() => {
     if (!reduced) return;
@@ -58,11 +80,43 @@ export function FieldCardStage({ card: id }: { card: FieldCardId }) {
   }, []);
 
   useEffect(() => {
+    const ac = new AbortController();
+    const cardId = id;
+    fetch(card.url, { signal: ac.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        return res.text();
+      })
+      .then((html) => {
+        if (ac.signal.aborted) return;
+        setFrame({ id: cardId, html: cardFrameHtml(html, card.url) });
+      })
+      .catch(() => {
+        if (ac.signal.aborted) return;
+        setFailed(cardId);
+      });
+    return () => ac.abort();
+  }, [card, id]);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== frameRef.current?.contentWindow) return;
+      const heading = parseSectionMessage(event.data);
+      if (!heading) return;
+      const line = sectionLine(card, heading);
+      if (line) setSpeech({ id, line });
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [card, id]);
+
+  useEffect(() => {
     if (!ready) return;
     const handle = rive.current;
     if (!handle) return;
     const accent = fieldCardAccent(id);
-    robotLineProps().forEach((prop, i) => handle.setString(prop, card.lines[i]));
+    const lines = plain ? [...card.lines] : robotLineProps().map(() => spoken);
+    robotLineProps().forEach((prop, i) => handle.setString(prop, lines[i]));
     handle.setColor(ROBOT.props.accent, argb(accent.rgb[0], accent.rgb[1], accent.rgb[2]));
     if (!reduced) {
       handle.play();
@@ -70,7 +124,7 @@ export function FieldCardStage({ card: id }: { card: FieldCardId }) {
     }
     handle.fire(ROBOT.props.settle);
     settle();
-  }, [ready, reduced, settle, id, card]);
+  }, [ready, reduced, settle, id, card, plain, spoken]);
 
   useEffect(() => {
     if (!ready) return;
@@ -101,8 +155,10 @@ export function FieldCardStage({ card: id }: { card: FieldCardId }) {
     <div className="fixed inset-0 bg-[#eef2f6]">
       <style>{`body > div > header, body > div > footer { display: none !important; }`}</style>
       <iframe
+        key={plain ? "plain" : srcDoc ? "tracked" : "loading"}
+        ref={frameRef}
         title={card.title}
-        src={card.url}
+        {...(plain ? { src: card.url } : srcDoc ? { srcDoc, sandbox: CARD_FRAME_SANDBOX } : {})}
         className="absolute inset-0 h-full w-full border-0"
         data-testid="field-card-frame"
       />
@@ -131,6 +187,9 @@ export function FieldCardStage({ card: id }: { card: FieldCardId }) {
       />
       <p className="sr-only" data-testid="robot-presence">
         {presence || "—"}
+      </p>
+      <p className="sr-only" data-testid="robot-section-line">
+        {plain ? "" : spoken}
       </p>
     </div>
   );
