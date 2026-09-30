@@ -12,6 +12,7 @@ import {
   CARD_FRAME_SANDBOX,
   fieldCardFramePath,
   parseSectionMessage,
+  SCROLL_MESSAGE,
   sectionLine,
 } from "@/components/director/card-frame";
 
@@ -23,11 +24,11 @@ const SETTLE_MS = 1400;
  * button over the character fires the same tuck the file uses in the lab.
  * Words and accent come from the card, not from a second character.
  *
- * The bubble says the line for the section under the cursor. On a phone it
- * says the line for the section in the reading band, and follows the sheet
- * as it scrolls. All six runs get that one line, so the file's crossfade
- * cannot swap in a different judgement. If the sheet cannot be framed, the
- * six lines rotate as before.
+ * Moving the pointer says the line for the section under the cursor. Scrolling
+ * says the line for the section in the reading band, and that is what follows
+ * the sheet. All six runs get that one line, so the file's crossfade cannot
+ * swap in a different judgement. A wheel that lands on the robot is forwarded
+ * into the sheet. If the sheet cannot be framed, the six lines rotate as before.
  */
 export function FieldCardStage({ card: id }: { card: FieldCardId }) {
   const card = fieldCard(id);
@@ -183,6 +184,12 @@ export function FieldCardStage({ card: id }: { card: FieldCardId }) {
         onClick={() => {
           rive.current?.fire(ROBOT.props.poke);
           if (reduced) settle();
+        }}
+        onWheel={(event) => {
+          frameRef.current?.contentWindow?.postMessage(
+            { source: SCROLL_MESSAGE, x: event.deltaX, y: event.deltaY, mode: event.deltaMode },
+            "*",
+          );
         }}
       />
       <p className="sr-only" data-testid="robot-presence">

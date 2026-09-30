@@ -5,16 +5,20 @@
  * frames it as a sandboxed srcdoc with one bridge script. The bridge names
  * the section. This file decides which bubble line that name is.
  *
- * A fine pointer (a mouse) reports the section under the cursor, including
- * the row beside the cursor when the sheet does not fill the width. A coarse
- * pointer (a phone) has no hover, so it reports the section crossing the
- * reading band — about a third of the way down the viewport — and that band
- * moves as the sheet scrolls.
+ * Moving a fine pointer reports the section under the cursor, including the
+ * row beside the cursor when the sheet does not fill the width. Scrolling
+ * reports the section crossing the reading band — about a third of the way
+ * down the viewport — on a mouse and on a phone. The band is what changes
+ * the line as the sheet moves; the cursor only changes it when the pointer
+ * itself moves.
  */
 
 import { type FieldCard } from "@/illustrations/field-cards";
 
 export const SECTION_MESSAGE = "field-card-section";
+
+/** The overlay asks the sheet to scroll when a wheel lands on the robot. */
+export const SCROLL_MESSAGE = "field-card-scroll";
 
 /** Share of the viewport height the phone treats as the line being read. */
 export const READING_BAND = 0.38;
@@ -58,10 +62,12 @@ function escapeAttr(value: string): string {
 export function fieldCardBridge(): string {
   return `(function () {
   var SOURCE = ${JSON.stringify(SECTION_MESSAGE)};
+  var SCROLL = ${JSON.stringify(SCROLL_MESSAGE)};
   var BAND = ${READING_BAND};
   var pointer = null;
   var last = "";
   var scheduled = false;
+  var sample = "band";
   var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
 
   function headingOf(el) {
@@ -78,7 +84,7 @@ export function fieldCardBridge(): string {
     if (named) return named;
     var nodes = document.querySelectorAll("header.hero, section, footer.meta");
     var best = "";
-    var bestScore = -1;
+    var bestScore = -Infinity;
     for (var i = 0; i < nodes.length; i++) {
       var box = nodes[i].getBoundingClientRect();
       if (y < box.top || y > box.bottom || box.height < 1) continue;
@@ -99,12 +105,13 @@ export function fieldCardBridge(): string {
     parent.postMessage({ source: SOURCE, heading: heading }, "*");
   }
 
-  function place() {
+  function place(next) {
+    sample = next;
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(function () {
       scheduled = false;
-      var usePointer = fine.matches && pointer;
+      var usePointer = sample === "pointer" && fine.matches && pointer;
       var x = usePointer ? pointer.x : window.innerWidth / 2;
       var y = usePointer ? pointer.y : window.innerHeight * BAND;
       send(regionAt(x, y));
@@ -113,13 +120,29 @@ export function fieldCardBridge(): string {
 
   document.addEventListener("pointermove", function (e) {
     pointer = { x: e.clientX, y: e.clientY };
-    if (fine.matches) place();
+    if (fine.matches) place("pointer");
   }, { passive: true });
-  window.addEventListener("scroll", place, { passive: true });
-  document.addEventListener("scroll", place, true);
-  window.addEventListener("resize", place);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", place);
-  else place();
+  window.addEventListener("scroll", function () { place("band"); }, { passive: true });
+  document.addEventListener("scroll", function () { place("band"); }, true);
+  window.addEventListener("resize", function () { place("band"); });
+  window.addEventListener("message", function (e) {
+    if (e.source !== parent || !e.data || e.data.source !== SCROLL) return;
+    var mode = e.data.mode;
+    var unit = mode === 1 ? 16 : mode === 2 ? window.innerHeight : 1;
+    var dx = Number(e.data.x);
+    var dy = Number(e.data.y);
+    if (!isFinite(dx) || !isFinite(dy)) return;
+    dx = Math.max(-2400, Math.min(2400, dx)) * unit;
+    dy = Math.max(-2400, Math.min(2400, dy)) * unit;
+    var root = document.scrollingElement || document.documentElement;
+    var prev = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    root.scrollLeft += dx;
+    root.scrollTop += dy;
+    root.style.scrollBehavior = prev;
+  });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { place("band"); });
+  else place("band");
 })();`;
 }
 
