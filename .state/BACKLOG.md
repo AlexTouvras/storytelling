@@ -74,10 +74,12 @@
 - [x] Migrate `grid.riv` and `household.riv` to data binding; `RiveLayer` on the view model; e2e fails on Rive deprecation warnings
 - [x] `/lab/robot` with a mock field card, `e2e/robot-character.spec.ts`
 - [x] Human: design review of the robot — friendly helper; homepage neon plus each field card's colour; appears with an introduction, tap tucks to the lower right, tap again returns; text bubble, no sound; skeletons for later. Shipped on `robot.riv` / `/lab/robot`
-- [x] Bubble rotates through six short judgements about handing a step to AI (`ROBOT_LINES`), baked into `robot.riv`
+- [x] Bubble rotates through six short judgements. First set was about handing a step to AI; each line is now a view-model string so a card can replace the whole rotation (`FIELD_CARDS`)
 - [x] Robot on the live Agentic AI field card at `/lab/ai-card`: the card stays in its own page, the robot is screen chrome over it, a tap tucks to the lower right. Publishing that into `agentic-ai-field-card` itself needs a push this repo's token cannot make
 - [ ] Publish the robot into `AlexTouvras/agentic-ai-field-card` (the Pages URL). Prepared locally; push was denied for this run
 - [ ] Merge `/stories/ai-card` so Orbit's next sync puts the robot on alextouvras.com (the live site 404s every `/lab/*` route)
+- [x] One robot for every homepage field card: six bound lines, accent on the bubble edge, overlays at `/stories/ai-card`, `delivery-card`, `analytics-card`, `sdlc-card`, `credit-risk-card`, `story-card` (and the matching `/lab/*` routes)
+- [ ] Ask the Delivery and Analytics repos, and the SDLC, Credit risk, and Story hosts, to mount this robot. They should set `line`…`line6` and `accent`. The AI repo can keep setting only `line`; the file defaults are that card's other five lines
 - [x] Writer: text runs, embedded fonts, root/child bones, skin/tendon/weight. The robot's waving arm is a rigid bone chain. Skin deformation is in the writer (tendon matrix = rest world transform; weight index 0 is the runtime identity bone)
 - [ ] Nested artboards, if a story needs a reusable part. Not earned yet
 
