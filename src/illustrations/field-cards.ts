@@ -12,10 +12,11 @@
  *
  * `lines` is that rotation: six judgements for a host that does not know
  * where the reader is. `sections` is one line per block of the sheet, in
- * document order. The overlay says that line for the section crossing the
- * reading band as the sheet scrolls, and for the section under the cursor
- * when the pointer moves. A table row, picker entry, or list item does not
- * get its own line. Headings match the card's `h1` / `h2` text.
+ * document order. The overlay and the robot on the sheet itself say that
+ * line for the section crossing the reading band as the sheet scrolls, and
+ * for the section under the cursor when the pointer moves. A table row,
+ * picker entry, or list item does not get its own line. Headings match the
+ * card's `h1` / `h2` text.
  *
  * Lines are judgements, not measurements. The bubble font is printable ASCII.
  * Headings keep the card's own punctuation; they are never drawn.
@@ -76,7 +77,7 @@ export const FIELD_CARDS = [
       TUCK_LINE,
     ],
     sections: [
-      { heading: "Delivery is a sequence, not a ticket", line: "This card is evidence before the change is called done." },
+      { heading: "Match the calendars, then cut over.", line: "This card is evidence before the change is called done." },
       { heading: "Problem → use → example", line: "Name the outcome and the owner. A title is not that." },
       { heading: "Tool picker", line: "Flags and pipelines are lanes. The sequence is the call." },
       { heading: "Ready vs green", line: "Pipeline green is not the same as held in production." },
