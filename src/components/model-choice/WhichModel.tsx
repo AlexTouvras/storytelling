@@ -404,7 +404,7 @@ export function WhichModel() {
             <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">{KIND_INFO.published.label}</dt>
             <dd className="mt-1">
               {pack.benchmark} Fetched {fetchedLabel(pack.fetchedAt)} from{" "}
-              <a href={pack.sourceUrl} className="focus-ring text-neon-cyan">
+              <a href={pack.sourceUrl} className="focus-ring text-neon-cyan underline underline-offset-2">
                 {pack.sourceUrl}
               </a>
               . {pack.priceBasis}
