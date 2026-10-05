@@ -117,6 +117,39 @@ describe("workload score", () => {
     expect(result.qualityLeader?.model.id).toBe("anthropic/claude-opus-5.5");
   });
 
+  it("picks MiMo for a short chat and for translation", () => {
+    expect(scored("chat").winner?.model.id).toBe("xiaomi/mimo-v2.6-flash");
+    expect(scored("translation").winner?.model.id).toBe("xiaomi/mimo-v2.6-flash");
+  });
+
+  it("ships Opus on a long draft, where quality is the stake", () => {
+    const result = scored("drafting");
+    expect(result.winner?.model.id).toBe("anthropic/claude-opus-5.5");
+    expect(result.qualityLeader?.model.id).toBe(result.winner?.model.id);
+  });
+
+  it("picks GLM 5.3 for a long diff, and Gemini when the coding index dominates", () => {
+    const review = scored("review");
+    expect(review.winner?.model.id).toBe("z-ai/glm-5.3");
+    expect(review.qualityLeader?.model.id).toBe("anthropic/claude-fable-5.1");
+    const quality = scored("code-quality");
+    expect(quality.winner?.model.id).toBe("google/gemini-3.8-flash");
+    expect(quality.qualityLeader?.model.id).toBe("anthropic/claude-fable-5.1");
+  });
+
+  it("keeps a 262k window in a summary and out of a 400k packet", () => {
+    const id = "mistralai/mistral-medium-3-5";
+    expect(scored("summarizing").rows.find((row) => row.model.id === id)?.eligible).toBe(true);
+    expect(scored("long-context").rows.find((row) => row.model.id === id)?.reason).toBe("context");
+  });
+
+  it("requires an image and an agentic index to read an image into fields", () => {
+    const result = scored("vision");
+    expect(result.rows.find((row) => row.model.id === "deepseek/deepseek-v4-pro")?.reason).toBe("modality");
+    expect(result.rows.find((row) => row.model.id === "anthropic/claude-opus-5.5")?.reason).toBe("missing-index");
+    expect(result.winner?.model.id).toBe("z-ai/glm-5.3-flash");
+  });
+
   it("follows a quality-only weight to the index leader", () => {
     const result = scoreWorkload(models, workloadById("classification"), {
       quality: 100,
