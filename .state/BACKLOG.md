@@ -2,6 +2,16 @@
 
 > Tracked in git. Upcoming work and hard scope boundaries.
 
+## Which model? (one-pager)
+
+- [x] Decision Spec — `docs/decision-specs/which-model.md`
+- [x] Freeze 14 OpenRouter rows (2026-10-05) — `data/figures/which-model.v1.json`
+- [x] One-pager: job, field, fit, weights, workload cost. Off the flagship index and off `/stories`
+- [x] Monthly catalog refresh — `.github/workflows/refresh-which-model.yml`, `npm run refresh:which-model`
+- [x] Wider shortlist: current shipping lines and cheaper siblings (28), not batch or free aliases
+- [x] Engine preview at `/desk/which-model` (not copied by stories:sync)
+- [ ] Human: merge the Orbit pull request that adds the live desk (`register-which-model-desk` opens it on main; this checkout cannot push to Orbit)
+
 ## Now
 
 - [x] Mobile New Horizon: spread warp field + smaller/brighter star pinpricks

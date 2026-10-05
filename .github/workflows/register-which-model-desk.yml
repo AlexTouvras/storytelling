@@ -1,0 +1,78 @@
+name: Register which-model live desk
+
+# The instrument lives in this repo. The card and the route live on Orbit,
+# which this checkout cannot push to. ORBIT_DISPATCH_TOKEN opens a pull
+# request that adds the desk. Merging that request is the publish step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/register-which-model-desk.mjs
+      - .github/workflows/register-which-model-desk.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: register-which-model-desk
+  cancel-in-progress: false
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout storytelling
+        uses: actions/checkout@v4
+        with:
+          path: storytelling
+
+      - name: Orbit token
+        id: token
+        env:
+          TOKEN: ${{ secrets.ORBIT_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::ORBIT_DISPATCH_TOKEN is not set. The live desk was not registered."
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout Orbit
+        if: steps.token.outputs.present == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: AlexTouvras/Orbit
+          token: ${{ secrets.ORBIT_DISPATCH_TOKEN }}
+          path: orbit
+
+      - name: Copy the instrument and patch the desk registry
+        if: steps.token.outputs.present == 'true'
+        env:
+          STORYTELLING_ROOT: ${{ github.workspace }}/storytelling
+          ORBIT_ROOT: ${{ github.workspace }}/orbit
+        run: node storytelling/scripts/register-which-model-desk.mjs
+
+      - name: Open the Orbit pull request
+        if: steps.token.outputs.present == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.ORBIT_DISPATCH_TOKEN }}
+          path: orbit
+          commit-message: "Add the Which model? live desk"
+          title: "Add Which model? to the live desks"
+          body: |
+            Which model? is a live desk, refreshed from the OpenRouter catalog on the first of the month.
+
+            The instrument, the scorer, and the frozen pack come from storytelling. This pull request adds the card on `/portfolio/live` and the route `/portfolio/live/which-model`. It does not list the page under `/stories`.
+          branch: which-model-live-desk
+          base: main
+          add-paths: |
+            src/components/model-choice
+            src/lib/model-choice
+            data/figures/which-model.v1.json
+            src/content/live-desks.ts
+            src/app/portfolio/live
