@@ -3,7 +3,7 @@ import { CURATED_IDS, type SourceCatalog, type SourceModel } from "@/lib/model-c
 const SOURCE_URL = "https://openrouter.ai/api/v1/models";
 
 const NOTE =
-  "Trimmed extract of 14 catalog rows. Prompt and completion are USD per token. Overrides are the catalog's long-prompt rates. Cache, batch, image, audio, and web-search prices were not copied. Benchmarks are Artificial Analysis indices as carried on the catalog response.";
+  "Trimmed extract of the curated catalog rows. Prompt and completion are USD per token. Overrides are the catalog's long-prompt rates. Cache, batch, image, audio, and web-search prices were not copied. Benchmarks are Artificial Analysis indices as carried on the catalog response.";
 
 export type OpenRouterCatalog = {
   data?: OpenRouterModel[];
@@ -97,7 +97,7 @@ function trimModel(model: OpenRouterModel): SourceModel {
 }
 
 /**
- * Keep the 14 curated rows and drop everything else the catalog sends.
+ * Keep the curated rows and drop everything else the catalog sends.
  * A missing id fails the refresh. An index the catalog left null stays null.
  */
 export function trimCatalog(payload: OpenRouterCatalog, fetchedAt: string): SourceCatalog {

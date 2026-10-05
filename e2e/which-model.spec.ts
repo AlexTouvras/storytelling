@@ -18,6 +18,7 @@ test.describe("which model one-pager", () => {
     await page.goto("/desk/which-model");
     const name = page.getByTestId("recommendation-name");
     await expect(page.getByRole("heading", { name: "Which model?" })).toBeVisible();
+    await expect(page.getByRole("button", { name: `All ${pack.models.length} models` })).toBeVisible();
     await expect(name).toHaveText(opening.winner?.model.name ?? "No model fits");
 
     await page.getByRole("button", { name: "Reasoning" }).click();

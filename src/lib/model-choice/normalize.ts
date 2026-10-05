@@ -1,21 +1,40 @@
 import type { CatalogModel, WhichModelPack } from "@/lib/model-choice/types";
 
-/** The 14 rows this page scores. Order is the pack order. */
+/**
+ * The rows this page scores. Order is the pack order.
+ * One current shipping line per product, plus the cheaper sibling when the
+ * catalog publishes a distinct one. Batch aliases, free aliases, and earlier
+ * generations stay off the page.
+ */
 export const CURATED_IDS = [
   "anthropic/claude-opus-5.5",
+  "anthropic/claude-opus-5",
   "anthropic/claude-sonnet-5.5",
   "anthropic/claude-fable-5.1",
+  "openai/gpt-6-astra",
+  "openai/gpt-6.1-sol",
   "openai/gpt-5.6-sol",
   "openai/gpt-5.6-terra",
+  "openai/gpt-6-luna",
   "openai/gpt-5.6-luna",
   "x-ai/grok-4.7",
+  "x-ai/grok-4.6",
   "google/gemini-3.8-flash",
   "deepseek/deepseek-v4.1-flash",
+  "deepseek/deepseek-v4-flash",
+  "deepseek/deepseek-v4-pro-0813",
   "deepseek/deepseek-v4-pro",
   "moonshotai/kimi-k3",
   "qwen/qwen3.8-max-0902",
+  "qwen/qwen3.8-27b",
   "z-ai/glm-5.3",
   "z-ai/glm-5.3-flash",
+  "xiaomi/mimo-v2.6-pro",
+  "xiaomi/mimo-v2.6-flash",
+  "meta/muse-spark-1.2",
+  "minimax/minimax-m3",
+  "mistralai/mistral-medium-3-5",
+  "nvidia/nemotron-3-ultra-550b-a55b",
 ] as const;
 
 export type SourceCatalog = {

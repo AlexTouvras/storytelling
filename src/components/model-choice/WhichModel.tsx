@@ -240,7 +240,7 @@ export function WhichModel({ frame = "page" }: { frame?: "page" | "desk" }) {
       <section className="mt-14" aria-labelledby="candidates-heading">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 id="candidates-heading" className="font-display text-2xl tracking-tight text-white">
-            {showAll ? "All 14 models" : "Candidates"}
+            {showAll ? `All ${pack.models.length} models` : "Candidates"}
           </h2>
           <button
             type="button"
@@ -431,7 +431,12 @@ export function WhichModel({ frame = "page" }: { frame?: "page" | "desk" }) {
         </dl>
         <h3 className="mt-8 font-display text-lg text-white">What this page leaves out</h3>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/65">
-          <li>Fourteen models, chosen for a spread of providers, prices, and index coverage. Not the whole catalog. The extract is replaced on the first of each month; a model that leaves the catalog stops the refresh rather than being guessed.</li>
+          <li>
+            {pack.models.length} models: the current shipping line from each provider on this page, and the cheaper
+            sibling when the catalog publishes one. Not the whole catalog. Batch and free aliases stay off. The
+            extract is replaced on the first of each month; a model that leaves the catalog stops the refresh rather
+            than being guessed.
+          </li>
           <li>Latency. This catalog snapshot does not publish a comparable speed, so speed is not a weight.</li>
           <li>Cache hits, batch rates, and web search. The cost is a cold prompt.</li>
           <li>

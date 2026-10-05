@@ -36,7 +36,7 @@ function scored(id: string, weights = workloadById(id).weights) {
 describe("which-model pack", () => {
   it("freezes the dated extract the formula tests pin", () => {
     expect(extract.fetched_at).toBe("2026-10-05");
-    expect(models).toHaveLength(14);
+    expect(models).toHaveLength(CURATED_IDS.length);
     for (const model of models) {
       expect(model.promptPerToken).toBeGreaterThan(0);
       expect(model.completionPerToken).toBeGreaterThan(0);
@@ -84,7 +84,24 @@ describe("workload score", () => {
     const result = scored("classification");
     const cheapest = [...result.eligible].sort((a, b) => a.cost - b.cost)[0];
     expect(result.winner?.model.id).toBe(cheapest?.model.id);
-    expect(result.winner?.model.id).toBe("z-ai/glm-5.3-flash");
+    expect(result.winner?.model.id).toBe("deepseek/deepseek-v4-flash");
+  });
+
+  it("keeps a model with a coding index in the coding job when its newer sibling has none", () => {
+    const result = scored("coding");
+    const grok47 = result.rows.find((row) => row.model.id === "x-ai/grok-4.7");
+    const grok46 = result.rows.find((row) => row.model.id === "x-ai/grok-4.6");
+    const opus5 = result.rows.find((row) => row.model.id === "anthropic/claude-opus-5");
+    expect(grok47?.reason).toBe("missing-index");
+    expect(grok46?.eligible).toBe(true);
+    expect(opus5?.eligible).toBe(true);
+  });
+
+  it("sits a window shorter than the packet out of the long-context job", () => {
+    const result = scored("long-context");
+    const mistral = result.rows.find((row) => row.model.id === "mistralai/mistral-medium-3-5");
+    expect(mistral?.reason).toBe("context");
+    expect(result.eligible.length).toBeLessThan(result.rows.length);
   });
 
   it("picks GLM 5.3 Flash for document extraction, ahead of the dearer GLM 5.3", () => {
