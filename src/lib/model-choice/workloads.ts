@@ -1,0 +1,104 @@
+import type { WeightShares, Workload } from "@/lib/model-choice/types";
+
+/**
+ * Hypothetical jobs. Token sizes, volumes, and the opening weights are choices
+ * on this page, not figures from the catalog. The reader can change all three.
+ */
+export const WORKLOADS: readonly Workload[] = [
+  {
+    id: "extraction",
+    label: "Document extraction",
+    unit: "documents",
+    blurb: "Pull structured fields out of a pile of documents.",
+    index: "agenticIndex",
+    indexName: "agentic index",
+    requiresModality: null,
+    requiresTools: true,
+    inputTokens: 8_000,
+    outputTokens: 800,
+    volume: 10_000,
+    weights: { quality: 45, cost: 40, context: 15 },
+  },
+  {
+    id: "coding",
+    label: "Coding",
+    unit: "tasks",
+    blurb: "A coding task, with the repository in the prompt and tools available.",
+    index: "codingIndex",
+    indexName: "coding index",
+    requiresModality: null,
+    requiresTools: true,
+    inputTokens: 12_000,
+    outputTokens: 2_000,
+    volume: 5_000,
+    weights: { quality: 55, cost: 30, context: 15 },
+  },
+  {
+    id: "reasoning",
+    label: "Reasoning",
+    unit: "questions",
+    blurb: "A hard question, where the quality of the answer is the stake.",
+    index: "intelligenceIndex",
+    indexName: "intelligence index",
+    requiresModality: null,
+    requiresTools: false,
+    inputTokens: 4_000,
+    outputTokens: 2_000,
+    volume: 2_000,
+    weights: { quality: 70, cost: 20, context: 10 },
+  },
+  {
+    id: "classification",
+    label: "Classification",
+    unit: "items",
+    blurb: "A short label on a large pile of items.",
+    index: "intelligenceIndex",
+    indexName: "intelligence index",
+    requiresModality: null,
+    requiresTools: false,
+    inputTokens: 1_500,
+    outputTokens: 50,
+    volume: 100_000,
+    weights: { quality: 25, cost: 65, context: 10 },
+  },
+  {
+    id: "long-context",
+    label: "Long context",
+    unit: "packets",
+    blurb: "A long packet that has to fit in the window, then a short answer.",
+    index: "intelligenceIndex",
+    indexName: "intelligence index",
+    requiresModality: null,
+    requiresTools: false,
+    inputTokens: 400_000,
+    outputTokens: 1_500,
+    volume: 500,
+    weights: { quality: 40, cost: 25, context: 35 },
+  },
+  {
+    id: "multimodal",
+    label: "Multimodal",
+    unit: "files",
+    blurb: "An image in the prompt, and a written answer.",
+    index: "intelligenceIndex",
+    indexName: "intelligence index",
+    requiresModality: "image",
+    requiresTools: false,
+    inputTokens: 6_000,
+    outputTokens: 800,
+    volume: 10_000,
+    weights: { quality: 50, cost: 30, context: 20 },
+  },
+];
+
+export const VOLUME_PRESETS = [1_000, 10_000, 100_000, 1_000_000] as const;
+
+export function workloadById(id: string): Workload {
+  const workload = WORKLOADS.find((item) => item.id === id);
+  if (!workload) throw new Error(`unknown workload ${id}`);
+  return workload;
+}
+
+export function weightsSum(weights: WeightShares): number {
+  return weights.quality + weights.cost + weights.context;
+}

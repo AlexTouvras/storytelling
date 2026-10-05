@@ -2,6 +2,13 @@
 
 > Tracked in git. Upcoming work and hard scope boundaries.
 
+## Which model? (one-pager)
+
+- [x] Decision Spec — `docs/decision-specs/which-model.md`
+- [x] Freeze 14 OpenRouter rows (2026-10-05) — `data/figures/which-model.v1.json`
+- [x] One-pager at `/stories/which-model`: job, field, fit, weights, workload cost. Unlisted
+- [ ] Human review before adding it to the flagship index
+
 ## Now
 
 - [x] Mobile New Horizon: spread warp field + smaller/brighter star pinpricks
