@@ -64,7 +64,9 @@ export function recommendationCopy(result: ScoreResult): RecommendationCopy {
       ? "Context adds the same amount to every model that can take this job: each window is at least twice the prompt."
       : null;
 
-  if (!result.winner || result.winner.fit == null) {
+  const winner = result.winner;
+  const fit = winner?.fit;
+  if (!winner || fit == null) {
     return {
       name: "No model fits",
       fit: "—",
@@ -75,13 +77,12 @@ export function recommendationCopy(result: ScoreResult): RecommendationCopy {
     };
   }
 
-  const winner = result.winner;
   const comparisons = [qualityLine(result, winner), runnerLine(result, winner)].filter(
     (line): line is string => Boolean(line),
   );
   return {
     name: winner.model.name,
-    fit: fitLabel(winner.fit),
+    fit: fitLabel(fit),
     lead: `${winner.model.name} fits this ${result.job.label.toLowerCase()} job best of the ${result.rows.length} models on this page, at ${usd(winner.cost)}.`,
     comparisons,
     sittingOut: sitting,
