@@ -9,6 +9,7 @@
 - [x] One-pager: job, field, fit, weights, workload cost. Off the flagship index and off `/stories`
 - [x] Monthly catalog refresh — `.github/workflows/refresh-which-model.yml`, `npm run refresh:which-model`
 - [x] Wider shortlist: current shipping lines and cheaper siblings (28), not batch or free aliases
+- [x] More jobs on the picker: chat, translation, support, summarizing, code review, code quality, drafting, agents, image reading
 - [x] Engine preview at `/desk/which-model` (not copied by stories:sync)
 - [ ] Human: merge the Orbit pull request that adds the live desk (`register-which-model-desk` opens it on main; this checkout cannot push to Orbit)
 

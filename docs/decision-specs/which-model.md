@@ -23,7 +23,7 @@ The volume, the token sizes, and the opening weights are **hypothetical**. Fit a
 
 ## What the page does
 
-1. Opens on the question, then six jobs: document extraction, coding, reasoning, classification, long context, multimodal.
+1. Opens on the question, then the jobs: document extraction, summarizing, classification, chat, translation, support, coding, code review, code quality, reasoning, drafting, agents, long context, multimodal, image reading.
 2. Shows the models that can take the job, and names who sits it out and why.
 3. Recommends the highest fit, with the formula `Fit = quality + cost + context` and the live shares.
 4. Lets the reader move the shares. They stay summed to 100, and the ranking moves.
@@ -48,6 +48,15 @@ Opening results, so a re-freeze or a formula change has something to bump into:
 | Classification | DeepSeek V4 Flash, which is also the cheapest | Claude Opus 5.5 |
 | Long context | GLM 5.3 | Claude Opus 5.5 |
 | Multimodal | GLM 5.3 Flash | Claude Opus 5.5. Text-only rows sit out |
+| Summarizing | GLM 5.3 | Claude Opus 5.5. A 262k window still fits |
+| Chat | MiMo-V2.6-Flash | Claude Opus 5.5 |
+| Translation | MiMo-V2.6-Flash | Claude Opus 5.5 |
+| Support | GLM 5.3 Flash | Claude Fable 5.1 (agentic) |
+| Code review | GLM 5.3 | Claude Fable 5.1 (coding) |
+| Code quality | Gemini 3.8 Flash | Claude Fable 5.1. Cost still moves the pick at 10% |
+| Drafting | Claude Opus 5.5, which also leads the index | Claude Opus 5.5 |
+| Agents | GLM 5.3 Flash | Claude Fable 5.1 (agentic) |
+| Image reading | GLM 5.3 Flash | Claude Fable 5.1. Needs an image and an agentic index |
 
 ## Out of this page
 
