@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import source from "../../../data/sources/openrouter-which-model-2026-10-05.json";
+import liveSource from "../../../data/sources/openrouter-which-model.json";
 import pack from "../../../data/figures/which-model.v1.json";
 import { recommendationCopy } from "@/lib/model-choice/copy";
+import { trimCatalog, type OpenRouterModel } from "@/lib/model-choice/extract";
 import { fieldScale } from "@/lib/model-choice/field";
 import { usd } from "@/lib/model-choice/format";
-import { freezePack, type SourceCatalog } from "@/lib/model-choice/normalize";
+import { CURATED_IDS, freezePack, type SourceCatalog } from "@/lib/model-choice/normalize";
 import { retargetWeight, scoreWorkload, unitPrices, workloadCost } from "@/lib/model-choice/score";
 import type { WhichModelPack } from "@/lib/model-choice/types";
 import { VOLUME_PRESETS, WORKLOADS, weightsSum, workloadById } from "@/lib/model-choice/workloads";
@@ -12,25 +14,44 @@ import { VOLUME_PRESETS, WORKLOADS, weightsSum, workloadById } from "@/lib/model
 const frozen = pack as WhichModelPack;
 const extract = source as SourceCatalog;
 const models = freezePack(extract).models;
+const live = liveSource as SourceCatalog;
+
+function catalogRow(id: string, patch: Partial<OpenRouterModel> = {}): OpenRouterModel {
+  return {
+    id,
+    name: `Provider: ${id}`,
+    context_length: 128_000,
+    architecture: { input_modalities: ["text"] },
+    pricing: { prompt: "0.000001", completion: "0.000002" },
+    supported_parameters: ["tools"],
+    benchmarks: { artificial_analysis: { intelligence_index: 10, coding_index: null, agentic_index: 4 } },
+    ...patch,
+  };
+}
 
 function scored(id: string, weights = workloadById(id).weights) {
   return scoreWorkload(models, workloadById(id), weights);
 }
 
 describe("which-model pack", () => {
-  it("freezes the trimmed OpenRouter extract without dropping a row", () => {
-    expect(freezePack(extract).models).toEqual(frozen.models);
-    expect(frozen.fetchedAt).toBe("2026-10-05");
-    expect(frozen.models).toHaveLength(14);
-    for (const model of frozen.models) {
+  it("freezes the dated extract the formula tests pin", () => {
+    expect(extract.fetched_at).toBe("2026-10-05");
+    expect(models).toHaveLength(14);
+    for (const model of models) {
       expect(model.promptPerToken).toBeGreaterThan(0);
       expect(model.completionPerToken).toBeGreaterThan(0);
       expect(model.contextLength).toBeGreaterThan(0);
     }
   });
 
+  it("freezes the living extract into the pack the page renders", () => {
+    expect(freezePack(live)).toEqual(frozen);
+    expect(frozen.fetchedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(frozen.models.map((model) => model.id)).toEqual([...CURATED_IDS]);
+  });
+
   it("keeps Claude Opus 5.5 as the published intelligence leader, with no coding index", () => {
-    const opus = frozen.models.find((model) => model.id === "anthropic/claude-opus-5.5");
+    const opus = models.find((model) => model.id === "anthropic/claude-opus-5.5");
     expect(opus?.intelligenceIndex).toBe(57.6);
     expect(opus?.codingIndex).toBeNull();
     expect(opus?.promptPerToken).toBe(0.000004);
@@ -175,6 +196,47 @@ describe("field scale", () => {
     const dear = scale.placed.find((point) => point.id === "dear");
     expect(cheap && dear && cheap.x).toBeLessThan(dear!.x);
     expect(cheap && dear && cheap.y).toBeGreaterThan(dear!.y);
+  });
+});
+
+describe("catalog trim", () => {
+  it("keeps the curated 14 and drops the rest of the catalog", () => {
+    const extra: OpenRouterModel = catalogRow("other/model");
+    const trimmed = trimCatalog(
+      { data: [...CURATED_IDS.map((id) => catalogRow(id)), extra] },
+      "2026-10-05",
+    );
+    expect(trimmed.models.map((model) => model.id)).toEqual([...CURATED_IDS]);
+    expect(trimmed.fetched_at).toBe("2026-10-05");
+  });
+
+  it("keeps a null index and a single long-prompt override, without cache prices", () => {
+    const row = catalogRow(CURATED_IDS[0], {
+      pricing: {
+        prompt: "0.000002",
+        completion: "0.00001",
+        overrides: [
+          {
+            min_prompt_tokens: 272000,
+            prompt: "0.000004",
+            completion: "0.000015",
+          },
+        ],
+      },
+      benchmarks: { artificial_analysis: { intelligence_index: 47, coding_index: null, agentic_index: null } },
+    });
+    const others = CURATED_IDS.slice(1).map((id) => catalogRow(id));
+    const model = trimCatalog({ data: [row, ...others] }, "2026-10-05").models[0];
+    expect(model.benchmarks.coding_index).toBeNull();
+    expect(model.pricing.overrides).toEqual([
+      { min_prompt_tokens: 272000, prompt: "0.000004", completion: "0.000015" },
+    ]);
+    expect(model.tools).toBe(true);
+  });
+
+  it("fails when a curated model has left the catalog", () => {
+    const data = CURATED_IDS.slice(1).map((id) => catalogRow(id));
+    expect(() => trimCatalog({ data }, "2026-10-05")).toThrow(/missing from the catalog/);
   });
 });
 

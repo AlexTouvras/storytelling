@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { freezePack, type SourceCatalog } from "../src/lib/model-choice/normalize";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const sourcePath = join(root, "data/sources/openrouter-which-model-2026-10-05.json");
+const sourcePath = join(root, "data/sources/openrouter-which-model.json");
 const outPath = join(root, "data/figures/which-model.v1.json");
 
 const source = JSON.parse(readFileSync(sourcePath, "utf8")) as SourceCatalog;

@@ -37,7 +37,8 @@ function listPrice(row: ScoredModel): string {
   return `${usdPerMillion(model.promptPerToken)} / ${usdPerMillion(model.completionPerToken)} per 1M`;
 }
 
-export function WhichModel() {
+/** `desk` sits inside Orbit's live-desk frame, which already pads the page. */
+export function WhichModel({ frame = "page" }: { frame?: "page" | "desk" }) {
   const pack = WHICH_MODEL_PACK;
   const [workloadId, setWorkloadId] = useState(OPENING.id);
   const [weights, setWeights] = useState<WeightShares>(OPENING.weights);
@@ -77,7 +78,11 @@ export function WhichModel() {
   }
 
   return (
-    <article className="mx-auto w-full max-w-6xl px-5 pb-20 pt-24 sm:px-8">
+    <article
+      className={
+        frame === "desk" ? "w-full pb-8" : "mx-auto w-full max-w-6xl px-5 pb-20 pt-24 sm:px-8"
+      }
+    >
       <header className="max-w-3xl">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-cyan">Decision instrument</p>
         <h1 className="mt-3 font-display text-4xl leading-[1.02] tracking-tight text-white sm:text-6xl">
@@ -394,7 +399,7 @@ export function WhichModel() {
         <h2 className="font-display text-2xl tracking-tight text-white">How the number is made</h2>
         <ol className="mt-5 space-y-2 font-mono text-[11px] uppercase tracking-[0.14em] text-white/70">
           <li>OpenRouter catalog</li>
-          <li>Frozen schema, {fetchedLabel(pack.fetchedAt)}</li>
+          <li>Monthly catalog fetch, {fetchedLabel(pack.fetchedAt)}</li>
           <li>Benchmark and price</li>
           <li>Workload score</li>
           <li>This page</li>
@@ -426,7 +431,7 @@ export function WhichModel() {
         </dl>
         <h3 className="mt-8 font-display text-lg text-white">What this page leaves out</h3>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/65">
-          <li>Fourteen models, chosen for a spread of providers, prices, and index coverage. Not the whole catalog.</li>
+          <li>Fourteen models, chosen for a spread of providers, prices, and index coverage. Not the whole catalog. The extract is replaced on the first of each month; a model that leaves the catalog stops the refresh rather than being guessed.</li>
           <li>Latency. This catalog snapshot does not publish a comparable speed, so speed is not a weight.</li>
           <li>Cache hits, batch rates, and web search. The cost is a cold prompt.</li>
           <li>

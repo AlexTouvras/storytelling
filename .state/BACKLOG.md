@@ -6,8 +6,10 @@
 
 - [x] Decision Spec — `docs/decision-specs/which-model.md`
 - [x] Freeze 14 OpenRouter rows (2026-10-05) — `data/figures/which-model.v1.json`
-- [x] One-pager at `/stories/which-model`: job, field, fit, weights, workload cost. Unlisted
-- [ ] Human review before adding it to the flagship index
+- [x] One-pager: job, field, fit, weights, workload cost. Off the flagship index and off `/stories`
+- [x] Monthly catalog refresh — `.github/workflows/refresh-which-model.yml`, `npm run refresh:which-model`
+- [x] Engine preview at `/desk/which-model` (not copied by stories:sync)
+- [ ] Human: merge the Orbit pull request that adds the live desk (`register-which-model-desk` opens it on main; this checkout cannot push to Orbit)
 
 ## Now
 
