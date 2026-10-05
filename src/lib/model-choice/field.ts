@@ -27,9 +27,13 @@ export function fieldScale(points: FieldInput[]): FieldScale {
   if (points.length === 0) return { placed: [], costTicks: [], indexTicks: [] };
 
   const logs = points.map((point) => log10(point.cost));
-  const lo = Math.min(...logs);
-  const hi = Math.max(...logs);
-  const span = hi - lo || 1;
+  const rawLo = Math.min(...logs);
+  const rawHi = Math.max(...logs);
+  const rawSpan = rawHi - rawLo || 1;
+  // Keep the dearest and cheapest marks off the frame.
+  const lo = rawLo - rawSpan * 0.08;
+  const hi = rawHi + rawSpan * 0.08;
+  const span = hi - lo;
   const yMax = Math.max(...points.map((point) => point.index), 0) * 1.08 || 1;
 
   const xOf = (cost: number) => padLeft + ((log10(cost) - lo) / span) * plotW;

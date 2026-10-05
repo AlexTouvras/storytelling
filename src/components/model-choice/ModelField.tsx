@@ -31,6 +31,18 @@ export function ModelField({ rows, winnerId, leaderId, activeId, indexName, onHo
   const scale = fieldScale(points);
   const { width, height, padLeft, padRight, padBottom } = FIELD_BOX;
   const byId = new Map(scale.placed.map((point) => [point.id, point]));
+  const winnerPoint = winnerId ? byId.get(winnerId) : undefined;
+
+  function labelOnLeft(x: number) {
+    return x > width * 0.5;
+  }
+
+  function leaderIsClear(id: string): boolean {
+    if (!winnerPoint || id === winnerId) return false;
+    const point = byId.get(id);
+    if (!point) return false;
+    return Math.hypot(point.x - winnerPoint.x, point.y - winnerPoint.y) > 96;
+  }
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-3 sm:p-4">
@@ -67,7 +79,7 @@ export function ModelField({ rows, winnerId, leaderId, activeId, indexName, onHo
             <text
               x={tick.x}
               y={height - 12}
-              textAnchor="middle"
+              textAnchor={tick.x > width - 56 ? "end" : tick.x < padLeft + 28 ? "start" : "middle"}
               fill="rgba(255,255,255,0.45)"
               fontSize={11}
             >
@@ -81,8 +93,8 @@ export function ModelField({ rows, winnerId, leaderId, activeId, indexName, onHo
           const winner = point.id === winnerId;
           const leader = point.id === leaderId && point.id !== winnerId;
           const active = point.id === activeId;
-          const showName = winner || active;
-          const labelLeft = placed.x > width * 0.62;
+          const showName = winner || active || (leader && leaderIsClear(point.id));
+          const labelLeft = labelOnLeft(placed.x);
           return (
             <g
               key={point.id}

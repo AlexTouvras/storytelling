@@ -169,7 +169,7 @@ export function WhichModel() {
           {result.winner && result.winner.index != null ? (
             <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-white/10 pt-4">
               <div>
-                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">{workload.indexName}</dt>
+                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">Index</dt>
                 <dd className="mt-1 font-mono text-sm tabular-nums text-white">{indexText(result.winner.index)}</dd>
               </div>
               <div>
