@@ -161,7 +161,7 @@ export function WhichModel({ frame = "page" }: { frame?: "page" | "desk" }) {
           >
             {copy.name}
           </h2>
-          <p className="mt-3 font-mono text-sm text-neon-cyan">
+          <p className="mt-3 font-mono text-sm text-neon-cyan" data-testid="fit-score">
             Fit {copy.fit}
             <span className="ml-2 align-middle font-mono text-[9px] uppercase tracking-[0.14em] text-white/45">
               {KIND_INFO.calculated.label}
@@ -174,15 +174,15 @@ export function WhichModel({ frame = "page" }: { frame?: "page" | "desk" }) {
           {result.winner && result.winner.index != null ? (
             <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-white/10 pt-4">
               <div>
-                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">Index</dt>
+                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/75">Index</dt>
                 <dd className="mt-1 font-mono text-sm tabular-nums text-white">{indexText(result.winner.index)}</dd>
               </div>
               <div>
-                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">This workload</dt>
+                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/75">This workload</dt>
                 <dd className="mt-1 font-mono text-sm tabular-nums text-white">{usd(result.winner.cost)}</dd>
               </div>
               <div>
-                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">Context</dt>
+                <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/75">Context</dt>
                 <dd className="mt-1 font-mono text-sm tabular-nums text-white">
                   {tokensLabel(result.winner.model.contextLength)}
                 </dd>

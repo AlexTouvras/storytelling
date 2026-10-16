@@ -18,6 +18,15 @@ type Props = {
 
 const BAD_AXIS_MAX = 0.12;
 
+/**
+ * Tick and anchor words are the series colour at full strength. The same ink
+ * at 0.18–0.55 measured 1.7:1 to 3.1:1 on the panel, so the scale was drawn
+ * and still unreadable. Guide strokes stay quieter than the live gate.
+ */
+const APPROVAL_INK = "rgb(92,214,226)";
+const BAD_INK = "rgb(186,104,255)";
+const AXIS_INK = "rgba(255,255,255,0.82)";
+
 function num(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v;
   if (typeof v === "string" && v !== "" && Number.isFinite(Number(v)))
@@ -202,7 +211,7 @@ export function CutoffHorizonChart({
                 x={pad.l - 8}
                 y={y + 3}
                 textAnchor="end"
-                fill="rgba(92,214,226,0.45)"
+                fill={APPROVAL_INK}
                 fontSize="10"
                 fontFamily="ui-monospace, monospace"
               >
@@ -220,7 +229,7 @@ export function CutoffHorizonChart({
               key={`b-${r}`}
               x={pad.l + plotW + 8}
               y={y + 3}
-              fill="rgba(186,104,255,0.55)"
+              fill={BAD_INK}
               fontSize="10"
               fontFamily="ui-monospace, monospace"
             >
@@ -241,7 +250,7 @@ export function CutoffHorizonChart({
         <text
           x={pad.l + 4}
           y={appetiteY - 6}
-          fill="rgba(186,104,255,0.7)"
+          fill={BAD_INK}
           fontSize="9"
           fontFamily="ui-monospace, monospace"
         >
@@ -250,8 +259,8 @@ export function CutoffHorizonChart({
 
         {/* operating / youden guides — reference anchors, not a second live gate */}
         {[
-          { pd: youdenPd, label: "youden", color: "rgba(255,255,255,0.18)" },
-          { pd: operatingPd, label: "op", color: "rgba(92,214,226,0.4)" },
+          { pd: youdenPd, label: "youden", line: "rgba(255,255,255,0.28)", text: AXIS_INK, anchor: "end" as const, dx: -4 },
+          { pd: operatingPd, label: "op", line: "rgba(92,214,226,0.45)", text: APPROVAL_INK, anchor: "start" as const, dx: 4 },
         ].map((g) => (
           <g key={g.label}>
             <line
@@ -259,13 +268,14 @@ export function CutoffHorizonChart({
               x2={xOf(g.pd)}
               y1={pad.t}
               y2={pad.t + plotH}
-              stroke={g.color}
+              stroke={g.line}
               strokeDasharray="2 4"
             />
             <text
-              x={xOf(g.pd) + 4}
+              x={xOf(g.pd) + g.dx}
               y={pad.t + 12}
-              fill={g.color}
+              textAnchor={g.anchor}
+              fill={g.text}
               fontSize="9"
               fontFamily="ui-monospace, monospace"
             >
@@ -332,7 +342,7 @@ export function CutoffHorizonChart({
             x={xOf(pd)}
             y={H - 14}
             textAnchor="middle"
-            fill="rgba(255,255,255,0.35)"
+            fill={AXIS_INK}
             fontSize="10"
             fontFamily="ui-monospace, monospace"
           >
@@ -343,7 +353,7 @@ export function CutoffHorizonChart({
           x={pad.l + plotW / 2}
           y={H - 2}
           textAnchor="middle"
-          fill="rgba(255,255,255,0.4)"
+          fill={AXIS_INK}
           fontSize="10"
           fontFamily="ui-monospace, monospace"
         >
@@ -354,7 +364,7 @@ export function CutoffHorizonChart({
           x={W - 4}
           y={pad.t + 8}
           textAnchor="end"
-          fill="rgba(186,104,255,0.55)"
+          fill={BAD_INK}
           fontSize="9"
           fontFamily="ui-monospace, monospace"
         >
@@ -363,7 +373,7 @@ export function CutoffHorizonChart({
         <text
           x={12}
           y={pad.t + 8}
-          fill="rgba(92,214,226,0.55)"
+          fill={APPROVAL_INK}
           fontSize="9"
           fontFamily="ui-monospace, monospace"
         >
