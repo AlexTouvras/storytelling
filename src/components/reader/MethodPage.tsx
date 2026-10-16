@@ -85,7 +85,7 @@ export function MethodPage({ manifest, method }: Props) {
         The data, the rules, the model and the limits behind the film. Every figure on this page is
         generated from the frozen evidence pack, so it cannot drift from what the film shows.
       </p>
-      <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-2 font-mono text-[11px] uppercase tracking-[0.12em] text-white/45">
+      <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-2 font-mono text-[11px] uppercase tracking-[0.12em] text-white/75">
         <div>
           <dt className="inline">Pack </dt>
           <dd className="inline text-white/75" data-testid="pack-id">
@@ -110,10 +110,10 @@ export function MethodPage({ manifest, method }: Props) {
       </div>
 
       <nav aria-label="On this page" className="mt-10 border-y border-white/10 py-4">
-        <ol className="grid gap-1 font-mono text-[11px] uppercase tracking-[0.12em] text-white/50 sm:grid-cols-2">
+        <ol className="grid gap-x-6 gap-y-1 font-mono text-[11px] uppercase tracking-[0.12em] text-white/70 sm:grid-cols-2">
           {contents.map((c, i) => (
             <li key={c.id}>
-              <a href={`#${c.id}`} className="focus-ring hover:text-white">
+              <a href={`#${c.id}`} className="focus-ring inline-flex min-h-6 items-center hover:text-white">
                 {String(i + 1).padStart(2, "0")} · {c.title}
               </a>
             </li>

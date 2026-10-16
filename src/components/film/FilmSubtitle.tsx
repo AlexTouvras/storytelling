@@ -60,7 +60,7 @@ export function FilmSubtitle({
             {figure}
           </span>
           {figureNote ? (
-            <span className="ml-2 font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">{figureNote}</span>
+            <span className="ml-2 font-mono text-[10px] uppercase tracking-[0.14em] text-white/75">{figureNote}</span>
           ) : null}
         </p>
       ) : null}

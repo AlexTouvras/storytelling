@@ -13,6 +13,11 @@
 - [x] Engine preview at `/desk/which-model` (not copied by stories:sync)
 - [ ] Human: merge the Orbit pull request that adds the live desk (`register-which-model-desk` opens it on main; this checkout cannot push to Orbit)
 
+## UX-kit benefit demo
+
+- [x] Measure contrast, 24px targets, controls that change, and labels-on-the-picture against the desk, the grid film, its method page, and the cut-off sleeve (`scripts/ux-benefit-demo.mjs`, `/lab/ux-benefit`)
+- [x] Lift the cut-off horizon labels that measured 1.7:1–3.1:1, and give the method-page section links a 24px target
+
 ## Now
 
 - [x] Mobile New Horizon: spread warp field + smaller/brighter star pinpricks

@@ -39,7 +39,7 @@ export function CutoffInstrument({ model }: Props) {
       </p>
 
       <label className="mt-10 block">
-        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
+        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/75">
           Cut-off PD
         </span>
         <input
@@ -56,7 +56,7 @@ export function CutoffInstrument({ model }: Props) {
 
       <dl className="mt-8 grid gap-6 sm:grid-cols-3">
         <div>
-          <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
+          <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/75">
             Gate
           </dt>
           <dd
@@ -67,7 +67,7 @@ export function CutoffInstrument({ model }: Props) {
           </dd>
         </div>
         <div>
-          <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
+          <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/75">
             Approval (OOT)
           </dt>
           <dd
@@ -78,7 +78,7 @@ export function CutoffInstrument({ model }: Props) {
           </dd>
         </div>
         <div>
-          <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
+          <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/75">
             Bad among approved (OOT)
           </dt>
           <dd
