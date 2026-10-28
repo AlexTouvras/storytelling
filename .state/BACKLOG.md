@@ -10,6 +10,7 @@
 - [x] Monthly catalog refresh — `.github/workflows/refresh-which-model.yml`, `npm run refresh:which-model`
 - [x] Wider shortlist: current shipping lines and cheaper siblings (28), not batch or free aliases
 - [x] More jobs on the picker: chat, translation, support, summarizing, code review, code quality, drafting, agents, image reading
+- [x] Work topics on the picker: data storytelling, analytics, data engineering, dashboards, data quality, metric design, evidence
 - [x] Engine preview at `/desk/which-model` (not copied by stories:sync)
 - [ ] Human: merge the Orbit pull request that adds the live desk (`register-which-model-desk` opens it on main; this checkout cannot push to Orbit)
 

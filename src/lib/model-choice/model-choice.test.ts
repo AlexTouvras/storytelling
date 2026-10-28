@@ -104,6 +104,29 @@ describe("workload score", () => {
     expect(result.eligible.length).toBeLessThan(result.rows.length);
   });
 
+  it("fits a warehouse change to GLM 5.3, and a metric question to GLM 5.3 Flash", () => {
+    const engineering = scored("data-engineering");
+    expect(engineering.winner?.model.id).toBe("z-ai/glm-5.3");
+    expect(engineering.qualityLeader?.model.id).toBe("anthropic/claude-fable-5.1");
+    const analytics = scored("analytics");
+    expect(analytics.winner?.model.id).toBe("z-ai/glm-5.3-flash");
+    expect(analytics.qualityLeader?.model.id).toBe("anthropic/claude-opus-5.5");
+  });
+
+  it("fits a decision narrative to Sonnet, with Opus still leading the index", () => {
+    const result = scored("storytelling");
+    expect(result.winner?.model.id).toBe("anthropic/claude-sonnet-5.5");
+    expect(result.qualityLeader?.model.id).toBe("anthropic/claude-opus-5.5");
+    expect(scored("metrics").winner?.model.id).toBe("anthropic/claude-sonnet-5.5");
+  });
+
+  it("keeps a 262k window in an evidence pack and out of a 400k packet", () => {
+    const id = "mistralai/mistral-medium-3-5";
+    expect(scored("evidence").rows.find((row) => row.model.id === id)?.eligible).toBe(true);
+    expect(scored("evidence").winner?.model.id).toBe("z-ai/glm-5.3");
+    expect(scored("long-context").rows.find((row) => row.model.id === id)?.reason).toBe("context");
+  });
+
   it("picks GLM 5.3 Flash for document extraction, ahead of the dearer GLM 5.3", () => {
     const result = scored("extraction");
     expect(result.winner?.model.id).toBe("z-ai/glm-5.3-flash");

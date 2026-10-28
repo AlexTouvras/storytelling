@@ -29,10 +29,10 @@ test.describe("which model one-pager", () => {
     await page.getByRole("slider", { name: "Quality" }).fill("100");
     await expect(name).toHaveText(quality.winner?.model.name ?? "No model fits");
 
-    for (const id of ["drafting", "chat", "code-quality"] as const) {
+    for (const id of ["storytelling", "analytics", "data-engineering", "drafting", "chat", "code-quality"] as const) {
       const job = workloadById(id);
       const result = scoreWorkload(pack.models, job, job.weights);
-      await page.getByRole("button", { name: job.label }).click();
+      await page.getByRole("button", { name: job.label, exact: true }).click();
       await expect(name).toHaveText(result.winner?.model.name ?? "No model fits");
     }
   });

@@ -23,7 +23,7 @@ The volume, the token sizes, and the opening weights are **hypothetical**. Fit a
 
 ## What the page does
 
-1. Opens on the question, then the jobs: document extraction, summarizing, classification, chat, translation, support, coding, code review, code quality, reasoning, drafting, agents, long context, multimodal, image reading.
+1. Opens on the question, then the jobs. The first group is the work: data storytelling, analytics, data engineering, dashboards, data quality, metric design, evidence. Then summarizing, classification, chat, translation, support, coding, code review, code quality, reasoning, drafting, agents, long context, multimodal, image reading.
 2. Shows the models that can take the job, and names who sits it out and why.
 3. Recommends the highest fit, with the formula `Fit = quality + cost + context` and the live shares.
 4. Lets the reader move the shares. They stay summed to 100, and the ranking moves.
@@ -42,6 +42,13 @@ Opening results, so a re-freeze or a formula change has something to bump into:
 
 | Job | Fits | Leads the index |
 |-----|------|-----------------|
+| Data storytelling | Claude Sonnet 5.5 | Claude Opus 5.5 |
+| Analytics | GLM 5.3 Flash | Claude Opus 5.5 |
+| Data engineering | GLM 5.3 | Claude Fable 5.1 (coding). The schema is long, so the cheap input rate wins |
+| Dashboards | GLM 5.3 Flash | Claude Fable 5.1 (coding) |
+| Data quality | GLM 5.3 Flash | Claude Fable 5.1 (agentic) |
+| Metric design | Claude Sonnet 5.5 | Claude Opus 5.5 |
+| Evidence | GLM 5.3 | Claude Opus 5.5. A 262k window still fits an 80k pack |
 | Document extraction | GLM 5.3 Flash | Claude Fable 5.1 (agentic) |
 | Coding | GLM 5.3 Flash | Claude Fable 5.1. Claude Opus 5.5 sits out: no coding index |
 | Reasoning | Claude Sonnet 5.5 | Claude Opus 5.5 |
