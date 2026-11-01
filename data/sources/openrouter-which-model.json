@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-05",
+  "fetched_at": "2026-11-01",
   "source_url": "https://openrouter.ai/api/v1/models",
   "note": "Trimmed extract of the curated catalog rows. Prompt and completion are USD per token. Overrides are the catalog's long-prompt rates. Cache, batch, image, audio, and web-search prices were not copied. Benchmarks are Artificial Analysis indices as carried on the catalog response.",
   "models": [
@@ -19,7 +19,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 57.6,
+        "intelligence_index": 58.4,
         "coding_index": null,
         "agentic_index": null
       }
@@ -40,7 +40,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 50.8,
+        "intelligence_index": null,
         "coding_index": 78,
         "agentic_index": 56.5
       }
@@ -61,7 +61,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 56,
+        "intelligence_index": 54.2,
         "coding_index": null,
         "agentic_index": null
       }
@@ -82,9 +82,9 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 53.4,
-        "coding_index": 81.6,
-        "agentic_index": 57.9
+        "intelligence_index": 49.7,
+        "coding_index": 80.7,
+        "agentic_index": 57.2
       }
     },
     {
@@ -109,7 +109,7 @@
         ]
       },
       "benchmarks": {
-        "intelligence_index": 52.7,
+        "intelligence_index": 56.9,
         "coding_index": 76.9,
         "agentic_index": 51
       }
@@ -136,7 +136,7 @@
         ]
       },
       "benchmarks": {
-        "intelligence_index": 51.8,
+        "intelligence_index": 54.5,
         "coding_index": null,
         "agentic_index": null
       }
@@ -152,20 +152,20 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.000002",
-        "completion": "0.00001",
+        "prompt": "0.000004",
+        "completion": "0.00002",
         "overrides": [
           {
             "min_prompt_tokens": 272000,
-            "prompt": "0.000004",
-            "completion": "0.000015"
+            "prompt": "0.000008",
+            "completion": "0.00003"
           }
         ]
       },
       "benchmarks": {
-        "intelligence_index": 47,
-        "coding_index": 77.4,
-        "agentic_index": 50.2
+        "intelligence_index": null,
+        "coding_index": 78.3,
+        "agentic_index": 47.4
       }
     },
     {
@@ -190,7 +190,7 @@
         ]
       },
       "benchmarks": {
-        "intelligence_index": 42.1,
+        "intelligence_index": null,
         "coding_index": 76.7,
         "agentic_index": 43.2
       }
@@ -217,7 +217,7 @@
         ]
       },
       "benchmarks": {
-        "intelligence_index": 38.1,
+        "intelligence_index": 27.8,
         "coding_index": null,
         "agentic_index": null
       }
@@ -244,7 +244,7 @@
         ]
       },
       "benchmarks": {
-        "intelligence_index": 37.3,
+        "intelligence_index": null,
         "coding_index": 71.4,
         "agentic_index": 42.1
       }
@@ -271,7 +271,7 @@
         ]
       },
       "benchmarks": {
-        "intelligence_index": 46.4,
+        "intelligence_index": 35,
         "coding_index": null,
         "agentic_index": null
       }
@@ -298,7 +298,7 @@
         ]
       },
       "benchmarks": {
-        "intelligence_index": 44.3,
+        "intelligence_index": null,
         "coding_index": 76.8,
         "agentic_index": 53
       }
@@ -316,12 +316,12 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.00000075",
-        "completion": "0.00000375",
+        "prompt": "0.000000825",
+        "completion": "0.000004125",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 40.9,
+        "intelligence_index": 30.5,
         "coding_index": 76.3,
         "agentic_index": 40.2
       }
@@ -336,12 +336,12 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.0000003",
-        "completion": "0.0000012",
+        "prompt": "0.000000045",
+        "completion": "0.0000005",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 39.5,
+        "intelligence_index": null,
         "coding_index": null,
         "agentic_index": null
       }
@@ -355,14 +355,14 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.00000003",
-        "completion": "0.00000128",
+        "prompt": "0.000000091",
+        "completion": "0.000000182",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 24.4,
-        "coding_index": 52,
-        "agentic_index": 26.3
+        "intelligence_index": null,
+        "coding_index": 56.2,
+        "agentic_index": 22.2
       }
     },
     {
@@ -374,12 +374,12 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.0000004",
-        "completion": "0.000005",
+        "prompt": "0.000000115",
+        "completion": "0.000004",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 36,
+        "intelligence_index": 23.1,
         "coding_index": 68.8,
         "agentic_index": 41.3
       }
@@ -393,12 +393,12 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.0000002088",
-        "completion": "0.0000004176",
+        "prompt": "0.0000016",
+        "completion": "0.0000032",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 30.4,
+        "intelligence_index": null,
         "coding_index": 59.4,
         "agentic_index": 26.3
       }
@@ -414,14 +414,14 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.00000067",
-        "completion": "0.000014",
+        "prompt": "0.000000192",
+        "completion": "0.000015",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 43.6,
-        "coding_index": 76.2,
-        "agentic_index": 50
+        "intelligence_index": 17.4,
+        "coding_index": 72,
+        "agentic_index": 29.3
       }
     },
     {
@@ -440,7 +440,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 45.4,
+        "intelligence_index": 33.6,
         "coding_index": 76.2,
         "agentic_index": 56
       }
@@ -456,12 +456,12 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.000000425",
-        "completion": "0.00000255",
+        "prompt": "0.00000015",
+        "completion": "0.000001875",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 33.7,
+        "intelligence_index": 20.1,
         "coding_index": 68.1,
         "agentic_index": 45.8
       }
@@ -475,12 +475,12 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.00000005",
-        "completion": "0.000007",
+        "prompt": "0.00000008",
+        "completion": "0.0000036",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 44.8,
+        "intelligence_index": 31.7,
         "coding_index": 74.8,
         "agentic_index": 53.1
       }
@@ -496,12 +496,12 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.00000015",
-        "completion": "0.0000005",
+        "prompt": "0.0000000285",
+        "completion": "0.0000000923",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 41.8,
+        "intelligence_index": 27.8,
         "coding_index": 71.5,
         "agentic_index": 50.9
       }
@@ -523,7 +523,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 46.3,
+        "intelligence_index": 29.9,
         "coding_index": null,
         "agentic_index": null
       }
@@ -545,7 +545,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 37.9,
+        "intelligence_index": 26.7,
         "coding_index": null,
         "agentic_index": null
       }
@@ -567,7 +567,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 39.6,
+        "intelligence_index": null,
         "coding_index": 72.2,
         "agentic_index": 43.2
       }
@@ -588,7 +588,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 29.2,
+        "intelligence_index": 18.7,
         "coding_index": 58.6,
         "agentic_index": 29.5
       }
@@ -609,7 +609,7 @@
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 14.2,
+        "intelligence_index": null,
         "coding_index": 46.9,
         "agentic_index": 7
       }
@@ -623,12 +623,12 @@
       ],
       "tools": true,
       "pricing": {
-        "prompt": "0.0000005",
-        "completion": "0.0000022",
+        "prompt": "0.0000006",
+        "completion": "0.0000024",
         "overrides": []
       },
       "benchmarks": {
-        "intelligence_index": 22.9,
+        "intelligence_index": 11.8,
         "coding_index": 49.3,
         "agentic_index": 20.1
       }
