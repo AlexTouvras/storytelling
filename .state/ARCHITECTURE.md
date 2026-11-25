@@ -6,7 +6,7 @@
 
 **Interactive Decision Storytelling** — Orbit flagship. Engine (Layer 1) is a boring stage; grammar (Layer 2) and decision stories (Layer 3) carry the product. Reference: `when-rates-rise`. Fixture: `rates-and-defaults`.
 
-**Skylore** (`weather/`) — separate Vite + React weather storytelling app for Cursor publish-app. Not part of the flagship film engine. Open-Meteo forecast/hourly/daily + archive baseline + ICON ensemble + air quality; BigDataCloud reverse geocode; last place in `localStorage`.
+**Skylore** (`weather/`) — separate Vite + React weather forecasting app for Cursor publish-app. Not part of the flagship film engine. Open-Meteo forecast/hourly/daily/pressure + archive baseline + ICON ensemble bands + air quality + 5×5 regional grid; Leaflet/OSM map layers; SVG analytics charts; BigDataCloud reverse geocode; last place in `localStorage`.
 
 ## Data shapes
 

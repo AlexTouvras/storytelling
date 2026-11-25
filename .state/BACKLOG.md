@@ -21,7 +21,8 @@
 
 ## Weather storytelling (Skylore)
 
-- [x] Vite app in `weather/` — location-aware 7–14 day scroll story (Open-Meteo)
+- [x] Vite app in `weather/` — location-aware 7–14 day forecast scroll (Open-Meteo)
+- [x] Feedback: plain weather copy + charts/map/ensemble/seasonal visuals
 - [ ] Human review of Skylore craft + publish confirmation
 
 ## Now
