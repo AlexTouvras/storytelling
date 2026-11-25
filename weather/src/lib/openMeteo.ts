@@ -349,14 +349,19 @@ async function fetchRegionalGrid(place: Place) {
 
   const data = await fetchJson<Point[] | Point>(url);
   const points = Array.isArray(data) ? data : [data];
-  const cells: GridCell[] = points.map((p, i) => ({
-    latitude: p.latitude ?? lats[i],
-    longitude: p.longitude ?? lons[i],
-    temp: num(p.current?.temperature_2m),
-    precip: num(p.current?.precipitation),
-    windSpeed: num(p.current?.wind_speed_10m),
-    pressure: num(p.current?.surface_pressure),
-  }));
+  // Anchor cells on the requested grid (not model-snapped coords) so the map
+  // stays centered on the selected place even when Open-Meteo snaps points.
+  const cells: GridCell[] = lats.map((latitude, i) => {
+    const p = points[i];
+    return {
+      latitude,
+      longitude: lons[i],
+      temp: num(p?.current?.temperature_2m),
+      precip: num(p?.current?.precipitation),
+      windSpeed: num(p?.current?.wind_speed_10m),
+      pressure: num(p?.current?.surface_pressure, 1013),
+    };
+  });
 
   return { cells, spanDeg: span };
 }

@@ -45,16 +45,38 @@ function colorFor(value: number, layer: Layer, min: number, max: number): string
   return `rgba(${r}, ${g}, ${b}, 0.62)`;
 }
 
+/** Keep only cells near the selected place so a stale grid cannot pull the camera away. */
+function cellsNearPlace(
+  cells: GridCell[] | undefined,
+  place: Place,
+  spanDeg: number,
+): GridCell[] {
+  if (!cells?.length) return [];
+  const limit = Math.max(spanDeg, 1.6) * 0.85;
+  return cells.filter(
+    (c) =>
+      Math.abs(c.latitude - place.latitude) <= limit &&
+      Math.abs(c.longitude - place.longitude) <= limit,
+  );
+}
+
 function gridStep(cells: GridCell[]): { halfLat: number; halfLon: number } {
-  const lats = [...new Set(cells.map((c) => +c.latitude.toFixed(4)))].sort(
+  const lats = [...new Set(cells.map((c) => +c.latitude.toFixed(3)))].sort(
     (a, b) => a - b,
   );
-  const lons = [...new Set(cells.map((c) => +c.longitude.toFixed(4)))].sort(
+  const lons = [...new Set(cells.map((c) => +c.longitude.toFixed(3)))].sort(
     (a, b) => a - b,
   );
-  const dLat = lats.length > 1 ? lats[1] - lats[0] : 0.4;
-  const dLon = lons.length > 1 ? lons[1] - lons[0] : 0.4;
-  // Slightly under half-step so cells abut without overlapping seams.
+  // Prefer median adjacent step so Open-Meteo snapping noise does not shrink cells.
+  const gaps = (xs: number[]) =>
+    xs.slice(1).map((v, i) => v - xs[i]).filter((g) => g > 0.05);
+  const median = (xs: number[], fallback: number) => {
+    if (!xs.length) return fallback;
+    const s = [...xs].sort((a, b) => a - b);
+    return s[Math.floor(s.length / 2)];
+  };
+  const dLat = median(gaps(lats), 0.4);
+  const dLon = median(gaps(lons), 0.4);
   return { halfLat: dLat / 2, halfLon: dLon / 2 };
 }
 
@@ -68,26 +90,47 @@ export function RegionalMap({ place, cells, spanDeg = 1.6 }: Props) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const localCells = useMemo(
+    () => cellsNearPlace(cells, place, spanDeg),
+    [cells, place, spanDeg],
+  );
+
   const stats = useMemo(() => {
-    if (!cells?.length) return null;
-    const vals = cells.map((c) => valueOf(c, layer));
+    if (!localCells.length) return null;
+    const vals = localCells.map((c) => valueOf(c, layer));
     return { min: Math.min(...vals), max: Math.max(...vals) };
-  }, [cells, layer]);
+  }, [localCells, layer]);
+
+  // Remount the map whenever the selected coordinates change so the viewport
+  // cannot stick on a previous geolocation (e.g. Washington after picking Helsinki).
+  const placeKey = `${place.latitude.toFixed(4)},${place.longitude.toFixed(4)}`;
 
   useEffect(() => {
     let cancelled = false;
+    setReady(false);
+    setError(null);
+
     async function boot() {
-      if (!mapRef.current || leafletRef.current) return;
+      if (!mapRef.current) return;
       try {
         const L = await import("leaflet");
         await import("leaflet/dist/leaflet.css");
         if (cancelled || !mapRef.current) return;
 
+        // Tear down any prior instance bound to this container.
+        if (leafletRef.current) {
+          leafletRef.current.map.remove();
+          leafletRef.current = null;
+        }
+
         const map = L.map(mapRef.current, {
           zoomControl: true,
           attributionControl: true,
           scrollWheelZoom: false,
-        }).setView([place.latitude, place.longitude], 8);
+          // Explicit center — never rely on Leaflet's default (London).
+          center: [place.latitude, place.longitude],
+          zoom: 8,
+        });
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution:
@@ -97,12 +140,24 @@ export function RegionalMap({ place, cells, spanDeg = 1.6 }: Props) {
 
         const layerGroup = L.layerGroup().addTo(map);
         leafletRef.current = { map, layerGroup };
-        setReady(true);
+
+        // Container may still be settling in the scroll layout.
+        requestAnimationFrame(() => {
+          if (cancelled || !leafletRef.current) return;
+          leafletRef.current.map.invalidateSize();
+          leafletRef.current.map.setView(
+            [place.latitude, place.longitude],
+            8,
+            { animate: false },
+          );
+          setReady(true);
+        });
       } catch (err) {
         console.error(err);
         if (!cancelled) setError("Map could not load.");
       }
     }
+
     void boot();
     return () => {
       cancelled = true;
@@ -111,14 +166,19 @@ export function RegionalMap({ place, cells, spanDeg = 1.6 }: Props) {
         leafletRef.current = null;
       }
     };
+    // placeKey captures lat/lon; place fields used inside are from this render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [placeKey]);
 
   useEffect(() => {
     const handle = leafletRef.current;
     if (!handle || !ready) return;
+
+    let cancelled = false;
     void import("leaflet").then((L) => {
-      handle.layerGroup.clearLayers();
+      if (cancelled || !leafletRef.current) return;
+      const { map, layerGroup } = leafletRef.current;
+      layerGroup.clearLayers();
 
       L.circleMarker([place.latitude, place.longitude], {
         radius: 7,
@@ -126,25 +186,34 @@ export function RegionalMap({ place, cells, spanDeg = 1.6 }: Props) {
         weight: 2,
         fillColor: "#f2c14e",
         fillOpacity: 1,
-      }).addTo(handle.layerGroup);
+      })
+        .bindTooltip(place.name, { direction: "top" })
+        .addTo(layerGroup);
 
-      if (!cells?.length || !stats) {
-        handle.map.setView([place.latitude, place.longitude], 8);
+      map.invalidateSize();
+
+      if (!localCells.length || !stats) {
+        map.setView([place.latitude, place.longitude], 8, { animate: false });
         return;
       }
 
-      const { halfLat, halfLon } = gridStep(cells);
-      const bounds = L.latLngBounds([]);
+      const { halfLat, halfLon } = gridStep(localCells);
+      const corners: import("leaflet").LatLngExpression[] = [
+        [place.latitude, place.longitude],
+      ];
 
-      for (const cell of cells) {
+      for (const cell of localCells) {
         const v = valueOf(cell, layer);
-        const rectBounds: [[number, number], [number, number]] = [
-          [cell.latitude - halfLat, cell.longitude - halfLon],
-          [cell.latitude + halfLat, cell.longitude + halfLon],
+        const sw: [number, number] = [
+          cell.latitude - halfLat,
+          cell.longitude - halfLon,
         ];
-        bounds.extend(rectBounds[0]);
-        bounds.extend(rectBounds[1]);
-        L.rectangle(rectBounds, {
+        const ne: [number, number] = [
+          cell.latitude + halfLat,
+          cell.longitude + halfLon,
+        ];
+        corners.push(sw, ne);
+        L.rectangle([sw, ne], {
           stroke: true,
           color: "rgba(20,32,46,0.12)",
           weight: 1,
@@ -162,12 +231,21 @@ export function RegionalMap({ place, cells, spanDeg = 1.6 }: Props) {
                     : `${v.toFixed(1)}°`
             }`,
           )
-          .addTo(handle.layerGroup);
+          .addTo(layerGroup);
       }
 
-      handle.map.fitBounds(bounds.pad(0.08), { animate: false });
+      const bounds = L.latLngBounds(corners);
+      if (bounds.isValid()) {
+        map.fitBounds(bounds.pad(0.1), { animate: false, maxZoom: 9 });
+      } else {
+        map.setView([place.latitude, place.longitude], 8, { animate: false });
+      }
     });
-  }, [place, cells, layer, stats, ready]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [place, localCells, layer, stats, ready]);
 
   const flatPrecip =
     layer === "precip" && stats && stats.max - stats.min < 0.05;
@@ -191,16 +269,17 @@ export function RegionalMap({ place, cells, spanDeg = 1.6 }: Props) {
       <div className="map-panel__frame">
         <div ref={mapRef} className="map-panel__canvas" />
         {error && <p className="map-panel__fallback">{error}</p>}
-        {!cells?.length && !error && (
+        {!localCells.length && !error && (
           <p className="map-panel__fallback">
-            Regional grid unavailable for this load.
+            Regional grid unavailable for this load — map is centered on{" "}
+            {place.name}.
           </p>
         )}
       </div>
       {stats && (
         <p className="chart__note">
           Local {LAYER_LABEL[layer].toLowerCase()} field from a 5×5 Open-Meteo
-          grid (~{spanDeg.toFixed(1)}° across). Range{" "}
+          grid around {place.name} (~{spanDeg.toFixed(1)}° across). Range{" "}
           {layer === "pressure"
             ? `${Math.round(stats.min)}–${Math.round(stats.max)} hPa`
             : layer === "precip"

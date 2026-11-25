@@ -5,6 +5,7 @@ import { loadSavedPlace, savePlace } from "./lib/location";
 import { fetchForecast } from "./lib/openMeteo";
 import type { ForecastBundle, Place } from "./lib/types";
 
+/** Sensible default when the visitor has not shared a place yet. */
 const FALLBACK_PLACE: Place = {
   id: "helsinki",
   name: "Helsinki",
@@ -27,10 +28,12 @@ export default function App() {
     setBusy(true);
     setError(null);
     setOfflineSample(false);
+    // Optimistic: update the selected place immediately so the map recenters
+    // before the forecast/grid requests finish.
+    setPlace(next);
     setStatus("Loading forecast…");
     try {
       const data = await fetchForecast(next);
-      setPlace(next);
       setBundle(data);
       if (opts?.persist !== false) savePlace(next);
       setStatus(null);
@@ -43,8 +46,7 @@ export default function App() {
           : "Could not load live weather. Showing sample data — try another place when the network is back.",
       );
       setOfflineSample(true);
-      setPlace(next);
-      setBundle(sampleBundle());
+      setBundle(sampleBundle(next));
       setStatus(null);
     } finally {
       setBusy(false);
@@ -91,7 +93,7 @@ export default function App() {
   );
 }
 
-function sampleBundle(): ForecastBundle {
+function sampleBundle(place: Place): ForecastBundle {
   const today = new Date();
   const day = (offset: number) => {
     const d = new Date(today);
@@ -121,9 +123,12 @@ function sampleBundle(): ForecastBundle {
     sunset: `${day(i)}T16:05`,
   }));
 
+  const span = 1.6;
+  const step = span / 4;
+
   return {
     fetchedAt: new Date().toISOString(),
-    timezone: "Europe/Helsinki",
+    timezone: place.timezone ?? "UTC",
     current: {
       time: hour(0),
       temperature: 4,
@@ -171,13 +176,13 @@ function sampleBundle(): ForecastBundle {
       dailyPrecipSpread: Array.from({ length: 7 }, (_, i) => 1 + i * 0.6),
     },
     grid: {
-      spanDeg: 1.6,
+      spanDeg: span,
       cells: Array.from({ length: 25 }, (_, i) => {
         const row = Math.floor(i / 5);
         const col = i % 5;
         return {
-          latitude: 60.17 - 0.8 + row * 0.4,
-          longitude: 24.94 - 0.8 + col * 0.4,
+          latitude: place.latitude - span / 2 + row * step,
+          longitude: place.longitude - span / 2 + col * step,
           temp: 2 + row * 0.4 + col * 0.2,
           precip: (row + col) % 4 === 0 ? 0.6 : 0,
           windSpeed: 12 + col * 2,

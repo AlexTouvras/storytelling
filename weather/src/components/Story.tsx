@@ -89,6 +89,7 @@ export function Story({ place, bundle }: Props) {
           temperature, rain, wind, or pressure near {formatPlace(place)}.
         </p>
         <RegionalMap
+          key={`${place.latitude.toFixed(4)},${place.longitude.toFixed(4)}`}
           place={place}
           cells={bundle.grid?.cells}
           spanDeg={bundle.grid?.spanDeg}
