@@ -505,6 +505,10 @@ input {
   font-family: var(--font-body);
 }
 
+.chart__tick--pressure {
+  fill: #9a7408;
+}
+
 .chart__line {
   stroke-width: 2.25;
   stroke-linecap: round;

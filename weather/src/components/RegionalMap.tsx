@@ -6,6 +6,7 @@ type Layer = "temp" | "precip" | "wind" | "pressure";
 type Props = {
   place: Place;
   cells?: GridCell[];
+  spanDeg?: number;
 };
 
 const LAYER_LABEL: Record<Layer, string> = {
@@ -25,7 +26,8 @@ function valueOf(cell: GridCell, layer: Layer): number {
 function colorFor(value: number, layer: Layer, min: number, max: number): string {
   const t = max === min ? 0.5 : (value - min) / (max - min);
   if (layer === "precip") {
-    const a = 0.15 + t * 0.7;
+    if (max <= 0.05) return "rgba(47, 111, 142, 0.12)";
+    const a = 0.18 + t * 0.72;
     return `rgba(47, 111, 142, ${a.toFixed(2)})`;
   }
   if (layer === "wind") {
@@ -37,14 +39,26 @@ function colorFor(value: number, layer: Layer, min: number, max: number): string
     const b = Math.round(160 - t * 80);
     return `rgba(${r}, 120, ${b}, 0.55)`;
   }
-  // temp: cool blue → warm amber
   const r = Math.round(60 + t * 180);
   const g = Math.round(120 + t * 40);
   const b = Math.round(180 - t * 140);
   return `rgba(${r}, ${g}, ${b}, 0.62)`;
 }
 
-export function RegionalMap({ place, cells }: Props) {
+function gridStep(cells: GridCell[]): { halfLat: number; halfLon: number } {
+  const lats = [...new Set(cells.map((c) => +c.latitude.toFixed(4)))].sort(
+    (a, b) => a - b,
+  );
+  const lons = [...new Set(cells.map((c) => +c.longitude.toFixed(4)))].sort(
+    (a, b) => a - b,
+  );
+  const dLat = lats.length > 1 ? lats[1] - lats[0] : 0.4;
+  const dLon = lons.length > 1 ? lons[1] - lons[0] : 0.4;
+  // Slightly under half-step so cells abut without overlapping seams.
+  return { halfLat: dLat / 2, halfLon: dLon / 2 };
+}
+
+export function RegionalMap({ place, cells, spanDeg = 1.6 }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletRef = useRef<{
     map: import("leaflet").Map;
@@ -82,16 +96,6 @@ export function RegionalMap({ place, cells }: Props) {
         }).addTo(map);
 
         const layerGroup = L.layerGroup().addTo(map);
-        L.circleMarker([place.latitude, place.longitude], {
-          radius: 7,
-          color: "#14202e",
-          weight: 2,
-          fillColor: "#f2c14e",
-          fillOpacity: 1,
-        })
-          .bindTooltip(place.name, { permanent: false })
-          .addTo(map);
-
         leafletRef.current = { map, layerGroup };
         setReady(true);
       } catch (err) {
@@ -107,7 +111,6 @@ export function RegionalMap({ place, cells }: Props) {
         leafletRef.current = null;
       }
     };
-    // Intentionally once per mount; place updates handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -115,7 +118,6 @@ export function RegionalMap({ place, cells }: Props) {
     const handle = leafletRef.current;
     if (!handle || !ready) return;
     void import("leaflet").then((L) => {
-      handle.map.setView([place.latitude, place.longitude], handle.map.getZoom());
       handle.layerGroup.clearLayers();
 
       L.circleMarker([place.latitude, place.longitude], {
@@ -126,17 +128,26 @@ export function RegionalMap({ place, cells }: Props) {
         fillOpacity: 1,
       }).addTo(handle.layerGroup);
 
-      if (!cells?.length || !stats) return;
+      if (!cells?.length || !stats) {
+        handle.map.setView([place.latitude, place.longitude], 8);
+        return;
+      }
 
-      const half = 0.18;
+      const { halfLat, halfLon } = gridStep(cells);
+      const bounds = L.latLngBounds([]);
+
       for (const cell of cells) {
         const v = valueOf(cell, layer);
-        const bounds: [[number, number], [number, number]] = [
-          [cell.latitude - half, cell.longitude - half],
-          [cell.latitude + half, cell.longitude + half],
+        const rectBounds: [[number, number], [number, number]] = [
+          [cell.latitude - halfLat, cell.longitude - halfLon],
+          [cell.latitude + halfLat, cell.longitude + halfLon],
         ];
-        L.rectangle(bounds, {
-          stroke: false,
+        bounds.extend(rectBounds[0]);
+        bounds.extend(rectBounds[1]);
+        L.rectangle(rectBounds, {
+          stroke: true,
+          color: "rgba(20,32,46,0.12)",
+          weight: 1,
           fillColor: colorFor(v, layer, stats.min, stats.max),
           fillOpacity: 1,
         })
@@ -153,8 +164,13 @@ export function RegionalMap({ place, cells }: Props) {
           )
           .addTo(handle.layerGroup);
       }
+
+      handle.map.fitBounds(bounds.pad(0.08), { animate: false });
     });
   }, [place, cells, layer, stats, ready]);
+
+  const flatPrecip =
+    layer === "precip" && stats && stats.max - stats.min < 0.05;
 
   return (
     <div className="map-panel">
@@ -176,13 +192,15 @@ export function RegionalMap({ place, cells }: Props) {
         <div ref={mapRef} className="map-panel__canvas" />
         {error && <p className="map-panel__fallback">{error}</p>}
         {!cells?.length && !error && (
-          <p className="map-panel__fallback">Regional grid unavailable for this load.</p>
+          <p className="map-panel__fallback">
+            Regional grid unavailable for this load.
+          </p>
         )}
       </div>
       {stats && (
         <p className="chart__note">
-          Local {LAYER_LABEL[layer].toLowerCase()} field from a 5×5 Open-Meteo grid
-          (~{((cells?.[0] && 1.6) || 1.6).toFixed(1)}° across). Range{" "}
+          Local {LAYER_LABEL[layer].toLowerCase()} field from a 5×5 Open-Meteo
+          grid (~{spanDeg.toFixed(1)}° across). Range{" "}
           {layer === "pressure"
             ? `${Math.round(stats.min)}–${Math.round(stats.max)} hPa`
             : layer === "precip"
@@ -190,7 +208,11 @@ export function RegionalMap({ place, cells }: Props) {
               : layer === "wind"
                 ? `${Math.round(stats.min)}–${Math.round(stats.max)} km/h`
                 : `${stats.min.toFixed(1)}–${stats.max.toFixed(1)}°`}
-          . Basemap © OpenStreetMap.
+          .
+          {flatPrecip
+            ? " No measurable precip across the grid right now, so the layer looks even."
+            : null}{" "}
+          Basemap © OpenStreetMap.
         </p>
       )}
     </div>

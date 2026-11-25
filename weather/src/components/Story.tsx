@@ -88,7 +88,11 @@ export function Story({ place, bundle }: Props) {
           A local Open-Meteo grid over OpenStreetMap. Switch layers for
           temperature, rain, wind, or pressure near {formatPlace(place)}.
         </p>
-        <RegionalMap place={place} cells={bundle.grid?.cells} />
+        <RegionalMap
+          place={place}
+          cells={bundle.grid?.cells}
+          spanDeg={bundle.grid?.spanDeg}
+        />
       </section>
 
       <section className="section" id="today">
