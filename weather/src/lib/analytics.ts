@@ -140,7 +140,9 @@ export function buildAnalytics(bundle: ForecastBundle): StoryAnalytics {
       );
     }
   } else {
-    reasons.push("Ensemble spread unavailable; confidence uses forecast day range.");
+    reasons.push(
+      "Ensemble spread is unavailable right now, so this score leans on how far out the forecast goes.",
+    );
   }
 
   const farWet = bundle.daily
@@ -148,7 +150,9 @@ export function buildAnalytics(bundle: ForecastBundle): StoryAnalytics {
     .some((d) => d.precipProbMax >= 50);
   if (farWet) {
     score -= 8;
-    reasons.push("Day 8–14 still carries meaningful rain probability — timing can shift.");
+    reasons.push(
+      "Days 8–14 still show a real chance of rain — exact timing can still move.",
+    );
   }
 
   const precipSpread = bundle.ensemble?.dailyPrecipSpread?.filter((v) =>
@@ -156,23 +160,25 @@ export function buildAnalytics(bundle: ForecastBundle): StoryAnalytics {
   );
   if (precipSpread && avg(precipSpread) > 5) {
     score -= 6;
-    reasons.push("Rain amounts differ a lot across ensemble members.");
+    reasons.push(
+      "Rain totals disagree a lot across ensemble members — treat amounts as a range.",
+    );
   }
 
   score = Math.max(35, Math.min(95, Math.round(score)));
   const label =
-    score >= 80 ? "High" : score >= 60 ? "Moderate" : "Low–moderate";
+    score >= 80 ? "High" : score >= 60 ? "Moderate" : "Lower";
 
   const practical: string[] = [];
   practical.push(
-    `Now: ${Math.round(bundle.current.temperature)}° feels like ${Math.round(bundle.current.apparent)}° — ${weatherLabel(bundle.current.weatherCode).toLowerCase()}.`,
+    `Right now: ${Math.round(bundle.current.temperature)}° (feels like ${Math.round(bundle.current.apparent)}°), ${weatherLabel(bundle.current.weatherCode).toLowerCase()}.`,
   );
   if (peakPrecipHour && peakPrecipHour.precipProb >= 40) {
     practical.push(
-      `Best rain window today around ${fmtHour(peakPrecipHour.time)} (${Math.round(peakPrecipHour.precipProb)}% chance).`,
+      `Highest rain chance today around ${fmtHour(peakPrecipHour.time)} (${Math.round(peakPrecipHour.precipProb)}%).`,
     );
   } else if (today.precipProbMax < 20) {
-    practical.push("Today looks largely dry — low chance of measurable rain.");
+    practical.push("Today looks mostly dry — low chance of measurable rain.");
   }
   if (today.windGustsMax >= 45) {
     practical.push(
@@ -231,6 +237,7 @@ export function buildAnalytics(bundle: ForecastBundle): StoryAnalytics {
   return {
     nowLabel: `${Math.round(bundle.current.temperature)}° · ${weatherLabel(bundle.current.weatherCode)}`,
     nextHours,
+    todayHours,
     today,
     tonightHours,
     peakHeatHour,

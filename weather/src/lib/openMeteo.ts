@@ -1,4 +1,11 @@
-import type { DailyPoint, ForecastBundle, HourlyPoint, Place } from "./types";
+import type {
+  DailyPoint,
+  EnsembleDay,
+  ForecastBundle,
+  GridCell,
+  HourlyPoint,
+  Place,
+} from "./types";
 
 function num(v: unknown, fallback = 0): number {
   return typeof v === "number" && Number.isFinite(v) ? v : fallback;
@@ -13,6 +20,8 @@ function zipHourly(raw: {
   weather_code: number[];
   wind_speed_10m: number[];
   wind_gusts_10m: number[];
+  wind_direction_10m: number[];
+  surface_pressure: number[];
   uv_index: number[];
   relative_humidity_2m: number[];
   cloud_cover: number[];
@@ -26,6 +35,8 @@ function zipHourly(raw: {
     weatherCode: num(raw.weather_code[i]),
     windSpeed: num(raw.wind_speed_10m[i]),
     windGusts: num(raw.wind_gusts_10m[i]),
+    windDir: num(raw.wind_direction_10m[i]),
+    pressure: num(raw.surface_pressure[i]),
     uvIndex: num(raw.uv_index[i]),
     humidity: num(raw.relative_humidity_2m[i]),
     cloudCover: num(raw.cloud_cover[i]),
@@ -85,6 +96,7 @@ export async function fetchForecast(place: Place): Promise<ForecastBundle> {
       "wind_speed_10m",
       "wind_gusts_10m",
       "relative_humidity_2m",
+      "surface_pressure",
       "is_day",
     ].join(","),
   );
@@ -98,6 +110,8 @@ export async function fetchForecast(place: Place): Promise<ForecastBundle> {
       "weather_code",
       "wind_speed_10m",
       "wind_gusts_10m",
+      "wind_direction_10m",
+      "surface_pressure",
       "uv_index",
       "relative_humidity_2m",
       "cloud_cover",
@@ -131,6 +145,7 @@ export async function fetchForecast(place: Place): Promise<ForecastBundle> {
       wind_speed_10m: number;
       wind_gusts_10m: number;
       relative_humidity_2m: number;
+      surface_pressure: number;
       is_day: number;
     };
     hourly: Parameters<typeof zipHourly>[0];
@@ -150,6 +165,7 @@ export async function fetchForecast(place: Place): Promise<ForecastBundle> {
       windSpeed: num(forecast.current.wind_speed_10m),
       windGusts: num(forecast.current.wind_gusts_10m),
       humidity: num(forecast.current.relative_humidity_2m),
+      pressure: num(forecast.current.surface_pressure),
       isDay: forecast.current.is_day === 1,
     },
     hourly: zipHourly(forecast.hourly),
@@ -160,16 +176,17 @@ export async function fetchForecast(place: Place): Promise<ForecastBundle> {
     fetchYearAgoBaseline(place, bundle.daily.length),
     fetchEnsemble(place),
     fetchAirQuality(place),
+    fetchRegionalGrid(place),
   ]);
 
   if (extras[0].status === "fulfilled") bundle.climate = extras[0].value;
   if (extras[1].status === "fulfilled") bundle.ensemble = extras[1].value;
   if (extras[2].status === "fulfilled") bundle.airQuality = extras[2].value;
+  if (extras[3].status === "fulfilled") bundle.grid = extras[3].value;
 
   return bundle;
 }
 
-/** Same calendar window last year — a light seasonal baseline (not a 30-year normal). */
 async function fetchYearAgoBaseline(place: Place, days: number) {
   const start = new Date();
   start.setFullYear(start.getFullYear() - 1);
@@ -186,14 +203,26 @@ async function fetchYearAgoBaseline(place: Place, days: number) {
 
   const data = await fetchJson<{
     daily: {
+      time: string[];
       temperature_2m_max: number[];
       precipitation_sum: number[];
     };
   }>(hist);
 
   return {
+    dates: data.daily.time,
     tempMeanMax: data.daily.temperature_2m_max.map((v) => num(v, NaN)),
     precipMean: data.daily.precipitation_sum.map((v) => num(v, NaN)),
+  };
+}
+
+function memberStats(values: number[]) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  return {
+    min: sorted[0],
+    mean,
+    max: sorted[sorted.length - 1],
   };
 }
 
@@ -212,38 +241,53 @@ async function fetchEnsemble(place: Place) {
   const data = await fetchJson<Ens>(url);
   const daily = data.daily;
 
-  const tempKeys = Object.keys(daily).filter((k) =>
-    k.startsWith("temperature_2m_max"),
+  const tempKeys = Object.keys(daily).filter(
+    (k) => k.startsWith("temperature_2m_max") && k.includes("member"),
   );
-  const precipKeys = Object.keys(daily).filter((k) =>
-    k.startsWith("precipitation_sum"),
+  const precipKeys = Object.keys(daily).filter(
+    (k) => k.startsWith("precipitation_sum") && k.includes("member"),
   );
+  // Fall back to all keys if member naming differs
+  const tKeys = tempKeys.length
+    ? tempKeys
+    : Object.keys(daily).filter((k) => k.startsWith("temperature_2m_max"));
+  const pKeys = precipKeys.length
+    ? precipKeys
+    : Object.keys(daily).filter((k) => k.startsWith("precipitation_sum"));
 
+  const dates = (daily.time as string[] | undefined) ?? [];
   const dayCount =
-    (daily.time as string[] | undefined)?.length ??
-    (daily[tempKeys[0]] as number[] | undefined)?.length ??
-    0;
+    dates.length || (daily[tKeys[0]] as number[] | undefined)?.length || 0;
 
+  const days: EnsembleDay[] = [];
   const dailyTempMaxSpread: number[] = [];
   const dailyPrecipSpread: number[] = [];
 
   for (let i = 0; i < dayCount; i++) {
-    const temps = tempKeys
+    const temps = tKeys
       .map((k) => num((daily[k] as number[])?.[i], NaN))
       .filter((v) => Number.isFinite(v));
-    const precips = precipKeys
+    const precips = pKeys
       .map((k) => num((daily[k] as number[])?.[i], NaN))
       .filter((v) => Number.isFinite(v));
-    dailyTempMaxSpread.push(
-      temps.length ? Math.max(...temps) - Math.min(...temps) : NaN,
-    );
-    dailyPrecipSpread.push(
-      precips.length ? Math.max(...precips) - Math.min(...precips) : NaN,
-    );
+    const t = temps.length ? memberStats(temps) : null;
+    const p = precips.length ? memberStats(precips) : null;
+    days.push({
+      date: dates[i] ?? "",
+      tempMaxMin: t?.min ?? NaN,
+      tempMaxMean: t?.mean ?? NaN,
+      tempMaxMax: t?.max ?? NaN,
+      precipMin: p?.min ?? NaN,
+      precipMean: p?.mean ?? NaN,
+      precipMax: p?.max ?? NaN,
+    });
+    dailyTempMaxSpread.push(t ? t.max - t.min : NaN);
+    dailyPrecipSpread.push(p ? p.max - p.min : NaN);
   }
 
   return {
-    memberCount: Math.max(tempKeys.length, precipKeys.length, 1),
+    memberCount: Math.max(tKeys.length, pKeys.length, 1),
+    days,
     dailyTempMaxSpread,
     dailyPrecipSpread,
   };
@@ -268,4 +312,51 @@ async function fetchAirQuality(place: Place) {
     europeanAqi: data.hourly.european_aqi,
     usAqi: data.hourly.us_aqi,
   };
+}
+
+/** 5×5 local grid for regional maps (temp / precip / wind / pressure). */
+async function fetchRegionalGrid(place: Place) {
+  const span = 1.6; // degrees ≈ 150–180 km mid-latitudes
+  const step = span / 4;
+  const lats: number[] = [];
+  const lons: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 5; j++) {
+      lats.push(place.latitude - span / 2 + i * step);
+      lons.push(place.longitude - span / 2 + j * step);
+    }
+  }
+
+  const url = new URL("https://api.open-meteo.com/v1/forecast");
+  url.searchParams.set("latitude", lats.map((v) => v.toFixed(3)).join(","));
+  url.searchParams.set("longitude", lons.map((v) => v.toFixed(3)).join(","));
+  url.searchParams.set(
+    "current",
+    "temperature_2m,precipitation,wind_speed_10m,surface_pressure",
+  );
+  url.searchParams.set("timezone", "auto");
+
+  type Point = {
+    latitude: number;
+    longitude: number;
+    current: {
+      temperature_2m: number;
+      precipitation: number;
+      wind_speed_10m: number;
+      surface_pressure: number;
+    };
+  };
+
+  const data = await fetchJson<Point[] | Point>(url);
+  const points = Array.isArray(data) ? data : [data];
+  const cells: GridCell[] = points.map((p, i) => ({
+    latitude: p.latitude ?? lats[i],
+    longitude: p.longitude ?? lons[i],
+    temp: num(p.current?.temperature_2m),
+    precip: num(p.current?.precipitation),
+    windSpeed: num(p.current?.wind_speed_10m),
+    pressure: num(p.current?.surface_pressure),
+  }));
+
+  return { cells, spanDeg: span };
 }

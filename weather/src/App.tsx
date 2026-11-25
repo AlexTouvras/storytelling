@@ -27,7 +27,7 @@ export default function App() {
     setBusy(true);
     setError(null);
     setOfflineSample(false);
-    setStatus("Fetching the forecast story…");
+    setStatus("Loading forecast…");
     try {
       const data = await fetchForecast(next);
       setPlace(next);
@@ -39,8 +39,8 @@ export default function App() {
       const offline = typeof navigator !== "undefined" && !navigator.onLine;
       setError(
         offline
-          ? "You appear offline. Showing a sample story so you can still scroll the layout."
-          : "Could not load live weather. Showing a sample story — try another place when the network is back.",
+          ? "You appear offline. Showing sample forecast data so you can still browse the page."
+          : "Could not load live weather. Showing sample data — try another place when the network is back.",
       );
       setOfflineSample(true);
       setPlace(next);
@@ -105,6 +105,22 @@ function sampleBundle(): ForecastBundle {
     return d.toISOString().slice(0, 16);
   };
 
+  const daily = Array.from({ length: 14 }, (_, i) => ({
+    date: day(i),
+    weatherCode: i === 2 ? 61 : i === 5 ? 95 : 3,
+    tempMax: 5 + (i % 4),
+    tempMin: -1 + (i % 3),
+    apparentMax: 3 + (i % 4),
+    apparentMin: -3 + (i % 3),
+    precipSum: i === 2 ? 6.2 : i === 5 ? 9.1 : 0.4,
+    precipProbMax: i === 2 || i === 5 ? 70 : 20,
+    windMax: 20 + i,
+    windGustsMax: 35 + i * 2,
+    uvMax: 1.5,
+    sunrise: `${day(i)}T08:10`,
+    sunset: `${day(i)}T16:05`,
+  }));
+
   return {
     fetchedAt: new Date().toISOString(),
     timezone: "Europe/Helsinki",
@@ -116,9 +132,10 @@ function sampleBundle(): ForecastBundle {
       windSpeed: 18,
       windGusts: 32,
       humidity: 78,
+      pressure: 1012,
       isDay: true,
     },
-    hourly: Array.from({ length: 36 }, (_, i) => ({
+    hourly: Array.from({ length: 48 }, (_, i) => ({
       time: hour(i),
       temperature: 4 + Math.sin(i / 5) * 3,
       apparent: 1 + Math.sin(i / 5) * 3,
@@ -127,38 +144,51 @@ function sampleBundle(): ForecastBundle {
       weatherCode: i > 8 && i < 14 ? 61 : 3,
       windSpeed: 14 + (i % 5),
       windGusts: 28 + (i % 7),
+      windDir: 220 + i,
+      pressure: 1012 - Math.sin(i / 8) * 4,
       uvIndex: i > 8 && i < 16 ? 1.2 : 0,
       humidity: 75,
       cloudCover: 80,
     })),
-    daily: Array.from({ length: 14 }, (_, i) => ({
-      date: day(i),
-      weatherCode: i === 2 ? 61 : i === 5 ? 95 : 3,
-      tempMax: 5 + (i % 4),
-      tempMin: -1 + (i % 3),
-      apparentMax: 3 + (i % 4),
-      apparentMin: -3 + (i % 3),
-      precipSum: i === 2 ? 6.2 : i === 5 ? 9.1 : 0.4,
-      precipProbMax: i === 2 || i === 5 ? 70 : 20,
-      windMax: 20 + i,
-      windGustsMax: 35 + i * 2,
-      uvMax: 1.5,
-      sunrise: `${day(i)}T08:10`,
-      sunset: `${day(i)}T16:05`,
-    })),
+    daily,
     climate: {
-      tempMeanMax: Array.from({ length: 14 }, () => 3.5),
+      dates: daily.map((d) => d.date),
+      tempMeanMax: Array.from({ length: 14 }, (_, i) => 3.5 + (i % 3) * 0.2),
       precipMean: Array.from({ length: 14 }, () => 1.2),
     },
     ensemble: {
       memberCount: 10,
+      days: Array.from({ length: 7 }, (_, i) => ({
+        date: day(i),
+        tempMaxMin: 3 + (i % 3) - 1.2,
+        tempMaxMean: 5 + (i % 4),
+        tempMaxMax: 5 + (i % 4) + 1.5 + i * 0.2,
+        precipMin: 0,
+        precipMean: i === 2 ? 5 : 0.5,
+        precipMax: i === 2 ? 9 : 1.5 + i * 0.3,
+      })),
       dailyTempMaxSpread: Array.from({ length: 7 }, (_, i) => 1.5 + i * 0.4),
       dailyPrecipSpread: Array.from({ length: 7 }, (_, i) => 1 + i * 0.6),
     },
+    grid: {
+      spanDeg: 1.6,
+      cells: Array.from({ length: 25 }, (_, i) => {
+        const row = Math.floor(i / 5);
+        const col = i % 5;
+        return {
+          latitude: 60.17 - 0.8 + row * 0.4,
+          longitude: 24.94 - 0.8 + col * 0.4,
+          temp: 2 + row * 0.4 + col * 0.2,
+          precip: (row + col) % 4 === 0 ? 0.6 : 0,
+          windSpeed: 12 + col * 2,
+          pressure: 1010 + row,
+        };
+      }),
+    },
     airQuality: {
-      time: [hour(0)],
-      europeanAqi: [22],
-      usAqi: [35],
+      time: Array.from({ length: 24 }, (_, i) => hour(i)),
+      europeanAqi: Array.from({ length: 24 }, (_, i) => 18 + (i % 5)),
+      usAqi: Array.from({ length: 24 }, (_, i) => 30 + (i % 6)),
     },
   };
 }

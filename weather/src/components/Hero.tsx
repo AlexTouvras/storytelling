@@ -41,7 +41,7 @@ export function Hero({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
         >
-          What the sky will do where you are
+          Your local forecast, explained in detail
         </motion.h1>
         <motion.p
           className="hero__lede"
@@ -49,7 +49,8 @@ export function Hero({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
         >
-          A clear scroll story of the next two weeks — not a wall of widgets.
+          Hourly trends, rain risk, wind, maps, and model confidence for the next
+          two weeks.
         </motion.p>
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 10 }}
@@ -64,7 +65,7 @@ export function Hero({
           />
           {status && <p className="status-banner">{status}</p>}
           {busy && !status && (
-            <p className="status-banner">Fetching the forecast story…</p>
+            <p className="status-banner">Loading forecast…</p>
           )}
         </motion.div>
       </div>

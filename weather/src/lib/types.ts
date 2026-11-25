@@ -29,6 +29,8 @@ export type HourlyPoint = {
   weatherCode: number;
   windSpeed: number;
   windGusts: number;
+  windDir: number;
+  pressure: number;
   uvIndex: number;
   humidity: number;
   cloudCover: number;
@@ -50,6 +52,25 @@ export type DailyPoint = {
   sunset: string;
 };
 
+export type EnsembleDay = {
+  date: string;
+  tempMaxMin: number;
+  tempMaxMean: number;
+  tempMaxMax: number;
+  precipMin: number;
+  precipMean: number;
+  precipMax: number;
+};
+
+export type GridCell = {
+  latitude: number;
+  longitude: number;
+  temp: number;
+  precip: number;
+  windSpeed: number;
+  pressure: number;
+};
+
 export type ForecastBundle = {
   fetchedAt: string;
   timezone: string;
@@ -61,18 +82,25 @@ export type ForecastBundle = {
     windSpeed: number;
     windGusts: number;
     humidity: number;
+    pressure: number;
     isDay: boolean;
   };
   hourly: HourlyPoint[];
   daily: DailyPoint[];
   climate?: {
+    dates: string[];
     tempMeanMax: number[];
     precipMean: number[];
   };
   ensemble?: {
     memberCount: number;
+    days: EnsembleDay[];
     dailyTempMaxSpread: number[];
     dailyPrecipSpread: number[];
+  };
+  grid?: {
+    cells: GridCell[];
+    spanDeg: number;
   };
   airQuality?: {
     time: string[];
@@ -84,6 +112,7 @@ export type ForecastBundle = {
 export type StoryAnalytics = {
   nowLabel: string;
   nextHours: HourlyPoint[];
+  todayHours: HourlyPoint[];
   today: DailyPoint;
   tonightHours: HourlyPoint[];
   peakHeatHour: HourlyPoint | null;
