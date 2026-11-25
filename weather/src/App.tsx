@@ -11,6 +11,7 @@ const FALLBACK_PLACE: Place = {
   name: "Helsinki",
   admin1: "Uusimaa",
   country: "Finland",
+  countryCode: "FI",
   latitude: 60.1699,
   longitude: 24.9384,
   timezone: "Europe/Helsinki",
@@ -175,21 +176,33 @@ function sampleBundle(place: Place): ForecastBundle {
       dailyTempMaxSpread: Array.from({ length: 7 }, (_, i) => 1.5 + i * 0.4),
       dailyPrecipSpread: Array.from({ length: 7 }, (_, i) => 1 + i * 0.6),
     },
-    grid: {
-      spanDeg: span,
-      cells: Array.from({ length: 25 }, (_, i) => {
-        const row = Math.floor(i / 5);
-        const col = i % 5;
-        return {
-          latitude: place.latitude - span / 2 + row * step,
-          longitude: place.longitude - span / 2 + col * step,
-          temp: 2 + row * 0.4 + col * 0.2,
-          precip: (row + col) % 4 === 0 ? 0.6 : 0,
-          windSpeed: 12 + col * 2,
-          pressure: 1010 + row,
-        };
-      }),
-    },
+    grid: (() => {
+      const pad = 3.5;
+      const bbox = [
+        place.longitude - pad,
+        place.latitude - pad,
+        place.longitude + pad,
+        place.latitude + pad,
+      ] as const;
+      return {
+        bbox,
+        countryCode: place.countryCode,
+        countryName: place.country || place.name,
+        spanDeg: pad * 2,
+        cells: Array.from({ length: 25 }, (_, i) => {
+          const row = Math.floor(i / 5);
+          const col = i % 5;
+          return {
+            latitude: place.latitude - span / 2 + row * step,
+            longitude: place.longitude - span / 2 + col * step,
+            temp: 2 + row * 0.4 + col * 0.2,
+            precip: (row + col) % 4 === 0 ? 0.6 : 0,
+            windSpeed: 12 + col * 2,
+            pressure: 1010 + row,
+          };
+        }),
+      };
+    })(),
     airQuality: {
       time: Array.from({ length: 24 }, (_, i) => hour(i)),
       europeanAqi: Array.from({ length: 24 }, (_, i) => 18 + (i % 5)),

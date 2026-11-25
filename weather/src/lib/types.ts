@@ -3,10 +3,14 @@ export type Place = {
   name: string;
   admin1?: string;
   country: string;
+  /** ISO 3166-1 alpha-2 when known — drives national map extent. */
+  countryCode?: string;
   latitude: number;
   longitude: number;
   timezone?: string;
 };
+
+export type BBox = readonly [number, number, number, number]; // west, south, east, north
 
 export type WeatherCode =
   | "clear"
@@ -100,7 +104,11 @@ export type ForecastBundle = {
   };
   grid?: {
     cells: GridCell[];
-    spanDeg: number;
+    bbox: BBox;
+    countryCode?: string;
+    countryName?: string;
+    /** @deprecated kept for older samples */
+    spanDeg?: number;
   };
   airQuality?: {
     time: string[];

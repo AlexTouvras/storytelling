@@ -41,7 +41,7 @@ export function Hero({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
         >
-          Your local forecast, explained in detail
+          Your local forecast, told as you scroll
         </motion.h1>
         <motion.p
           className="hero__lede"
@@ -49,8 +49,8 @@ export function Hero({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
         >
-          Hourly trends, rain risk, wind, maps, and model confidence for the next
-          two weeks.
+          One idea at a time — hours, the country map, rain risk, and confidence
+          for the next two weeks.
         </motion.p>
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 10 }}

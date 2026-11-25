@@ -28,7 +28,6 @@ export function formatPlace(place: Place): string {
   const bits = [place.name, place.admin1, place.country].filter(
     (b): b is string => Boolean(b),
   );
-  // Avoid "Helsinki, Helsinki, Finland"
   const unique: string[] = [];
   for (const b of bits) {
     if (!unique.includes(b)) unique.push(b);
@@ -58,6 +57,7 @@ export async function searchPlaces(query: string): Promise<Place[]> {
       name: string;
       admin1?: string;
       country?: string;
+      country_code?: string;
       latitude: number;
       longitude: number;
       timezone?: string;
@@ -68,6 +68,7 @@ export async function searchPlaces(query: string): Promise<Place[]> {
     name: r.name,
     admin1: r.admin1,
     country: r.country ?? "",
+    countryCode: r.country_code?.toUpperCase(),
     latitude: r.latitude,
     longitude: r.longitude,
     timezone: r.timezone,
@@ -78,7 +79,6 @@ export async function reverseGeocode(
   latitude: number,
   longitude: number,
 ): Promise<Place> {
-  // Open-Meteo has search but no reverse endpoint — use BigDataCloud's keyless client API.
   try {
     const url = new URL(
       "https://api.bigdatacloud.net/data/reverse-geocode-client",
@@ -93,6 +93,7 @@ export async function reverseGeocode(
         locality?: string;
         principalSubdivision?: string;
         countryName?: string;
+        countryCode?: string;
       };
       const name = data.city || data.locality || "Your location";
       return {
@@ -100,6 +101,7 @@ export async function reverseGeocode(
         name,
         admin1: data.principalSubdivision,
         country: data.countryName ?? "",
+        countryCode: data.countryCode?.toUpperCase(),
         latitude,
         longitude,
       };

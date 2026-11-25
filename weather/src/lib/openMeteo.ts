@@ -1,4 +1,6 @@
+import { bboxForCountry } from "./countryBounds";
 import type {
+  BBox,
   DailyPoint,
   EnsembleDay,
   ForecastBundle,
@@ -314,16 +316,51 @@ async function fetchAirQuality(place: Place) {
   };
 }
 
-/** 5×5 local grid for regional maps (temp / precip / wind / pressure). */
+function nationalBBox(place: Place): {
+  bbox: BBox;
+  countryCode?: string;
+  countryName?: string;
+} {
+  const known = bboxForCountry(place.countryCode);
+  if (known) {
+    return {
+      bbox: known,
+      countryCode: place.countryCode?.toUpperCase(),
+      countryName: place.country || undefined,
+    };
+  }
+  // Fallback: regional pad around the point when ISO code is unknown.
+  const pad = 3.5;
+  return {
+    bbox: [
+      place.longitude - pad,
+      place.latitude - pad,
+      place.longitude + pad,
+      place.latitude + pad,
+    ],
+    countryCode: place.countryCode?.toUpperCase(),
+    countryName: place.country || undefined,
+  };
+}
+
+/** National (or wide regional) sample grid for the country map layers. */
 async function fetchRegionalGrid(place: Place) {
-  const span = 1.6; // degrees ≈ 150–180 km mid-latitudes
-  const step = span / 4;
+  const { bbox, countryCode, countryName } = nationalBBox(place);
+  const [west, south, east, north] = bbox;
+  // Cap extent for huge countries so Open-Meteo multi-point stays responsive.
+  const width = Math.max(east - west, 0.5);
+  const height = Math.max(north - south, 0.5);
+  const cols = width > 40 ? 7 : width > 20 ? 8 : 9;
+  const rows = height > 40 ? 7 : height > 20 ? 8 : 9;
+
   const lats: number[] = [];
   const lons: number[] = [];
-  for (let i = 0; i < 5; i++) {
-    for (let j = 0; j < 5; j++) {
-      lats.push(place.latitude - span / 2 + i * step);
-      lons.push(place.longitude - span / 2 + j * step);
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const lat = south + ((i + 0.5) / rows) * height;
+      const lon = west + ((j + 0.5) / cols) * width;
+      lats.push(lat);
+      lons.push(lon);
     }
   }
 
@@ -349,8 +386,6 @@ async function fetchRegionalGrid(place: Place) {
 
   const data = await fetchJson<Point[] | Point>(url);
   const points = Array.isArray(data) ? data : [data];
-  // Anchor cells on the requested grid (not model-snapped coords) so the map
-  // stays centered on the selected place even when Open-Meteo snaps points.
   const cells: GridCell[] = lats.map((latitude, i) => {
     const p = points[i];
     return {
@@ -363,5 +398,11 @@ async function fetchRegionalGrid(place: Place) {
     };
   });
 
-  return { cells, spanDeg: span };
+  return {
+    cells,
+    bbox,
+    countryCode,
+    countryName,
+    spanDeg: Math.max(width, height),
+  };
 }
