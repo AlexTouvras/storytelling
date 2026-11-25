@@ -282,13 +282,14 @@ input {
   position: sticky;
   top: 1.15rem;
   align-self: start;
-  height: calc(100dvh - 2.3rem);
-  max-height: 820px;
-  min-height: 460px;
+  /* Size to content — no tall empty glass panel */
+  height: auto;
+  max-height: calc(100dvh - 2rem);
+  min-height: 0;
 }
 
 .story-stage {
-  height: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
   border: 1px solid oklch(1 0 0 / 0.1);
@@ -334,23 +335,83 @@ input {
 }
 
 .story-stage__body {
-  flex: 1;
-  min-height: 0;
   padding: 0.65rem 0.75rem 0.85rem;
-  overflow: auto;
+}
+
+.living-stage__viewport {
+  position: relative;
+  padding: 0.55rem 0.65rem 0.75rem;
+  min-height: 0;
+}
+
+.living-layer {
+  position: relative;
+  width: 100%;
+}
+
+.living-layer:not([style*="pointer-events: auto"]) {
+  /* inactive layers collapse out of flow via absolute when faded */
+}
+
+.living-layer[aria-hidden="true"] {
+  position: absolute;
+  inset: 0.55rem 0.65rem auto;
+  width: calc(100% - 1.3rem);
+  z-index: 0;
+}
+
+.living-layer[aria-hidden="false"],
+.living-layer:not([aria-hidden]) {
+  position: relative;
+  z-index: 1;
+}
+
+.living-layer--map .map-panel__frame {
+  border-radius: 12px;
+}
+
+.living-layer--map .map-panel__canvas {
+  height: min(360px, 46vh);
+  min-height: 260px;
+}
+
+.living-chart {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 0.15rem 0 0;
+}
+
+.living-annotation {
+  position: relative;
+  z-index: 2;
+  margin: 0.55rem 0.15rem 0.15rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid oklch(0.78 0.14 195 / 0.28);
+  background: oklch(0.78 0.14 195 / 0.1);
+  color: #e8f7fb;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .story-stage__body .chart,
-.story-stage__body .map-panel {
+.story-stage__body .map-panel,
+.living-stage .chart,
+.living-stage .map-panel {
   margin-bottom: 0;
   border: 0;
   background: transparent;
   padding: 0;
 }
 
-.story-stage__body .map-panel__canvas {
-  height: min(420px, 52vh);
-  min-height: 280px;
+.living-stage .map-panel__canvas {
+  height: min(360px, 46vh);
+  min-height: 260px;
+}
+
+.living-stage .chart__note {
+  display: none;
 }
 
 .story-stage__empty,
@@ -462,12 +523,13 @@ input {
   }
 
   .story-stage {
-    max-height: min(54vh, 440px);
+    max-height: none;
   }
 
-  .story-stage__body .map-panel__canvas {
-    height: min(240px, 36vh);
-    min-height: 180px;
+  .living-layer--map .map-panel__canvas,
+  .living-stage .map-panel__canvas {
+    height: min(260px, 40vh);
+    min-height: 200px;
   }
 
   .chapter {
@@ -907,7 +969,13 @@ input {
 
 .leaflet-container {
   font: inherit;
-  background: #0a0d14;
+  background: #070a12;
+}
+
+.leaflet-container .leaflet-control-zoom a {
+  background: oklch(1 0 0 / 0.08);
+  color: #e8ecf4;
+  border-color: oklch(1 0 0 / 0.12);
 }
 
 .skylore-heat-canvas {

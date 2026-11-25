@@ -216,15 +216,8 @@ export function RegionalMap({
           zoom: 6,
         });
 
-        // Keyless dark basemap (Carto CDN now watermarks without an API key)
-        L.tileLayer(
-          "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-          {
-            maxZoom: 12,
-            opacity: 0.9,
-            attribution: "Tiles © Esri",
-          },
-        ).addTo(map);
+        // Keyless: no raster tiles (no Carto/Esri/API keys). Void + polygon + heat.
+        map.getContainer().style.background = "#070a12";
 
         leafletRef.current = {
           map,
@@ -413,7 +406,7 @@ export function RegionalMap({
           {flatPrecip
             ? " Little or no precip on the grid right now."
             : null}{" "}
-          Dark basemap · Natural Earth borders.
+          Void canvas · Natural Earth borders · no tile API.
         </p>
       )}
     </div>
