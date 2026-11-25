@@ -38,18 +38,6 @@ export function Story({ place, bundle }: Props) {
   return (
     <div className="story" ref={rootRef}>
       <div className="story-layout">
-        <aside className="story-stage-wrap" aria-label="Forecast visual">
-          <StoryStage
-            beat={activeBeat}
-            place={place}
-            bundle={bundle}
-            analytics={a}
-            mapLayer={mapLayer}
-            onMapLayer={setMapLayer}
-            next48={next48}
-          />
-        </aside>
-
         <div className="story-chapters">
           <section className="chapter" data-beat="now" id="now">
             <p className="kicker">Right now</p>
@@ -269,6 +257,18 @@ export function Story({ place, bundle }: Props) {
             stores only your last place on this device.
           </footer>
         </div>
+
+        <aside className="story-stage-wrap" aria-label="Forecast visual">
+          <StoryStage
+            beat={activeBeat}
+            place={place}
+            bundle={bundle}
+            analytics={a}
+            mapLayer={mapLayer}
+            onMapLayer={setMapLayer}
+            next48={next48}
+          />
+        </aside>
       </div>
     </div>
   );

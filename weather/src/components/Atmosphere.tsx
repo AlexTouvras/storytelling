@@ -31,7 +31,7 @@ export function Atmosphere({ weatherCode, isDay }: Props) {
     let w = 0;
     let h = 0;
     let dpr = 1;
-    const particles = Array.from({ length: 48 }, (_, i) => ({
+    const particles = Array.from({ length: 72 }, (_, i) => ({
       x: Math.random(),
       y: Math.random(),
       r: 0.4 + Math.random() * 1.8,
@@ -54,34 +54,41 @@ export function Atmosphere({ weatherCode, isDay }: Props) {
       ctx.clearRect(0, 0, w, h);
       const time = t * 0.001;
 
-      // Soft drifting haze bands
-      for (let i = 0; i < 3; i++) {
-        const y = h * (0.22 + i * 0.18) + Math.sin(time * 0.35 + i) * 12;
-        const grad = ctx.createLinearGradient(0, y - 40, 0, y + 40);
-        grad.addColorStop(0, "rgba(255,255,255,0)");
-        grad.addColorStop(0.5, `rgba(255,255,255,${0.05 + i * 0.02})`);
-        grad.addColorStop(1, "rgba(255,255,255,0)");
+      // Soft drifting haze + cyan/violet aurora ribbons
+      for (let i = 0; i < 4; i++) {
+        const y = h * (0.18 + i * 0.16) + Math.sin(time * 0.35 + i) * 16;
+        const grad = ctx.createLinearGradient(0, y - 48, 0, y + 48);
+        const cyan = i % 2 === 0;
+        grad.addColorStop(0, "rgba(0,0,0,0)");
+        grad.addColorStop(
+          0.5,
+          cyan
+            ? `rgba(34,211,238,${0.045 + i * 0.015})`
+            : `rgba(167,139,250,${0.04 + i * 0.012})`,
+        );
+        grad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = grad;
-        ctx.fillRect(0, y - 40, w, 80);
+        ctx.fillRect(0, y - 48, w, 96);
       }
 
-      // Sun / moon disc
+      // Soft orbital glow (day = cyan disc, night = cooler moon)
       if (theme.particle === "sun" || theme.particle === "stars") {
-        const cx = w * 0.72;
-        const cy = h * (theme.particle === "stars" ? 0.22 : 0.18);
+        const cx = w * 0.74;
+        const cy = h * (theme.particle === "stars" ? 0.2 : 0.16);
         const pulse = reduced ? 1 : 1 + Math.sin(time * 0.8) * 0.03;
-        const radius = (theme.particle === "stars" ? 28 : 46) * pulse;
-        const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 3.2);
+        const radius = (theme.particle === "stars" ? 22 : 36) * pulse;
+        const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 4);
         glow.addColorStop(0, theme.accent);
-        glow.addColorStop(0.25, `${theme.accent}99`);
+        glow.addColorStop(0.2, `${theme.accent}66`);
         glow.addColorStop(1, "transparent");
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(cx, cy, radius * 3.2, 0, Math.PI * 2);
+        ctx.arc(cx, cy, radius * 4, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = theme.accent;
+        ctx.fillStyle =
+          theme.particle === "stars" ? "#e2e8f0" : "rgba(248,250,252,0.92)";
         ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.arc(cx, cy, radius * 0.55, 0, Math.PI * 2);
         ctx.fill();
       }
 

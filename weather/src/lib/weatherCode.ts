@@ -48,11 +48,12 @@ export function weatherLabel(code: number): string {
   return map[code] ?? `Code ${code}`;
 }
 
+/** Orbit-void skies — weather still shifts mood, never a bright paper day. */
 export function atmosphereTheme(code: number, isDay: boolean) {
   const kind = classifyWeather(code);
   if (kind === "thunder") {
     return {
-      sky: ["#1a2233", "#2a3548", "#4a5568"],
+      sky: ["#0a0c14", "#14182a", "#2a2038"],
       accent: "#f0c36a",
       particle: "storm",
       mood: "charged",
@@ -60,47 +61,52 @@ export function atmosphereTheme(code: number, isDay: boolean) {
   }
   if (kind === "snow") {
     return {
-      sky: ["#6b7c93", "#9aabbe", "#d5dde8"],
+      sky: ["#0c1018", "#1a2434", "#2e3a4c"],
       accent: "#e8f0ff",
       particle: "snow",
       mood: "quiet",
     } as const;
   }
-  if (kind === "rain" || kind === "heavyRain" || kind === "showers" || kind === "drizzle") {
+  if (
+    kind === "rain" ||
+    kind === "heavyRain" ||
+    kind === "showers" ||
+    kind === "drizzle"
+  ) {
     return {
-      sky: ["#2f3f52", "#4a6278", "#7a93a8"],
-      accent: "#8ec5d8",
+      sky: ["#0a1018", "#152030", "#243848"],
+      accent: "#67e8f9",
       particle: "rain",
       mood: "wet",
     } as const;
   }
   if (kind === "fog" || kind === "overcast") {
     return {
-      sky: ["#5a6674", "#7d8896", "#a8b2bf"],
-      accent: "#c9d2dc",
+      sky: ["#0c0e16", "#181c28", "#2a303c"],
+      accent: "#a78bfa",
       particle: "mist",
       mood: "soft",
     } as const;
   }
   if (!isDay) {
     return {
-      sky: ["#0b1324", "#16233a", "#2a3f5f"],
-      accent: "#d4b483",
+      sky: ["#06080f", "#0e1424", "#1a2740"],
+      accent: "#22d3ee",
       particle: "stars",
       mood: "night",
     } as const;
   }
   if (kind === "clear") {
     return {
-      sky: ["#3a7ca5", "#6fa8c9", "#c9e4f2"],
-      accent: "#f2c14e",
+      sky: ["#0b1020", "#122038", "#1a3350"],
+      accent: "#22d3ee",
       particle: "sun",
       mood: "bright",
     } as const;
   }
   return {
-    sky: ["#4a7d9a", "#7ea9c2", "#d2e6f0"],
-    accent: "#e8c36a",
+    sky: ["#0c1220", "#152238", "#1e3348"],
+    accent: "#67e8f9",
     particle: "sun",
     mood: "fair",
   } as const;

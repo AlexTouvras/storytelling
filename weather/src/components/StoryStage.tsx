@@ -70,10 +70,16 @@ export function StoryStage({
         <motion.div
           key={beat}
           className="story-stage__body"
-          initial={reduce ? false : { opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={reduce ? undefined : { opacity: 0, y: -8 }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          initial={
+            reduce ? false : { opacity: 0, y: 18, filter: "blur(6px)", scale: 0.985 }
+          }
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
+          exit={
+            reduce
+              ? undefined
+              : { opacity: 0, y: -12, filter: "blur(4px)", scale: 0.99 }
+          }
+          transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
         >
           {renderBeat({
             beat,
@@ -108,9 +114,13 @@ function renderBeat({
   next48: ForecastBundle["hourly"];
 }) {
   if (beat === "country") {
+    const mapPlace =
+      place.countryCode || !bundle.grid?.countryCode
+        ? place
+        : { ...place, countryCode: bundle.grid.countryCode };
     return (
       <RegionalMap
-        place={place}
+        place={mapPlace}
         cells={bundle.grid?.cells}
         bbox={bundle.grid?.bbox}
         countryLabel={bundle.grid?.countryName || place.country}
