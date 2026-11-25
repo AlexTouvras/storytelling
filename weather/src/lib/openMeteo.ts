@@ -350,8 +350,9 @@ async function fetchRegionalGrid(place: Place) {
   // Cap extent for huge countries so Open-Meteo multi-point stays responsive.
   const width = Math.max(east - west, 0.5);
   const height = Math.max(north - south, 0.5);
-  const cols = width > 40 ? 7 : width > 20 ? 8 : 9;
-  const rows = height > 40 ? 7 : height > 20 ? 8 : 9;
+  // Dense enough for a continuous IDW field without hammering Open-Meteo.
+  const cols = width > 40 ? 8 : width > 20 ? 10 : 12;
+  const rows = height > 40 ? 8 : height > 20 ? 10 : 12;
 
   const lats: number[] = [];
   const lons: number[] = [];

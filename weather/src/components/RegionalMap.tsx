@@ -6,8 +6,9 @@ import {
   toGeoJsonFeature,
   type CountryGeometry,
 } from "../lib/countryPolygon";
+import type { MapLayer } from "../lib/idwField";
 
-export type MapLayer = "temp" | "precip" | "wind" | "pressure";
+export type { MapLayer } from "../lib/idwField";
 
 type Props = {
   place: Place;

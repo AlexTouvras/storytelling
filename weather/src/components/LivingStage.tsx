@@ -15,7 +15,8 @@ import {
   shortDay,
   shortHour,
 } from "./charts/chartUtils";
-import { RegionalMap, type MapLayer } from "./RegionalMap";
+import type { MapLayer } from "../lib/idwField";
+import { CountryField } from "./CountryField";
 
 export const STORY_BEATS = [
   "now",
@@ -183,14 +184,14 @@ export function LivingStage({
           style={{ pointerEvents: surface === "map" ? "auto" : "none" }}
           aria-hidden={surface !== "map"}
         >
-          <RegionalMap
+          <CountryField
             place={mapPlace}
             cells={bundle.grid?.cells}
             bbox={bundle.grid?.bbox}
             countryLabel={bundle.grid?.countryName || place.country}
             layer={mapLayer}
             onLayerChange={onMapLayer}
-            compact
+            reveal={1}
           />
         </motion.div>
 
