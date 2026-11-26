@@ -44,12 +44,12 @@ const BEAT_COPY: Record<
   now: {
     kicker: "Right now",
     title: "The hour you are in",
-    line: "Temperature draws first. Pressure and rain wait in the wings.",
+    line: "Temperature draws first. Feels-like rides beside it as a second path.",
   },
   country: {
     kicker: "Across the country",
     title: "The field, not the pin",
-    line: "A continuous surface clipped to the border — one place inside a national pattern.",
+    line: "A continuous surface on a real map, clipped to the border — cities named, extremes called out.",
   },
   today: {
     kicker: "Today",
@@ -69,7 +69,7 @@ const BEAT_COPY: Record<
   precip: {
     kicker: "Rain",
     title: "Where water falls",
-    line: "Rain amount rises through the same outlook — amount, not just chance.",
+    line: "A precip strip under the outlook — amount through the fortnight, not just chance.",
   },
   confidence: {
     kicker: "Confidence",
@@ -83,29 +83,6 @@ const BEAT_COPY: Record<
   },
 };
 
-function clamp01(n: number) {
-  return n < 0 ? 0 : n > 1 ? 1 : n;
-}
-
-function smoothstep(t: number) {
-  const x = clamp01(t);
-  return x * x * (3 - 2 * x);
-}
-
-function beatAt(progress: number): BeatId {
-  const i = Math.min(
-    BEATS.length - 1,
-    Math.max(0, Math.floor(progress * BEATS.length)),
-  );
-  return BEATS[i];
-}
-
-function beatLocal(progress: number): number {
-  const n = BEATS.length;
-  const x = progress * n;
-  return x - Math.floor(x);
-}
-
 type Props = {
   place: Place;
   bundle: ForecastBundle;
@@ -113,60 +90,58 @@ type Props = {
 
 export function WeatherFilm({ place, bundle }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
+  const sceneRefs = useRef<(HTMLElement | null)[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [mapLayer, setMapLayer] = useState<MapLayer>("temp");
   const reduce = useReducedMotion();
   const a = useMemo(() => buildAnalytics(bundle), [bundle]);
 
+  // Scroll-snap on the document while the film is mounted
   useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    let raf = 0;
-    const update = () => {
-      const total = el.offsetHeight - window.innerHeight;
-      const scrolled = -el.getBoundingClientRect().top;
-      setProgress(total <= 0 ? 0 : clamp01(scrolled / total));
-    };
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    const root = document.documentElement;
+    const prev = root.style.scrollSnapType;
+    root.style.scrollSnapType = "y proximity";
+    root.classList.add("skylore-film-snap");
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      root.style.scrollSnapType = prev;
+      root.classList.remove("skylore-film-snap");
     };
   }, []);
 
-  const beat = beatAt(progress);
-  const local = beatLocal(progress);
-  const copy = BEAT_COPY[beat];
+  // IntersectionObserver — clear scene ownership
+  useEffect(() => {
+    const nodes = sceneRefs.current.filter(Boolean) as HTMLElement[];
+    if (!nodes.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        let best: { i: number; r: number } | null = null;
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const i = Number((e.target as HTMLElement).dataset.beatIndex);
+          if (Number.isNaN(i)) continue;
+          if (!best || e.intersectionRatio > best.r) {
+            best = { i, r: e.intersectionRatio };
+          }
+        }
+        if (best) setActiveIndex(best.i);
+      },
+      { threshold: [0.35, 0.55, 0.75], rootMargin: "-10% 0px -25% 0px" },
+    );
+    for (const n of nodes) io.observe(n);
+    return () => io.disconnect();
+  }, []);
 
-  // Surface weights — soft morphs, but only one surface leads (no ghost charts)
-  const hoursW =
-    beat === "now" || beat === "today" || beat === "tonight"
-      ? 1
-      : beat === "country"
-        ? 1 - smoothstep(Math.min(1, local * 2.2))
-        : 0;
-  const mapW =
+  const beat = BEATS[activeIndex] ?? "now";
+  const copy = BEAT_COPY[beat];
+  const progress = (activeIndex + 0.5) / BEATS.length;
+
+  // Hard cuts between surface families; soft only within family
+  const surface: "hours" | "map" | "outlook" =
     beat === "country"
-      ? smoothstep(0.15 + local * 0.85)
-      : beat === "today"
-        ? Math.max(0, 1 - smoothstep(local * 1.8))
-        : 0;
-  const outlookW =
-    beat === "days" ||
-    beat === "precip" ||
-    beat === "confidence" ||
-    beat === "do"
-      ? 1
-      : beat === "tonight"
-        ? smoothstep(Math.max(0, local - 0.7) / 0.3) * 0 // keep hours through tonight
-        : 0;
+      ? "map"
+      : beat === "now" || beat === "today" || beat === "tonight"
+        ? "hours"
+        : "outlook";
 
   const mapPlace =
     place.countryCode || !bundle.grid?.countryCode
@@ -177,37 +152,32 @@ export function WeatherFilm({ place, bundle }: Props) {
   const annotation = annotationFor(beat, a, place, bundle);
 
   return (
-    <div className="weather-film">
+    <div className="weather-film" data-beat={beat} data-surface={surface}>
       <section className="film-prologue">
         <p className="kicker">Before you scroll</p>
         <h2>The forecast as a film, not a dashboard</h2>
         <p className="section__lede">
-          One stage. Scroll moves the camera — hours stretch, the country field
-          fills its border, the fortnight opens.{" "}
-          {formatPlace(place)}.
+          One stage. Each scene snaps into place — hours, the country field, then
+          the fortnight. {formatPlace(place)}.
         </p>
       </section>
 
-      <div
-        ref={trackRef}
-        className="weather-film__track"
-        style={{ height: `${BEATS.length * 95}vh` }}
-        data-beat={beat}
-      >
+      <div ref={trackRef} className="weather-film__track">
         <div className="weather-film__stage">
           <div className="film-stage__viz">
             <div
-              className="film-layer"
+              className={`film-layer ${surface === "hours" ? "is-lead" : ""}`}
               style={{
-                opacity: hoursW,
-                pointerEvents: hoursW > 0.4 ? "auto" : "none",
+                opacity: surface === "hours" ? 1 : 0,
+                pointerEvents: surface === "hours" ? "auto" : "none",
               }}
-              aria-hidden={hoursW < 0.2}
+              aria-hidden={surface !== "hours"}
             >
               <HoursRunway
                 hours={hours}
                 beat={beat}
                 showPressure={beat === "now"}
+                showFeelsBand={beat === "now" || beat === "today"}
                 reduce={!!reduce}
                 camera={
                   beat === "tonight" ? 0.65 : beat === "today" ? 0.35 : 0.15
@@ -216,12 +186,12 @@ export function WeatherFilm({ place, bundle }: Props) {
             </div>
 
             <div
-              className="film-layer film-layer--map"
+              className={`film-layer film-layer--map ${surface === "map" ? "is-lead" : ""}`}
               style={{
-                opacity: mapW,
-                pointerEvents: mapW > 0.4 ? "auto" : "none",
+                opacity: surface === "map" ? 1 : 0,
+                pointerEvents: surface === "map" ? "auto" : "none",
               }}
-              aria-hidden={mapW < 0.2}
+              aria-hidden={surface !== "map"}
             >
               <CountryField
                 place={mapPlace}
@@ -230,7 +200,7 @@ export function WeatherFilm({ place, bundle }: Props) {
                 countryLabel={bundle.grid?.countryName || place.country}
                 layer={mapLayer}
                 onLayerChange={setMapLayer}
-                reveal={mapW}
+                reveal={surface === "map" ? 1 : 0}
               />
               <div className="film-map-tabs" role="tablist">
                 {(
@@ -258,12 +228,12 @@ export function WeatherFilm({ place, bundle }: Props) {
             </div>
 
             <div
-              className="film-layer"
+              className={`film-layer ${surface === "outlook" ? "is-lead" : ""}`}
               style={{
-                opacity: outlookW,
-                pointerEvents: outlookW > 0.4 ? "auto" : "none",
+                opacity: surface === "outlook" ? 1 : 0,
+                pointerEvents: surface === "outlook" ? "auto" : "none",
               }}
-              aria-hidden={outlookW < 0.2}
+              aria-hidden={surface !== "outlook"}
             >
               <OutlookRunway
                 beat={beat}
@@ -276,13 +246,32 @@ export function WeatherFilm({ place, bundle }: Props) {
           </div>
 
           <div className="film-stage__chrome">
-            <p className="film-stage__kicker">{copy.kicker}</p>
+            <div className="film-beat-rail" aria-hidden>
+              {BEATS.map((id, i) => (
+                <span
+                  key={id}
+                  className={
+                    i === activeIndex
+                      ? "film-beat-dot film-beat-dot--active"
+                      : i < activeIndex
+                        ? "film-beat-dot film-beat-dot--done"
+                        : "film-beat-dot"
+                  }
+                />
+              ))}
+            </div>
+            <p className="film-stage__kicker">
+              <span className="film-stage__index">
+                {String(activeIndex + 1).padStart(2, "0")} / {String(BEATS.length).padStart(2, "0")}
+              </span>
+              {copy.kicker}
+            </p>
             <motion.h3
               key={copy.title}
               className="film-stage__title"
-              initial={reduce ? false : { opacity: 0, y: 8 }}
+              initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
+              transition={{ duration: 0.32 }}
             >
               {copy.title}
             </motion.h3>
@@ -300,14 +289,23 @@ export function WeatherFilm({ place, bundle }: Props) {
           </div>
         </div>
 
-        {/* Invisible beat anchors for scroll length + a11y headings */}
-        {BEATS.map((id) => (
+        {BEATS.map((id, i) => (
           <section
             key={id}
             id={id}
-            className="film-beat-spacer"
+            data-beat-index={i}
+            ref={(el) => {
+              sceneRefs.current[i] = el;
+            }}
+            className={`film-scene ${i === activeIndex ? "is-active" : ""}`}
             aria-label={BEAT_COPY[id].title}
-          />
+          >
+            <div className="film-scene__card">
+              <p className="film-scene__kicker">{BEAT_COPY[id].kicker}</p>
+              <h3 className="film-scene__title">{BEAT_COPY[id].title}</h3>
+              <p className="film-scene__line">{BEAT_COPY[id].line}</p>
+            </div>
+          </section>
         ))}
       </div>
 
@@ -324,7 +322,7 @@ export function WeatherFilm({ place, bundle }: Props) {
           <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">
             Open-Meteo
           </a>
-          . Borders: Natural Earth. No map tile API. Updated{" "}
+          . Basemap OpenStreetMap. Borders Natural Earth. Updated{" "}
           {new Date(bundle.fetchedAt).toLocaleString()}.
         </footer>
       </section>
@@ -376,12 +374,14 @@ function HoursRunway({
   hours,
   beat,
   showPressure,
+  showFeelsBand,
   reduce,
   camera,
 }: {
   hours: HourlyPoint[];
   beat: BeatId;
   showPressure: boolean;
+  showFeelsBand: boolean;
   reduce: boolean;
   camera: number;
 }) {
@@ -417,6 +417,15 @@ function HoursRunway({
     y: yTemp(pt.temperature),
   }));
   const appLine = hours.map((pt, i) => ({ x: xAt(i), y: yTemp(pt.apparent) }));
+  // Alternate band between temp and feels-like (inspiration: hourly alts)
+  const feelsHi = hours.map((pt, i) => ({
+    x: xAt(i),
+    y: yTemp(Math.max(pt.temperature, pt.apparent)),
+  }));
+  const feelsLo = hours.map((pt, i) => ({
+    x: xAt(i),
+    y: yTemp(Math.min(pt.temperature, pt.apparent)),
+  }));
   const pressLine = hours.map((pt, i) => ({
     x: xAt(i),
     y: yPress(pt.pressure || pressDomain[0]),
@@ -464,6 +473,9 @@ function HoursRunway({
           </g>
         );
       })}
+      {showFeelsBand && (
+        <path d={areaPath(feelsHi, feelsLo)} className="chart__feels-band" />
+      )}
       {hasRain &&
         hours.map((pt, i) => (
           <rect
@@ -511,7 +523,7 @@ function HoursRunway({
           ? "Evening into night"
           : beat === "today"
             ? "Today, hour by hour"
-            : "Next twelve hours"}
+            : "Next twelve hours · temp + feels-like"}
       </text>
     </svg>
   );
@@ -533,11 +545,12 @@ function OutlookRunway({
   if (!daily.length) {
     return <p className="story-stage__empty">Outlook unavailable.</p>;
   }
-  const showPrecip = beat === "precip" || beat === "do";
+  const showPrecip = beat === "precip" || beat === "do" || beat === "days";
   const showEnsemble = beat === "confidence" || beat === "days" || beat === "do";
   const w = 960;
-  const h = 420;
-  const pad = { t: 36, r: 28, b: 44, l: 52 };
+  const h = 440;
+  const precipStrip = 56;
+  const pad = { t: 36, r: 28, b: showPrecip ? 52 + precipStrip : 44, l: 52 };
   const innerW = w - pad.l - pad.r;
   const innerH = h - pad.t - pad.b;
   const all = [
@@ -552,8 +565,9 @@ function OutlookRunway({
   const xAt = (i: number, n = daily.length) =>
     pad.l + scale(i, [0, Math.max(n - 1, 1)], [0, innerW]);
   const yAt = (v: number) => pad.t + scale(v, domain, [innerH, 0]);
-  const yPrecip = (v: number) =>
-    pad.t + scale(v, [0, precipMax * 1.15], [innerH, 0]);
+  const stripTop = h - precipStrip - 18;
+  const yPrecipStrip = (v: number) =>
+    stripTop + scale(v, [0, precipMax * 1.1], [precipStrip - 8, 0]);
   const high = daily.map((d, i) => ({ x: xAt(i), y: yAt(d.tempMax) }));
   const low = daily.map((d, i) => ({ x: xAt(i), y: yAt(d.tempMin) }));
   const ensTop =
@@ -610,18 +624,34 @@ function OutlookRunway({
           animate={{ opacity: beat === "confidence" ? 0.9 : 0.45 }}
         />
       )}
-      {showPrecip &&
-        daily.map((d, i) => (
-          <rect
-            key={d.date}
-            x={xAt(i) - 5}
-            width={10}
-            y={yPrecip(d.precipSum)}
-            height={Math.max(0, pad.t + innerH - yPrecip(d.precipSum))}
-            className="chart__rain-bar"
-            opacity={beat === "precip" ? 0.9 : 0.4}
+      {showPrecip && (
+        <g className="film-precip-strip" aria-hidden={beat !== "precip"}>
+          <text x={pad.l} y={stripTop - 6} className="film-svg__caption">
+            Precip mm
+          </text>
+          <line
+            x1={pad.l}
+            x2={pad.l + innerW}
+            y1={stripTop + precipStrip - 8}
+            y2={stripTop + precipStrip - 8}
+            className="chart__grid"
           />
-        ))}
+          {daily.map((d, i) => (
+            <rect
+              key={d.date}
+              x={xAt(i) - 5}
+              width={10}
+              y={yPrecipStrip(d.precipSum)}
+              height={Math.max(
+                0,
+                stripTop + precipStrip - 8 - yPrecipStrip(d.precipSum),
+              )}
+              className="chart__rain-bar"
+              opacity={beat === "precip" ? 0.95 : 0.55}
+            />
+          ))}
+        </g>
+      )}
       {daily
         .map((_, i) => i)
         .filter((i) => i % Math.ceil(daily.length / 7) === 0)
@@ -629,7 +659,7 @@ function OutlookRunway({
           <text
             key={daily[i].date}
             x={xAt(i)}
-            y={h - 14}
+            y={h - 8}
             textAnchor="middle"
             className="chart__tick"
           >

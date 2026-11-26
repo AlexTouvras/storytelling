@@ -23,6 +23,8 @@
 
 - [x] Vite app in `weather/` — location-aware 7–14 day forecast scroll (Open-Meteo)
 - [x] Feedback: plain weather copy + charts/map/ensemble/seasonal visuals
+- [x] Scene-snap film scroll + credible OSM+IDW national map + selective inspiration adoption
+- [x] Loading hang fix (batched grid + timeouts + progressive paint)
 - [ ] Human review of Skylore craft + publish confirmation
 
 ## Now
