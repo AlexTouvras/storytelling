@@ -48,8 +48,8 @@ const BEAT_COPY: Record<
   },
   country: {
     kicker: "Across the country",
-    title: "The field, not the pin",
-    line: "A continuous surface on a real map, clipped to the border — cities named, extremes called out.",
+    title: "Your place on the map",
+    line: "OpenStreetMap under a national weather overlay — borders, cities, and the warmest and coldest spots called out.",
   },
   today: {
     kicker: "Today",
@@ -522,9 +522,27 @@ function HoursRunway({
         {beat === "tonight"
           ? "Evening into night"
           : beat === "today"
-            ? "Today, hour by hour"
-            : "Next twelve hours · temp + feels-like"}
+            ? "Today, hour by hour · temp vs feels-like"
+            : "Next twelve hours · temp vs feels-like band"}
       </text>
+      {showFeelsBand && (
+        <g aria-hidden>
+          <rect
+            x={pad.l + innerW - 168}
+            y={12}
+            width={10}
+            height={8}
+            className="chart__feels-band"
+          />
+          <text
+            x={pad.l + innerW - 152}
+            y={20}
+            className="chart__tick"
+          >
+            Feels-like spread
+          </text>
+        </g>
+      )}
     </svg>
   );
 }

@@ -25,6 +25,7 @@
 - [x] Feedback: plain weather copy + charts/map/ensemble/seasonal visuals
 - [x] Scene-snap film scroll + credible OSM+IDW national map + selective inspiration adoption
 - [x] Loading hang fix (batched grid + timeouts + progressive paint)
+- [x] Delete void-map legacy paths; prove geographic map + kill “no tile API” copy
 - [ ] Human review of Skylore craft + publish confirmation
 
 ## Now

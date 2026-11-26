@@ -21,14 +21,14 @@ type Props = {
   layer: MapLayer;
   onLayerChange?: (layer: MapLayer) => void;
   showToolbar?: boolean;
-  /** 0–1 reveal of the field fill (scroll-tied). */
+  /** 0–1 reveal of the weather overlay. */
   reveal?: number;
 };
 
 const LAYER_LABEL: Record<MapLayer, string> = {
   temp: "Temperature",
-  precip: "Precipitation",
-  wind: "Wind",
+  precip: "Radar-style rain",
+  wind: "Wind field",
   pressure: "Pressure",
 };
 
@@ -39,7 +39,7 @@ const LAYER_UNIT: Record<MapLayer, string> = {
   pressure: "hPa",
 };
 
-const INTERNAL = 320;
+const INTERNAL = 360;
 
 type LeafletNS = typeof import("leaflet");
 
@@ -72,13 +72,13 @@ function findExtremes(
   if (Math.abs(hi.v - lo.v) < 1e-6) return [];
   return [
     {
-      label: layer === "precip" ? "Driest" : layer === "wind" ? "Calm" : "Low",
+      label: layer === "precip" ? "Driest" : layer === "wind" ? "Calmest" : "Coldest",
       value: formatValue(layer, lo.v),
       lat: lo.c.latitude,
       lon: lo.c.longitude,
     },
     {
-      label: layer === "precip" ? "Wettest" : layer === "wind" ? "Strongest" : "High",
+      label: layer === "precip" ? "Wettest" : layer === "wind" ? "Strongest" : "Warmest",
       value: formatValue(layer, hi.v),
       lat: hi.c.latitude,
       lon: hi.c.longitude,
@@ -87,8 +87,8 @@ function findExtremes(
 }
 
 /**
- * Credible national weather map: darkened OSM basemap (keyless) + continuous
- * IDW field clipped to Natural Earth borders + city hierarchy + extreme callouts.
+ * National geographic weather map — Leaflet + visible OSM basemap + weather
+ * overlay clipped to Natural Earth borders. No void-canvas fallback.
  */
 export function CountryField({
   place,
@@ -112,8 +112,8 @@ export function CountryField({
   const fieldCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const windCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const geometryRef = useRef<CountryGeometry | null>(null);
-  const viewRef = useRef<ViewBox | null>(null);
   const [ready, setReady] = useState(false);
+  const [tilesOk, setTilesOk] = useState(false);
   const [range, setRange] = useState<{ min: number; max: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [clipped, setClipped] = useState(false);
@@ -133,10 +133,10 @@ export function CountryField({
   const placeKey = `${place.latitude.toFixed(4)},${place.longitude.toFixed(4)}`;
   const bboxKey = bbox?.join(",") ?? "";
 
-  // Boot Leaflet + OSM once per place/bbox
   useEffect(() => {
     let cancelled = false;
     setReady(false);
+    setTilesOk(false);
     setError(null);
 
     async function boot() {
@@ -168,12 +168,20 @@ export function CountryField({
           zoom: 6,
         });
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 18,
-          className: "wx-basemap-tiles",
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-        }).addTo(map);
+        // Visible geographic basemap (keyless OSM). Not a void canvas.
+        const tiles = L.tileLayer(
+          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          {
+            maxZoom: 18,
+            className: "wx-basemap-tiles",
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          },
+        );
+        tiles.on("load", () => {
+          if (!cancelled) setTilesOk(true);
+        });
+        tiles.addTo(map);
 
         const pane = map.getPane("overlayPane") ?? map.getContainer();
         const field = L.DomUtil.create(
@@ -208,7 +216,11 @@ export function CountryField({
         });
       } catch (err) {
         console.error(err);
-        if (!cancelled) setError("Map could not load.");
+        if (!cancelled) {
+          setError(
+            "Geographic map failed to load. Check network access to OpenStreetMap tiles.",
+          );
+        }
       }
     }
 
@@ -225,7 +237,6 @@ export function CountryField({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placeKey, bboxKey]);
 
-  // Borders, fit, labels, callouts
   useEffect(() => {
     const handle = leafletRef.current;
     if (!handle || !ready) return;
@@ -253,39 +264,32 @@ export function CountryField({
         const feature = toGeoJsonFeature(countryCode, geometry);
         handle.border = L.geoJSON(feature, {
           style: {
-            color: "rgba(232, 220, 200, 0.9)",
-            weight: 1.6,
+            color: "#f0e6d2",
+            weight: 2.25,
             opacity: 1,
-            fillColor: "transparent",
-            fillOpacity: 0,
+            fillColor: "#22d3ee",
+            fillOpacity: 0.04,
             lineJoin: "round",
           },
         }).addTo(map);
         setClipped(true);
-        viewRef.current = viewBoxFromGeometry(geometry, 0.06);
+        void viewBoxFromGeometry(geometry, 0.06);
         map.fitBounds(handle.border.getBounds(), {
           animate: false,
-          padding: [36, 36],
+          padding: [40, 40],
           maxZoom: 8,
         });
       } else if (bbox) {
         setClipped(false);
-        viewRef.current = {
-          west: bbox[0],
-          south: bbox[1],
-          east: bbox[2],
-          north: bbox[3],
-        };
         map.fitBounds(
           [
             [bbox[1], bbox[0]],
             [bbox[3], bbox[2]],
           ],
-          { animate: false, padding: [24, 24], maxZoom: 8 },
+          { animate: false, padding: [28, 28], maxZoom: 8 },
         );
       } else {
         setClipped(false);
-        viewRef.current = null;
         map.setView([place.latitude, place.longitude], 6, { animate: false });
       }
 
@@ -294,7 +298,7 @@ export function CountryField({
         el.className = c.major
           ? "wx-city-label wx-city-label--major"
           : "wx-city-label";
-        el.textContent = c.name;
+        el.innerHTML = `<span class="wx-city-dot"></span><span class="wx-city-name">${c.name}</span>`;
         L.marker([c.lat, c.lon], {
           icon: L.divIcon({
             className: "wx-city-icon",
@@ -324,8 +328,8 @@ export function CountryField({
       }
 
       handle.pin = L.circleMarker([place.latitude, place.longitude], {
-        radius: 6,
-        color: "#f8fafc",
+        radius: 7,
+        color: "#0b1220",
         weight: 2,
         fillColor: "#22d3ee",
         fillOpacity: 1,
@@ -333,9 +337,7 @@ export function CountryField({
         .bindTooltip(place.name, { direction: "top", opacity: 0.95 })
         .addTo(map);
 
-      requestAnimationFrame(() => {
-        map.invalidateSize();
-      });
+      requestAnimationFrame(() => map.invalidateSize());
     })();
 
     return () => {
@@ -354,7 +356,7 @@ export function CountryField({
     place.name,
   ]);
 
-  // Paint continuous IDW field into overlay canvas, clipped via rasterizeField
+  // Weather overlay — keep semi-transparent so roads/coast stay readable
   useEffect(() => {
     const handle = leafletRef.current;
     const canvas = fieldCanvasRef.current;
@@ -383,7 +385,6 @@ export function CountryField({
       }
 
       const geometry = geometryRef.current;
-      // Derive view from current map bounds so field tracks pan/zoom
       const b = map.getBounds();
       const view: ViewBox = {
         west: b.getWest(),
@@ -399,7 +400,14 @@ export function CountryField({
       const { min, max } = rasterizeField(img, cells, layer, geometry, view);
       setRange({ min, max });
 
-      // Scale low-res field up smoothly
+      // Soften alpha so basemap geography remains visible under the field
+      const data = img.data;
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i] > 0) {
+          data[i] = Math.round(data[i] * (layer === "precip" ? 0.72 : 0.55));
+        }
+      }
+
       const off = document.createElement("canvas");
       off.width = rw;
       off.height = rh;
@@ -408,22 +416,23 @@ export function CountryField({
       octx.putImageData(img, 0, 0);
 
       ctx.save();
-      ctx.globalAlpha = Math.max(0.15, Math.min(1, reveal));
+      ctx.globalAlpha = Math.max(0.2, Math.min(1, reveal));
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(off, 0, 0, size.x, size.y);
 
-      // Soft radar-like blooms for precip (inspiration: futurecast / severe outlook)
-      if (layer === "precip" && max > 0.15) {
+      // Radar-style precip blooms (inspiration: futurecast / severe outlook)
+      if (layer === "precip" && max > 0.12) {
         ctx.globalCompositeOperation = "lighter";
         for (const c of cells) {
-          if (c.precip < max * 0.35) continue;
+          if (c.precip < max * 0.28) continue;
           const p = map.latLngToContainerPoint([c.latitude, c.longitude]);
           const t = (c.precip - min) / Math.max(1e-6, max - min);
-          const r = 18 + t * 42;
+          const r = 22 + t * 56;
           const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-          g.addColorStop(0, `rgba(120, 200, 255, ${0.25 + t * 0.35})`);
-          g.addColorStop(1, "rgba(40, 100, 180, 0)");
+          g.addColorStop(0, `rgba(90, 210, 255, ${0.35 + t * 0.45})`);
+          g.addColorStop(0.45, `rgba(40, 120, 220, ${0.18 + t * 0.25})`);
+          g.addColorStop(1, "rgba(20, 60, 140, 0)");
           ctx.fillStyle = g;
           ctx.beginPath();
           ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
@@ -453,9 +462,7 @@ export function CountryField({
     const particles: P[] = [];
     const avgWind =
       cells.reduce((a, c) => a + c.windSpeed, 0) / Math.max(1, cells.length);
-    const dirSample = cells[Math.floor(cells.length / 2)];
-    // Approximate prevailing direction from place — no per-cell windDir on grid
-    const dirRad = ((220 + (dirSample?.longitude ?? 0) * 0.2) * Math.PI) / 180;
+    const dirRad = ((210 + (place.longitude % 40)) * Math.PI) / 180;
 
     const tick = () => {
       if (!alive) return;
@@ -465,8 +472,7 @@ export function CountryField({
       canvas.height = Math.round(size.y * dpr);
       canvas.style.width = `${size.x}px`;
       canvas.style.height = `${size.y}px`;
-      const topLeft = map.containerPointToLayerPoint([0, 0]);
-      L.DomUtil.setPosition(canvas, topLeft);
+      L.DomUtil.setPosition(canvas, map.containerPointToLayerPoint([0, 0]));
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         raf = requestAnimationFrame(tick);
@@ -476,7 +482,7 @@ export function CountryField({
       ctx.clearRect(0, 0, size.x, size.y);
 
       const show = layer === "wind" && reveal > 0.2;
-      const density = show ? Math.round(36 + reveal * 50) : 0;
+      const density = show ? Math.round(55 + reveal * 70) : 0;
       while (particles.length < density) {
         particles.push({
           x: Math.random() * size.x,
@@ -486,11 +492,11 @@ export function CountryField({
       }
       while (particles.length > density) particles.pop();
 
-      const speed = 0.35 + (avgWind / 45) * 1.4;
+      const speed = 0.45 + (avgWind / 40) * 1.5;
       const dx = Math.sin(dirRad) * speed;
       const dy = -Math.cos(dirRad) * speed;
-      ctx.strokeStyle = "rgba(220, 235, 245, 0.4)";
-      ctx.lineWidth = 1.15;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+      ctx.lineWidth = 1.35;
       for (const p of particles) {
         p.x += dx;
         p.y += dy;
@@ -500,10 +506,10 @@ export function CountryField({
           p.y = Math.random() * size.y;
           p.age = 0;
         }
-        ctx.globalAlpha = Math.sin(p.age * Math.PI) * 0.75;
+        ctx.globalAlpha = Math.sin(p.age * Math.PI) * 0.85;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x - dx * 7, p.y - dy * 7);
+        ctx.lineTo(p.x - dx * 8, p.y - dy * 8);
         ctx.stroke();
       }
       ctx.globalAlpha = 1;
@@ -514,7 +520,7 @@ export function CountryField({
       alive = false;
       cancelAnimationFrame(raf);
     };
-  }, [ready, layer, reveal, cells]);
+  }, [ready, layer, reveal, cells, place.longitude]);
 
   const rangeText = range
     ? layer === "pressure"
@@ -527,7 +533,7 @@ export function CountryField({
     : null;
 
   return (
-    <div className="country-field wx-map">
+    <div className="country-field wx-map" data-map-kind="geographic-osm">
       {showToolbar && onLayerChange && (
         <div className="film-map-tabs" role="tablist" aria-label="Map layer">
           {(Object.keys(LAYER_LABEL) as MapLayer[]).map((key) => (
@@ -549,34 +555,40 @@ export function CountryField({
           ref={hostRef}
           className="country-field__canvas wx-map__host"
           role="img"
-          aria-label={`${LAYER_LABEL[layer]} across ${label}${
-            clipped ? ", clipped to national borders" : ""
+          aria-label={`Geographic ${LAYER_LABEL[layer]} map of ${label}${
+            clipped ? ", weather clipped to national borders" : ""
           }`}
         />
         <div className="wx-map__chrome">
           <div className="wx-map__legend">
             <span className="wx-map__legend-title">{LAYER_LABEL[layer]}</span>
             <div className="wx-map__ramp" data-layer={layer} aria-hidden />
+            <div className="wx-map__risk-row" aria-hidden>
+              <span>Low</span>
+              <span>High</span>
+            </div>
             {rangeText && (
               <span className="wx-map__legend-range">{rangeText}</span>
             )}
           </div>
           <p className="wx-map__credit">
-            OSM basemap · Open-Meteo field · Natural Earth borders
+            OpenStreetMap basemap · Open-Meteo weather · Natural Earth borders
             {clipped ? " · clipped" : ""}
+            {tilesOk ? "" : " · loading tiles…"}
           </p>
         </div>
         {error && <p className="map-panel__fallback">{error}</p>}
         {!cells.length && !error && (
           <p className="map-panel__fallback">
-            National grid still loading — map will fill in.
+            National grid still loading — basemap is live; weather fills in
+            next.
           </p>
         )}
       </div>
       <p className="country-field__legend">
-        {LAYER_LABEL[layer]} ({LAYER_UNIT[layer]}) across {label}.
-        {rangeText ? ` Range ${rangeText}.` : ""} Continuous IDW field, not
-        grid cells.
+        Geographic map of {label}: OSM roads and coasts under a{" "}
+        {LAYER_LABEL[layer].toLowerCase()} overlay ({LAYER_UNIT[layer]}).
+        {rangeText ? ` Range ${rangeText}.` : ""}
       </p>
     </div>
   );
