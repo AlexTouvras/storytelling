@@ -19,6 +19,16 @@
 - [x] Measure contrast, 24px targets, controls that change, and labels-on-the-picture against the desk, the grid film, its method page, and the cut-off sleeve (`scripts/ux-benefit-demo.mjs`, `/lab/ux-benefit`)
 - [x] Lift the cut-off horizon labels that measured 1.7:1–3.1:1, and give the method-page section links a 24px target
 
+## Weather storytelling (Skylore)
+
+- [x] Vite app in `weather/` — location-aware 7–14 day forecast scroll (Open-Meteo)
+- [x] Feedback: plain weather copy + charts/map/ensemble/seasonal visuals
+- [x] Scene-snap film scroll + credible OSM+IDW national map + selective inspiration adoption
+- [x] Loading hang fix (batched grid + timeouts + progressive paint)
+- [x] Delete void-map legacy paths; prove geographic map + kill “no tile API” copy
+- [x] Ensemble hourly alts + radar play + Windy-style map scrubber (`6c27dbb`)
+- [ ] Human review of Skylore craft + publish confirmation
+
 ## Now
 
 - [x] Mobile New Horizon: spread warp field + smaller/brighter star pinpricks

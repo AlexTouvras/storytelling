@@ -6,6 +6,8 @@
 
 **Interactive Decision Storytelling** — Orbit flagship. Engine (Layer 1) is a boring stage; grammar (Layer 2) and decision stories (Layer 3) carry the product. Reference: `when-rates-rise`. Fixture: `rates-and-defaults`.
 
+**Skylore** (`weather/`) — separate Vite + React weather app for Cursor publish-app. `WeatherFilm`: Orbit-style sticky `100dvh` stage with CSS scroll-snap scenes + IntersectionObserver beat ownership (hours → country → outlook; hard cuts between families). Hours runway draws Open-Meteo ensemble member temperature paths. `CountryField`: **only** geographic map path — Leaflet visible OSM + IDW overlay clipped to Natural Earth 110m, city pills, callouts, wind particles, and a Windy-style 24h scrubber (Play/Pause); Rain layer auto-plays radar hours. National grid stores hourly series (`grid.times` + per-cell `hours`). Deleted legacy void-map components. Open-Meteo + BigDataCloud. Grid fetch batches ≤8 with timeouts; core forecast paints before enrich.
+
 ## Data shapes
 
 | Name | Shape / location | Notes |
