@@ -1244,6 +1244,16 @@ input {
   stroke: none;
 }
 
+.chart__ensemble-band--hourly {
+  fill: oklch(0.72 0.12 280 / 0.22);
+}
+
+.chart__line--ensemble-member {
+  stroke: oklch(0.78 0.1 280 / 0.45);
+  stroke-width: 1.1;
+  stroke-dasharray: 3 4;
+}
+
 .country-field {
   display: flex;
   flex-direction: column;
@@ -1413,6 +1423,83 @@ input {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: oklch(1 0 0 / 0.45);
+}
+
+/* Windy-style forecast hour scrubber */
+.wx-scrubber {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 3.1rem;
+  z-index: 460;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(7, 10, 18, 0.88);
+  border: 1px solid oklch(1 0 0 / 0.12);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.wx-scrubber__play {
+  flex-shrink: 0;
+  appearance: none;
+  border: 1px solid oklch(0.78 0.14 195 / 0.45);
+  background: oklch(0.78 0.14 195 / 0.14);
+  color: #e8f7fb;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.55rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wx-scrubber__play[aria-pressed="true"] {
+  background: oklch(0.78 0.14 195 / 0.28);
+}
+
+.wx-scrubber__range {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--cyan);
+  cursor: pointer;
+}
+
+.wx-scrubber__time {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: #f8fafc;
+  font-weight: 600;
+  min-width: 7.5rem;
+  text-align: right;
+}
+
+.wx-scrubber__meta {
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+}
+
+@media (max-width: 720px) {
+  .wx-scrubber {
+    bottom: 2.6rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    gap: 0.35rem;
+    padding: 0.35rem 0.45rem;
+  }
+  .wx-scrubber__time {
+    min-width: 4.5rem;
+  }
+  .wx-scrubber__meta {
+    display: none;
+  }
 }
 
 .wx-callout {

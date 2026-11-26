@@ -66,13 +66,35 @@ export type EnsembleDay = {
   precipMax: number;
 };
 
+export type GridHourSeries = {
+  time: string[];
+  temp: number[];
+  precip: number[];
+  windSpeed: number[];
+  windDir: number[];
+  pressure: number[];
+};
+
 export type GridCell = {
   latitude: number;
   longitude: number;
+  /** Snapshot values (current / selected hour). */
   temp: number;
   precip: number;
   windSpeed: number;
   pressure: number;
+  windDir?: number;
+  /** Hourly series for scrubber / radar (same length across cells). */
+  hours?: GridHourSeries;
+};
+
+export type EnsembleHourly = {
+  time: string[];
+  /** Per-member temperature series (each same length as `time`). */
+  members: number[][];
+  min: number[];
+  mean: number[];
+  max: number[];
 };
 
 export type ForecastBundle = {
@@ -101,12 +123,16 @@ export type ForecastBundle = {
     days: EnsembleDay[];
     dailyTempMaxSpread: number[];
     dailyPrecipSpread: number[];
+    /** Alternate hourly temperature paths for the hours runway. */
+    hourly?: EnsembleHourly;
   };
   grid?: {
     cells: GridCell[];
     bbox: BBox;
     countryCode?: string;
     countryName?: string;
+    /** Shared forecast hour timestamps for the national grid scrubber. */
+    times?: string[];
     /** @deprecated kept for older samples */
     spanDeg?: number;
   };

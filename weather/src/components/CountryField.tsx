@@ -12,18 +12,29 @@ import {
   type ViewBox,
 } from "../lib/idwField";
 import { citiesForCountry } from "../lib/cities";
+import { gridCellAtHour } from "../lib/openMeteo";
 
 type Props = {
   place: Place;
   cells?: GridCell[];
   bbox?: BBox;
   countryLabel?: string;
+  /** Shared forecast hour labels for the scrubber (from grid.times). */
+  times?: string[];
   layer: MapLayer;
   onLayerChange?: (layer: MapLayer) => void;
   showToolbar?: boolean;
   /** 0–1 reveal of the weather overlay. */
   reveal?: number;
+  /** When true (map beat active), radar can auto-step. */
+  active?: boolean;
 };
+
+function shortScrubHour(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso.slice(11, 16) || iso;
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 
 const LAYER_LABEL: Record<MapLayer, string> = {
   temp: "Temperature",
@@ -95,10 +106,12 @@ export function CountryField({
   cells = [],
   bbox,
   countryLabel,
+  times: timesProp,
   layer,
   onLayerChange,
   showToolbar = false,
   reveal = 1,
+  active = true,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const leafletRef = useRef<{
@@ -117,6 +130,19 @@ export function CountryField({
   const [range, setRange] = useState<{ min: number; max: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [clipped, setClipped] = useState(false);
+  const [hourIndex, setHourIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+
+  const scrubTimes = useMemo(() => {
+    if (timesProp?.length) return timesProp;
+    const fromCell = cells.find((c) => c.hours?.time?.length)?.hours?.time;
+    return fromCell ?? [];
+  }, [timesProp, cells]);
+
+  const activeCells = useMemo(
+    () => cells.map((c) => gridCellAtHour(c, hourIndex)),
+    [cells, hourIndex],
+  );
 
   const countryCode = place.countryCode;
   const label = countryLabel || place.country || place.name;
@@ -129,9 +155,38 @@ export function CountryField({
       }),
     [countryCode, place.name, place.latitude, place.longitude],
   );
-  const extremes = useMemo(() => findExtremes(cells, layer), [cells, layer]);
+  const extremes = useMemo(
+    () => findExtremes(activeCells, layer),
+    [activeCells, layer],
+  );
   const placeKey = `${place.latitude.toFixed(4)},${place.longitude.toFixed(4)}`;
   const bboxKey = bbox?.join(",") ?? "";
+
+  // Clamp hour when times arrive / shrink
+  useEffect(() => {
+    if (!scrubTimes.length) {
+      setHourIndex(0);
+      return;
+    }
+    setHourIndex((i) => Math.min(i, scrubTimes.length - 1));
+  }, [scrubTimes]);
+
+  // Futurecast radar: auto-step when Rain is selected and map is on stage
+  useEffect(() => {
+    if (layer === "precip" && active && scrubTimes.length > 1) {
+      setPlaying(true);
+    } else {
+      setPlaying(false);
+    }
+  }, [layer, active, scrubTimes.length]);
+
+  useEffect(() => {
+    if (!playing || !scrubTimes.length || !active) return;
+    const id = window.setInterval(() => {
+      setHourIndex((i) => (i + 1) % scrubTimes.length);
+    }, 900);
+    return () => window.clearInterval(id);
+  }, [playing, scrubTimes.length, active]);
 
   useEffect(() => {
     let cancelled = false;
@@ -345,7 +400,7 @@ export function CountryField({
     };
   }, [
     ready,
-    cells,
+    activeCells,
     layer,
     extremes,
     cities,
@@ -379,7 +434,7 @@ export function CountryField({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, size.x, size.y);
 
-      if (!cells.length) {
+      if (!activeCells.length) {
         setRange(null);
         return;
       }
@@ -397,7 +452,13 @@ export function CountryField({
       const rw = INTERNAL;
       const rh = Math.max(48, Math.round(INTERNAL / aspect));
       const img = ctx.createImageData(rw, rh);
-      const { min, max } = rasterizeField(img, cells, layer, geometry, view);
+      const { min, max } = rasterizeField(
+        img,
+        activeCells,
+        layer,
+        geometry,
+        view,
+      );
       setRange({ min, max });
 
       // Soften alpha so basemap geography remains visible under the field
@@ -421,10 +482,10 @@ export function CountryField({
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(off, 0, 0, size.x, size.y);
 
-      // Radar-style precip blooms (inspiration: futurecast / severe outlook)
+      // Radar-style precip blooms (inspiration: futurecast) — follow scrub hour
       if (layer === "precip" && max > 0.12) {
         ctx.globalCompositeOperation = "lighter";
-        for (const c of cells) {
+        for (const c of activeCells) {
           if (c.precip < max * 0.28) continue;
           const p = map.latLngToContainerPoint([c.latitude, c.longitude]);
           const t = (c.precip - min) / Math.max(1e-6, max - min);
@@ -448,9 +509,9 @@ export function CountryField({
     return () => {
       map.off("move zoom resize", paint);
     };
-  }, [ready, cells, layer, reveal]);
+  }, [ready, activeCells, layer, reveal]);
 
-  // Wind particles (inspiration: Windy)
+  // Wind particles (inspiration: Windy) — follow scrubbed wind field
   useEffect(() => {
     const handle = leafletRef.current;
     const canvas = windCanvasRef.current;
@@ -461,8 +522,12 @@ export function CountryField({
     type P = { x: number; y: number; age: number };
     const particles: P[] = [];
     const avgWind =
-      cells.reduce((a, c) => a + c.windSpeed, 0) / Math.max(1, cells.length);
-    const dirRad = ((210 + (place.longitude % 40)) * Math.PI) / 180;
+      activeCells.reduce((a, c) => a + c.windSpeed, 0) /
+      Math.max(1, activeCells.length);
+    const dirSample =
+      activeCells.find((c) => c.windDir != null)?.windDir ??
+      210 + (place.longitude % 40);
+    const dirRad = (dirSample * Math.PI) / 180;
 
     const tick = () => {
       if (!alive) return;
@@ -520,7 +585,7 @@ export function CountryField({
       alive = false;
       cancelAnimationFrame(raf);
     };
-  }, [ready, layer, reveal, cells, place.longitude]);
+  }, [ready, layer, reveal, activeCells, place.longitude]);
 
   const rangeText = range
     ? layer === "pressure"
@@ -530,6 +595,10 @@ export function CountryField({
         : layer === "wind"
           ? `${Math.round(range.min)}–${Math.round(range.max)} km/h`
           : `${range.min.toFixed(1)}–${range.max.toFixed(1)}°`
+    : null;
+
+  const scrubLabel = scrubTimes[hourIndex]
+    ? shortScrubHour(scrubTimes[hourIndex])
     : null;
 
   return (
@@ -557,7 +626,7 @@ export function CountryField({
           role="img"
           aria-label={`Geographic ${LAYER_LABEL[layer]} map of ${label}${
             clipped ? ", weather clipped to national borders" : ""
-          }`}
+          }${scrubLabel ? `, ${scrubLabel}` : ""}`}
         />
         <div className="wx-map__chrome">
           <div className="wx-map__legend">
@@ -577,6 +646,40 @@ export function CountryField({
             {tilesOk ? "" : " · loading tiles…"}
           </p>
         </div>
+        {scrubTimes.length > 1 && (
+          <div className="wx-scrubber" role="group" aria-label="Forecast hour">
+            <button
+              type="button"
+              className="wx-scrubber__play"
+              aria-pressed={playing}
+              aria-label={playing ? "Pause timeline" : "Play timeline"}
+              onClick={() => setPlaying((p) => !p)}
+            >
+              {playing ? "Pause" : "Play"}
+            </button>
+            <input
+              className="wx-scrubber__range"
+              type="range"
+              min={0}
+              max={scrubTimes.length - 1}
+              step={1}
+              value={hourIndex}
+              aria-valuetext={scrubLabel ?? undefined}
+              onChange={(e) => {
+                setPlaying(false);
+                setHourIndex(Number(e.target.value));
+              }}
+            />
+            <span className="wx-scrubber__time">
+              {scrubLabel}
+              <span className="wx-scrubber__meta">
+                {" "}
+                · {hourIndex + 1}/{scrubTimes.length}h
+                {layer === "precip" ? " · radar" : ""}
+              </span>
+            </span>
+          </div>
+        )}
         {error && <p className="map-panel__fallback">{error}</p>}
         {!cells.length && !error && (
           <p className="map-panel__fallback">
@@ -586,9 +689,13 @@ export function CountryField({
         )}
       </div>
       <p className="country-field__legend">
-        Geographic map of {label}: OSM roads and coasts under a{" "}
-        {LAYER_LABEL[layer].toLowerCase()} overlay ({LAYER_UNIT[layer]}).
+        Geographic map of {label}: OSM under a{" "}
+        {LAYER_LABEL[layer].toLowerCase()} overlay ({LAYER_UNIT[layer]})
+        {scrubLabel ? ` at ${scrubLabel}` : ""}.
         {rangeText ? ` Range ${rangeText}.` : ""}
+        {scrubTimes.length > 1
+          ? " Scrub the timeline — field and particles follow."
+          : ""}
       </p>
     </div>
   );

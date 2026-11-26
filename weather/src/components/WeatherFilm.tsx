@@ -9,6 +9,7 @@ import { weatherLabel } from "../lib/weatherCode";
 import type {
   DailyPoint,
   EnsembleDay,
+  EnsembleHourly,
   ForecastBundle,
   HourlyPoint,
   Place,
@@ -44,17 +45,17 @@ const BEAT_COPY: Record<
   now: {
     kicker: "Right now",
     title: "The hour you are in",
-    line: "Temperature draws first. Feels-like rides beside it as a second path.",
+    line: "Temperature draws first. Ensemble members sketch the alternate paths around it.",
   },
   country: {
     kicker: "Across the country",
     title: "Your place on the map",
-    line: "OpenStreetMap under a national weather overlay — borders, cities, and the warmest and coldest spots called out.",
+    line: "Scrub the forecast hours — OSM stays put while the weather field, radar blooms, and wind particles move with time.",
   },
   today: {
     kicker: "Today",
     title: "The day unfolds",
-    line: "The same runway stretches through daylight. Watch where the heat peaks.",
+    line: "Deterministic temp with ensemble alternate paths — the spread is the story.",
   },
   tonight: {
     kicker: "Tonight",
@@ -178,6 +179,7 @@ export function WeatherFilm({ place, bundle }: Props) {
                 beat={beat}
                 showPressure={beat === "now"}
                 showFeelsBand={beat === "now" || beat === "today"}
+                ensembleHourly={bundle.ensemble?.hourly}
                 reduce={!!reduce}
                 camera={
                   beat === "tonight" ? 0.65 : beat === "today" ? 0.35 : 0.15
@@ -196,11 +198,13 @@ export function WeatherFilm({ place, bundle }: Props) {
               <CountryField
                 place={mapPlace}
                 cells={bundle.grid?.cells}
+                times={bundle.grid?.times}
                 bbox={bundle.grid?.bbox}
                 countryLabel={bundle.grid?.countryName || place.country}
                 layer={mapLayer}
                 onLayerChange={setMapLayer}
                 reveal={surface === "map" ? 1 : 0}
+                active={surface === "map"}
               />
               <div className="film-map-tabs" role="tablist">
                 {(
@@ -370,11 +374,47 @@ function annotationFor(
   return null;
 }
 
+function alignEnsembleHours(
+  hours: HourlyPoint[],
+  ens?: EnsembleHourly,
+): {
+  min: { x: number; y: number }[];
+  max: { x: number; y: number }[];
+  members: { x: number; y: number }[][];
+  sampleCount: number;
+} | null {
+  if (!ens?.time.length || !ens.members.length || !hours.length) return null;
+  const ensByTime = new Map(ens.time.map((t, i) => [t, i]));
+  // Prefer exact ISO match; fall back to index alignment for the first N hours.
+  const idxs = hours.map((h, i) => ensByTime.get(h.time) ?? i);
+  if (idxs.every((i) => i >= ens.time.length)) return null;
+  const memberStride = Math.max(1, Math.floor(ens.members.length / 6));
+  const sampled = ens.members.filter((_, mi) => mi % memberStride === 0).slice(0, 6);
+  return {
+    min: hours.map((_, i) => ({
+      x: i,
+      y: ens.min[Math.min(idxs[i], ens.min.length - 1)] ?? NaN,
+    })),
+    max: hours.map((_, i) => ({
+      x: i,
+      y: ens.max[Math.min(idxs[i], ens.max.length - 1)] ?? NaN,
+    })),
+    members: sampled.map((series) =>
+      hours.map((_, i) => ({
+        x: i,
+        y: series[Math.min(idxs[i], series.length - 1)] ?? NaN,
+      })),
+    ),
+    sampleCount: sampled.length,
+  };
+}
+
 function HoursRunway({
   hours,
   beat,
   showPressure,
   showFeelsBand,
+  ensembleHourly,
   reduce,
   camera,
 }: {
@@ -382,6 +422,7 @@ function HoursRunway({
   beat: BeatId;
   showPressure: boolean;
   showFeelsBand: boolean;
+  ensembleHourly?: EnsembleHourly;
   reduce: boolean;
   camera: number;
 }) {
@@ -395,9 +436,16 @@ function HoursRunway({
   const innerH = h - pad.t - pad.b;
   const temps = hours.map((x) => x.temperature);
   const apps = hours.map((x) => x.apparent);
+  const ensAligned = alignEnsembleHours(hours, ensembleHourly);
+  const ensVals = ensAligned
+    ? [
+        ...ensAligned.min.map((p) => p.y),
+        ...ensAligned.max.map((p) => p.y),
+      ].filter(Number.isFinite)
+    : [];
   const domain = niceDomain(
-    Math.min(...temps, ...apps),
-    Math.max(...temps, ...apps),
+    Math.min(...temps, ...apps, ...(ensVals.length ? ensVals : [Infinity])),
+    Math.max(...temps, ...apps, ...(ensVals.length ? ensVals : [-Infinity])),
   );
   const precipMax = Math.max(...hours.map((x) => x.precipMm), 0.5);
   const pressVals = hours.map((x) => x.pressure).filter((v) => v > 800);
@@ -417,7 +465,7 @@ function HoursRunway({
     y: yTemp(pt.temperature),
   }));
   const appLine = hours.map((pt, i) => ({ x: xAt(i), y: yTemp(pt.apparent) }));
-  // Alternate band between temp and feels-like (inspiration: hourly alts)
+  // Feels-like band stays as a soft cue under ensemble alts
   const feelsHi = hours.map((pt, i) => ({
     x: xAt(i),
     y: yTemp(Math.max(pt.temperature, pt.apparent)),
@@ -426,6 +474,26 @@ function HoursRunway({
     x: xAt(i),
     y: yTemp(Math.min(pt.temperature, pt.apparent)),
   }));
+  const ensBandHi = ensAligned
+    ? ensAligned.max.map((p, i) => ({
+        x: xAt(i),
+        y: yTemp(Number.isFinite(p.y) ? p.y : domain[1]),
+      }))
+    : [];
+  const ensBandLo = ensAligned
+    ? ensAligned.min.map((p, i) => ({
+        x: xAt(i),
+        y: yTemp(Number.isFinite(p.y) ? p.y : domain[0]),
+      }))
+    : [];
+  const memberLines = ensAligned
+    ? ensAligned.members.map((series) =>
+        series.map((p, i) => ({
+          x: xAt(i),
+          y: yTemp(Number.isFinite(p.y) ? p.y : temps[i]),
+        })),
+      )
+    : [];
   const pressLine = hours.map((pt, i) => ({
     x: xAt(i),
     y: yPress(pt.pressure || pressDomain[0]),
@@ -473,9 +541,23 @@ function HoursRunway({
           </g>
         );
       })}
-      {showFeelsBand && (
+      {ensBandHi.length > 0 && (
+        <path
+          d={areaPath(ensBandHi, ensBandLo)}
+          className="chart__ensemble-band chart__ensemble-band--hourly"
+        />
+      )}
+      {showFeelsBand && !ensAligned && (
         <path d={areaPath(feelsHi, feelsLo)} className="chart__feels-band" />
       )}
+      {memberLines.map((pts, mi) => (
+        <path
+          key={`m-${mi}`}
+          d={linePath(pts)}
+          fill="none"
+          className="chart__line chart__line--ensemble-member"
+        />
+      ))}
       {hasRain &&
         hours.map((pt, i) => (
           <rect
@@ -521,25 +603,23 @@ function HoursRunway({
       <text x={pad.l} y={22} className="film-svg__caption">
         {beat === "tonight"
           ? "Evening into night"
-          : beat === "today"
-            ? "Today, hour by hour · temp vs feels-like"
-            : "Next twelve hours · temp vs feels-like band"}
+          : ensAligned
+            ? `Next hours · forecast + ${ensAligned.sampleCount} ensemble paths`
+            : beat === "today"
+              ? "Today, hour by hour · temp vs feels-like"
+              : "Next twelve hours · temp vs feels-like band"}
       </text>
-      {showFeelsBand && (
+      {ensAligned && (
         <g aria-hidden>
-          <rect
-            x={pad.l + innerW - 168}
-            y={12}
-            width={10}
-            height={8}
-            className="chart__feels-band"
+          <line
+            x1={pad.l + innerW - 176}
+            y1={16}
+            x2={pad.l + innerW - 160}
+            y2={16}
+            className="chart__line chart__line--ensemble-member"
           />
-          <text
-            x={pad.l + innerW - 152}
-            y={20}
-            className="chart__tick"
-          >
-            Feels-like spread
+          <text x={pad.l + innerW - 154} y={20} className="chart__tick">
+            Ensemble alts
           </text>
         </g>
       )}

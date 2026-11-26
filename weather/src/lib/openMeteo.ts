@@ -3,6 +3,7 @@ import type {
   BBox,
   DailyPoint,
   EnsembleDay,
+  EnsembleHourly,
   ForecastBundle,
   GridCell,
   HourlyPoint,
@@ -269,11 +270,14 @@ async function fetchEnsemble(place: Place) {
   url.searchParams.set("forecast_days", "7");
   url.searchParams.set("models", "icon_seamless");
   url.searchParams.set("daily", "temperature_2m_max,precipitation_sum");
+  // Alternate hourly temperature paths for the hours runway (inspiration: alts).
+  url.searchParams.set("hourly", "temperature_2m");
 
   type Ens = {
     daily: Record<string, number[] | string[] | undefined>;
+    hourly?: Record<string, number[] | string[] | undefined>;
   };
-  const data = await fetchJson<Ens>(url);
+  const data = await fetchJson<Ens>(url, 18_000);
   const daily = data.daily;
 
   const tempKeys = Object.keys(daily).filter(
@@ -320,11 +324,58 @@ async function fetchEnsemble(place: Place) {
     dailyPrecipSpread.push(p ? p.max - p.min : NaN);
   }
 
+  let hourly: EnsembleHourly | undefined;
+  const h = data.hourly;
+  if (h) {
+    const hTime = (h.time as string[] | undefined) ?? [];
+    const memberKeys = Object.keys(h)
+      .filter((k) => k.startsWith("temperature_2m") && k.includes("member"))
+      .sort();
+    const keys = memberKeys.length
+      ? memberKeys
+      : Object.keys(h).filter(
+          (k) => k.startsWith("temperature_2m") && k !== "temperature_2m",
+        );
+    // Cap to next 24 hours for the runway chart.
+    const n = Math.min(hTime.length, 24);
+    const times = hTime.slice(0, n);
+    const members = keys.map((k) =>
+      ((h[k] as number[]) ?? []).slice(0, n).map((v) => num(v, NaN)),
+    );
+    if (times.length && members.length) {
+      const min: number[] = [];
+      const mean: number[] = [];
+      const max: number[] = [];
+      for (let i = 0; i < n; i++) {
+        const vals = members
+          .map((m) => m[i])
+          .filter((v) => Number.isFinite(v));
+        if (!vals.length) {
+          min.push(NaN);
+          mean.push(NaN);
+          max.push(NaN);
+          continue;
+        }
+        const s = memberStats(vals);
+        min.push(s.min);
+        mean.push(s.mean);
+        max.push(s.max);
+      }
+      hourly = { time: times, members, min, mean, max };
+    }
+  }
+
   return {
-    memberCount: Math.max(tKeys.length, pKeys.length, 1),
+    memberCount: Math.max(
+      tKeys.length,
+      pKeys.length,
+      hourly?.members.length ?? 0,
+      1,
+    ),
     days,
     dailyTempMaxSpread,
     dailyPrecipSpread,
+    hourly,
   };
 }
 
@@ -383,6 +434,8 @@ function nationalBBox(place: Place): {
  */
 const GRID_CHUNK = 8;
 
+const GRID_HOURS = 24;
+
 /** National (or wide regional) sample grid for the country map layers. */
 async function fetchRegionalGrid(place: Place) {
   const { bbox, countryCode, countryName } = nationalBBox(place);
@@ -406,15 +459,24 @@ async function fetchRegionalGrid(place: Place) {
   type Point = {
     latitude: number;
     longitude: number;
-    current: {
+    current?: {
       temperature_2m: number;
       precipitation: number;
       wind_speed_10m: number;
+      wind_direction_10m?: number;
       surface_pressure: number;
+    };
+    hourly?: {
+      time: string[];
+      temperature_2m: number[];
+      precipitation: number[];
+      wind_speed_10m: number[];
+      wind_direction_10m: number[];
+      surface_pressure: number[];
     };
   };
 
-  const chunkJobs: Promise<GridCell[]>[] = [];
+  const chunkJobs: Promise<{ cells: GridCell[]; times?: string[] }>[] = [];
   for (let offset = 0; offset < coords.length; offset += GRID_CHUNK) {
     const chunk = coords.slice(offset, offset + GRID_CHUNK);
     chunkJobs.push(
@@ -430,31 +492,68 @@ async function fetchRegionalGrid(place: Place) {
         );
         url.searchParams.set(
           "current",
-          "temperature_2m,precipitation,wind_speed_10m,surface_pressure",
+          "temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,surface_pressure",
         );
+        url.searchParams.set(
+          "hourly",
+          "temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,surface_pressure",
+        );
+        url.searchParams.set("forecast_hours", String(GRID_HOURS));
         url.searchParams.set("timezone", "auto");
 
-        const data = await fetchJson<Point[] | Point>(url, 10_000);
+        const data = await fetchJson<Point[] | Point>(url, 14_000);
         const points = Array.isArray(data) ? data : [data];
-        return chunk.map((c, i) => {
+        let times: string[] | undefined;
+        const cells = chunk.map((c, i) => {
           const p = points[i];
+          const h = p?.hourly;
+          const n = Math.min(GRID_HOURS, h?.time?.length ?? 0);
+          if (h && n > 0 && !times) times = h.time.slice(0, n);
+          const hours =
+            h && n > 0
+              ? {
+                  time: h.time.slice(0, n),
+                  temp: h.temperature_2m.slice(0, n).map((v) => num(v)),
+                  precip: h.precipitation.slice(0, n).map((v) => num(v)),
+                  windSpeed: h.wind_speed_10m.slice(0, n).map((v) => num(v)),
+                  windDir: (h.wind_direction_10m ?? [])
+                    .slice(0, n)
+                    .map((v) => num(v, 220)),
+                  pressure: h.surface_pressure
+                    .slice(0, n)
+                    .map((v) => num(v, 1013)),
+                }
+              : undefined;
           return {
             latitude: c.lat,
             longitude: c.lon,
-            temp: num(p?.current?.temperature_2m),
-            precip: num(p?.current?.precipitation),
-            windSpeed: num(p?.current?.wind_speed_10m),
-            pressure: num(p?.current?.surface_pressure, 1013),
-          };
+            temp: num(p?.current?.temperature_2m ?? hours?.temp[0]),
+            precip: num(p?.current?.precipitation ?? hours?.precip[0]),
+            windSpeed: num(p?.current?.wind_speed_10m ?? hours?.windSpeed[0]),
+            windDir: num(
+              p?.current?.wind_direction_10m ?? hours?.windDir[0],
+              220,
+            ),
+            pressure: num(
+              p?.current?.surface_pressure ?? hours?.pressure[0],
+              1013,
+            ),
+            hours,
+          } satisfies GridCell;
         });
+        return { cells, times };
       })(),
     );
   }
 
   const settled = await Promise.allSettled(chunkJobs);
   const cells: GridCell[] = [];
+  let times: string[] | undefined;
   for (const result of settled) {
-    if (result.status === "fulfilled") cells.push(...result.value);
+    if (result.status === "fulfilled") {
+      cells.push(...result.value.cells);
+      if (!times && result.value.times?.length) times = result.value.times;
+    }
   }
 
   if (!cells.length) {
@@ -466,6 +565,22 @@ async function fetchRegionalGrid(place: Place) {
     bbox,
     countryCode,
     countryName,
+    times,
     spanDeg: Math.max(width, height),
+  };
+}
+
+/** Snapshot a grid cell at a forecast hour index (scrubber / radar). */
+export function gridCellAtHour(cell: GridCell, hourIndex: number): GridCell {
+  const h = cell.hours;
+  if (!h?.temp.length) return cell;
+  const i = Math.max(0, Math.min(h.temp.length - 1, hourIndex));
+  return {
+    ...cell,
+    temp: h.temp[i],
+    precip: h.precip[i],
+    windSpeed: h.windSpeed[i],
+    windDir: h.windDir[i] ?? cell.windDir,
+    pressure: h.pressure[i],
   };
 }

@@ -185,6 +185,22 @@ function sampleBundle(place: Place): ForecastBundle {
       })),
       dailyTempMaxSpread: Array.from({ length: 7 }, (_, i) => 1.5 + i * 0.4),
       dailyPrecipSpread: Array.from({ length: 7 }, (_, i) => 1 + i * 0.6),
+      hourly: (() => {
+        const time = Array.from({ length: 24 }, (_, i) => hour(i));
+        const members = Array.from({ length: 8 }, (_, m) =>
+          time.map((_, i) => 4 + Math.sin(i / 5) * 3 + (m - 3.5) * 0.35),
+        );
+        const min = time.map((_, i) =>
+          Math.min(...members.map((series) => series[i])),
+        );
+        const max = time.map((_, i) =>
+          Math.max(...members.map((series) => series[i])),
+        );
+        const mean = time.map((_, i) =>
+          members.reduce((a, s) => a + s[i], 0) / members.length,
+        );
+        return { time, members, min, mean, max };
+      })(),
     },
     grid: (() => {
       const pad = 3.5;
@@ -194,21 +210,36 @@ function sampleBundle(place: Place): ForecastBundle {
         place.longitude + pad,
         place.latitude + pad,
       ] as const;
+      const times = Array.from({ length: 24 }, (_, i) => hour(i));
       return {
         bbox,
         countryCode: place.countryCode,
         countryName: place.country || place.name,
         spanDeg: pad * 2,
+        times,
         cells: Array.from({ length: 25 }, (_, i) => {
           const row = Math.floor(i / 5);
           const col = i % 5;
+          const baseTemp = 2 + row * 0.4 + col * 0.2;
+          const hours = {
+            time: times,
+            temp: times.map((_, t) => baseTemp + Math.sin(t / 4) * 1.2),
+            precip: times.map((_, t) =>
+              (row + col + t) % 5 === 0 ? 0.4 + (t % 3) * 0.3 : 0,
+            ),
+            windSpeed: times.map((_, t) => 12 + col * 2 + (t % 4)),
+            windDir: times.map(() => 220 + col * 5),
+            pressure: times.map((_, t) => 1010 + row - Math.sin(t / 6)),
+          };
           return {
             latitude: place.latitude - span / 2 + row * step,
             longitude: place.longitude - span / 2 + col * step,
-            temp: 2 + row * 0.4 + col * 0.2,
-            precip: (row + col) % 4 === 0 ? 0.6 : 0,
-            windSpeed: 12 + col * 2,
-            pressure: 1010 + row,
+            temp: hours.temp[0],
+            precip: hours.precip[0],
+            windSpeed: hours.windSpeed[0],
+            windDir: hours.windDir[0],
+            pressure: hours.pressure[0],
+            hours,
           };
         }),
       };
