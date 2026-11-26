@@ -26,6 +26,7 @@
 - [x] Scene-snap film scroll + credible OSM+IDW national map + selective inspiration adoption
 - [x] Loading hang fix (batched grid + timeouts + progressive paint)
 - [x] Delete void-map legacy paths; prove geographic map + kill “no tile API” copy
+- [x] Ensemble hourly alts + radar play + Windy-style map scrubber (`6c27dbb`)
 - [ ] Human review of Skylore craft + publish confirmation
 
 ## Now
