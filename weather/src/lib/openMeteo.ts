@@ -77,13 +77,52 @@ function zipDaily(raw: {
   }));
 }
 
-async function fetchJson<T>(url: URL): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Weather request failed (${res.status})`);
-  return res.json() as Promise<T>;
+const DEFAULT_TIMEOUT_MS = 12_000;
+
+async function fetchJson<T>(
+  url: URL,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<T> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`Weather request failed (${res.status})`);
+    return (await res.json()) as T;
+  } catch (err) {
+    if (
+      (err instanceof Error && err.name === "AbortError") ||
+      (typeof DOMException !== "undefined" &&
+        err instanceof DOMException &&
+        err.name === "AbortError")
+    ) {
+      throw new Error(`Weather request timed out after ${timeoutMs}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
-export async function fetchForecast(place: Place): Promise<ForecastBundle> {
+type ForecastResponse = {
+  timezone: string;
+  current: {
+    time: string;
+    temperature_2m: number;
+    apparent_temperature: number;
+    weather_code: number;
+    wind_speed_10m: number;
+    wind_gusts_10m: number;
+    relative_humidity_2m: number;
+    surface_pressure: number;
+    is_day: number;
+  };
+  hourly: Parameters<typeof zipHourly>[0];
+  daily: Parameters<typeof zipDaily>[0];
+};
+
+/** Core hourly/daily/current only — paints the UI without waiting on extras. */
+export async function fetchForecastCore(place: Place): Promise<ForecastBundle> {
   const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast");
   forecastUrl.searchParams.set("latitude", String(place.latitude));
   forecastUrl.searchParams.set("longitude", String(place.longitude));
@@ -137,26 +176,9 @@ export async function fetchForecast(place: Place): Promise<ForecastBundle> {
     ].join(","),
   );
 
-  type ForecastResponse = {
-    timezone: string;
-    current: {
-      time: string;
-      temperature_2m: number;
-      apparent_temperature: number;
-      weather_code: number;
-      wind_speed_10m: number;
-      wind_gusts_10m: number;
-      relative_humidity_2m: number;
-      surface_pressure: number;
-      is_day: number;
-    };
-    hourly: Parameters<typeof zipHourly>[0];
-    daily: Parameters<typeof zipDaily>[0];
-  };
-
   const forecast = await fetchJson<ForecastResponse>(forecastUrl);
 
-  const bundle: ForecastBundle = {
+  return {
     fetchedAt: new Date().toISOString(),
     timezone: forecast.timezone,
     current: {
@@ -173,7 +195,14 @@ export async function fetchForecast(place: Place): Promise<ForecastBundle> {
     hourly: zipHourly(forecast.hourly),
     daily: zipDaily(forecast.daily),
   };
+}
 
+/** Best-effort climate / ensemble / AQ / national grid — never blocks first paint. */
+export async function enrichForecast(
+  place: Place,
+  bundle: ForecastBundle,
+): Promise<ForecastBundle> {
+  const next: ForecastBundle = { ...bundle };
   const extras = await Promise.allSettled([
     fetchYearAgoBaseline(place, bundle.daily.length),
     fetchEnsemble(place),
@@ -181,12 +210,16 @@ export async function fetchForecast(place: Place): Promise<ForecastBundle> {
     fetchRegionalGrid(place),
   ]);
 
-  if (extras[0].status === "fulfilled") bundle.climate = extras[0].value;
-  if (extras[1].status === "fulfilled") bundle.ensemble = extras[1].value;
-  if (extras[2].status === "fulfilled") bundle.airQuality = extras[2].value;
-  if (extras[3].status === "fulfilled") bundle.grid = extras[3].value;
+  if (extras[0].status === "fulfilled") next.climate = extras[0].value;
+  if (extras[1].status === "fulfilled") next.ensemble = extras[1].value;
+  if (extras[2].status === "fulfilled") next.airQuality = extras[2].value;
+  if (extras[3].status === "fulfilled") next.grid = extras[3].value;
+  return next;
+}
 
-  return bundle;
+export async function fetchForecast(place: Place): Promise<ForecastBundle> {
+  const core = await fetchForecastCore(place);
+  return enrichForecast(place, core);
 }
 
 async function fetchYearAgoBaseline(place: Place, days: number) {
@@ -343,36 +376,32 @@ function nationalBBox(place: Place): {
   };
 }
 
+/**
+ * Open-Meteo multi-location GETs hang / stall above ~8–10 points from this
+ * environment. Batch in chunks of 8 so the IDW field stays continuous without
+ * blocking the forecast load forever.
+ */
+const GRID_CHUNK = 8;
+
 /** National (or wide regional) sample grid for the country map layers. */
 async function fetchRegionalGrid(place: Place) {
   const { bbox, countryCode, countryName } = nationalBBox(place);
   const [west, south, east, north] = bbox;
-  // Cap extent for huge countries so Open-Meteo multi-point stays responsive.
   const width = Math.max(east - west, 0.5);
   const height = Math.max(north - south, 0.5);
-  // Dense enough for a continuous IDW field without hammering Open-Meteo.
-  const cols = width > 40 ? 8 : width > 20 ? 10 : 12;
-  const rows = height > 40 ? 8 : height > 20 ? 10 : 12;
+  // 5×5 = 25 samples → 4 chunks of ≤8 — enough for a smooth IDW field.
+  const cols = width > 50 ? 4 : 5;
+  const rows = height > 50 ? 4 : 5;
 
-  const lats: number[] = [];
-  const lons: number[] = [];
+  const coords: { lat: number; lon: number }[] = [];
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
-      const lat = south + ((i + 0.5) / rows) * height;
-      const lon = west + ((j + 0.5) / cols) * width;
-      lats.push(lat);
-      lons.push(lon);
+      coords.push({
+        lat: south + ((i + 0.5) / rows) * height,
+        lon: west + ((j + 0.5) / cols) * width,
+      });
     }
   }
-
-  const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.searchParams.set("latitude", lats.map((v) => v.toFixed(3)).join(","));
-  url.searchParams.set("longitude", lons.map((v) => v.toFixed(3)).join(","));
-  url.searchParams.set(
-    "current",
-    "temperature_2m,precipitation,wind_speed_10m,surface_pressure",
-  );
-  url.searchParams.set("timezone", "auto");
 
   type Point = {
     latitude: number;
@@ -385,19 +414,52 @@ async function fetchRegionalGrid(place: Place) {
     };
   };
 
-  const data = await fetchJson<Point[] | Point>(url);
-  const points = Array.isArray(data) ? data : [data];
-  const cells: GridCell[] = lats.map((latitude, i) => {
-    const p = points[i];
-    return {
-      latitude,
-      longitude: lons[i],
-      temp: num(p?.current?.temperature_2m),
-      precip: num(p?.current?.precipitation),
-      windSpeed: num(p?.current?.wind_speed_10m),
-      pressure: num(p?.current?.surface_pressure, 1013),
-    };
-  });
+  const chunkJobs: Promise<GridCell[]>[] = [];
+  for (let offset = 0; offset < coords.length; offset += GRID_CHUNK) {
+    const chunk = coords.slice(offset, offset + GRID_CHUNK);
+    chunkJobs.push(
+      (async () => {
+        const url = new URL("https://api.open-meteo.com/v1/forecast");
+        url.searchParams.set(
+          "latitude",
+          chunk.map((c) => c.lat.toFixed(3)).join(","),
+        );
+        url.searchParams.set(
+          "longitude",
+          chunk.map((c) => c.lon.toFixed(3)).join(","),
+        );
+        url.searchParams.set(
+          "current",
+          "temperature_2m,precipitation,wind_speed_10m,surface_pressure",
+        );
+        url.searchParams.set("timezone", "auto");
+
+        const data = await fetchJson<Point[] | Point>(url, 10_000);
+        const points = Array.isArray(data) ? data : [data];
+        return chunk.map((c, i) => {
+          const p = points[i];
+          return {
+            latitude: c.lat,
+            longitude: c.lon,
+            temp: num(p?.current?.temperature_2m),
+            precip: num(p?.current?.precipitation),
+            windSpeed: num(p?.current?.wind_speed_10m),
+            pressure: num(p?.current?.surface_pressure, 1013),
+          };
+        });
+      })(),
+    );
+  }
+
+  const settled = await Promise.allSettled(chunkJobs);
+  const cells: GridCell[] = [];
+  for (const result of settled) {
+    if (result.status === "fulfilled") cells.push(...result.value);
+  }
+
+  if (!cells.length) {
+    throw new Error("National grid returned no cells");
+  }
 
   return {
     cells,

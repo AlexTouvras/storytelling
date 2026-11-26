@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Hero } from "./components/Hero";
 import { Story } from "./components/Story";
 import { loadSavedPlace, savePlace } from "./lib/location";
-import { fetchForecast } from "./lib/openMeteo";
+import { enrichForecast, fetchForecastCore } from "./lib/openMeteo";
 import type { ForecastBundle, Place } from "./lib/types";
 
 /** Sensible default when the visitor has not shared a place yet. */
@@ -34,10 +34,21 @@ export default function App() {
     setPlace(next);
     setStatus("Loading forecast…");
     try {
-      const data = await fetchForecast(next);
-      setBundle(data);
+      // Paint as soon as the core forecast lands — never wait on the national
+      // grid / ensemble (those used to hang Open-Meteo multi-point forever).
+      const core = await fetchForecastCore(next);
+      setBundle(core);
       if (opts?.persist !== false) savePlace(next);
       setStatus(null);
+      setBusy(false);
+
+      void enrichForecast(next, core)
+        .then((enriched) => {
+          setBundle(enriched);
+        })
+        .catch((err) => {
+          console.warn("Forecast enrichments skipped", err);
+        });
     } catch (err) {
       console.error(err);
       const offline = typeof navigator !== "undefined" && !navigator.onLine;
@@ -49,7 +60,6 @@ export default function App() {
       setOfflineSample(true);
       setBundle(sampleBundle(next));
       setStatus(null);
-    } finally {
       setBusy(false);
     }
   }, []);
